@@ -28,7 +28,7 @@
 */
 
 
-class TELEGRAMAPI_EXPORT Animation : public Type
+class Animation : public Type
 {
 public:
     Animation();
