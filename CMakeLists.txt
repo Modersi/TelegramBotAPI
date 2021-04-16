@@ -30,7 +30,7 @@ set_target_properties( ${PROJECT_NAME}
 # Including all header files #
 target_include_directories( ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/Headers )
 
-# Set privtae and public headers? # 
+#? Set privtae and public headers ?# 
 # Putting all headers in build destination folder #
 install( DIRECTORY ${PROJECT_SOURCE_DIR}/Headers/ DESTINATION ${CMAKE_INSTALL_PREFIX}/Headers )
 
@@ -91,10 +91,6 @@ set( ${PROJECT_NAME}_SourceFiles
 target_sources( ${PROJECT_NAME} PRIVATE ${${PROJECT_NAME}_SourceFiles} )
 
 ##### QT
-
-#set(CMAKE_AUTOMOC ON)
-#set(CMAKE_AUTORCC ON)
-#set(CMAKE_AUTOUIC ON)
 
 # Searching for QT6 package files (in directory of Qt6_DIR variable) #
 find_package( Qt6 
