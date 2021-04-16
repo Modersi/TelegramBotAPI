@@ -1,9 +1,9 @@
 #ifndef POLLOPTION_H
 #define POLLOPTION_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT PollOption : public Type
+class PollOption : public Type
 {
 public:
     PollOption();

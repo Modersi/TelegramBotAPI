@@ -1,9 +1,9 @@
 #ifndef INPUTMEDIADOCUMENT_H
 #define INPUTMEDIADOCUMENT_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT InputMediaDocument : public Type
+class InputMediaDocument : public Type
 {
 public:
     InputMediaDocument();

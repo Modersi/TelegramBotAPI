@@ -1,9 +1,9 @@
 #ifndef INPUTMEDIAANIMATION_H
 #define INPUTMEDIAANIMATION_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT InputMediaAnimation : public Type
+class InputMediaAnimation : public Type
 {
 public:
     InputMediaAnimation();

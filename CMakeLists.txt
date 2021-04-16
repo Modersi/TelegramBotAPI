@@ -1,156 +1,122 @@
-cmake_minimum_required(VERSION 3.20.0)
+cmake_minimum_required( VERSION 3.20.0 )
+##### Declaring a project
+
+# Project data #
+project( TelegramBotAPI
+         VERSION 0.0.1
+         LANGUAGES CXX
+         DESCRIPTION "Telegram Bot REST API realization on C++ and QT" )
+
+#? Maybe make module system ?#
+# Adding Telegram Bot API library #
+add_library( ${PROJECT_NAME} STATIC)
+
+# Может удалить? #
+# Adding library definition #
+target_compile_definitions( ${PROJECT_NAME} PRIVATE TELEGRAMBOTAPI_LIBRARY )
+
+# Setting library destination folder #
+install( TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/Libraries )
+
+# Setting project C++ requirements #
+set_target_properties( ${PROJECT_NAME} 
+						PROPERTIES
+							CMAKE_CXX_STANDARD 20
+							CMAKE_CXX_STANDARD_REQUIRED ON )
 
 
-#################### Declaring a project ####################
+##### Library files
 
-project(TelegramBotAPI
-        VERSION 0.0.1
-        LANGUAGES CXX
-        DESCRIPTION "Telegram Bot REST API realization on C++ and QT")
+# Including all header files #
+target_include_directories( ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/Headers )
 
+# Set privtae and public headers? # 
+# Putting all headers in build destination folder #
+install( DIRECTORY ${PROJECT_SOURCE_DIR}/Headers/ DESTINATION ${CMAKE_INSTALL_PREFIX}/Headers )
 
-#################### Declaring a C++ requirements ####################
+# Variable which contain all game source files directories #
+set( ${PROJECT_NAME}_SourceFiles
 
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+		# Telegram Bot API main header #
+		Sources/TelegramBotAPI.cpp
 
+		# Request Manager #
+		Sources/RequestManager/RequestManager.cpp
 
-#################### Serching for all "RequestManager" files ####################
+		# Types #
+		Sources/Types/Animation.cpp
+		Sources/Types/Audio.cpp
+		Sources/Types/BotCommand.cpp
+		Sources/Types/CallbackQuery.cpp
+		Sources/Types/Chat.cpp
+		Sources/Types/ChatMember.cpp
+		Sources/Types/ChatPermissions.cpp
+		Sources/Types/ChatPhoto.cpp
+		Sources/Types/Contact.cpp
+		Sources/Types/Dice.cpp
+		Sources/Types/Document.cpp
+		Sources/Types/File.cpp
+		Sources/Types/ForceReply.cpp
+		Sources/Types/InlineKeyboardButton.cpp
+		Sources/Types/InlineKeyboardMarkup.cpp
+		Sources/Types/InputFile.cpp
+		Sources/Types/InputMedia.cpp
+		Sources/Types/InputMediaAnimation.cpp
+		Sources/Types/InputMediaAudio.cpp
+		Sources/Types/InputMediaDocument.cpp
+		Sources/Types/InputMediaPhoto.cpp
+		Sources/Types/InputMediaVideo.cpp
+		Sources/Types/KeyboardButton.cpp
+		Sources/Types/KeyboardButtonPollType.cpp
+		Sources/Types/Location.cpp
+		Sources/Types/LoginUrl.cpp
+		Sources/Types/Message.cpp
+		Sources/Types/MessageEntity.cpp
+		Sources/Types/PhotoSize.cpp
+		Sources/Types/Poll.cpp
+		Sources/Types/PollAnswer.cpp
+		Sources/Types/PollOption.cpp
+		Sources/Types/ReplyKeyboardMarkup.cpp
+		Sources/Types/ReplyKeyboardRemove.cpp
+		Sources/Types/ResponseParameters.cpp
+		Sources/Types/Type.cpp
+		Sources/Types/User.cpp
+		Sources/Types/UserProfilePhotos.cpp
+		Sources/Types/Venue.cpp
+		Sources/Types/Video.cpp
+		Sources/Types/VideoNote.cpp
+		Sources/Types/Voice.cpp )
 
-# Searching for all .cpp files #
-set(${PROJECT_NAME}_RequestManagerSourceFiles
-		sources/RequestManager/RequestManager.cpp)
+# Setting source files for our library #
+target_sources( ${PROJECT_NAME} PRIVATE ${${PROJECT_NAME}_SourceFiles} )
 
-# Searching for all .h files #
-set(${PROJECT_NAME}_RequestManagerHeaderFiles 
-		headers/RequestManager/RequestManager.h)
+##### QT
 
-# Making variable which includes all "RequestManager" files #
-set(${PROJECT_NAME}_RequestManager
-		${TelegramBotAPI_RequestManagerSourceFiles}
-		${TelegramBotAPI_RequestManagerHeaderFiles})
+#set(CMAKE_AUTOMOC ON)
+#set(CMAKE_AUTORCC ON)
+#set(CMAKE_AUTOUIC ON)
 
+# Searching for QT6 package files (in directory of Qt6_DIR variable) #
+find_package( Qt6 
+				COMPONENTS 
+					Core REQUIRED #? Раздупрлить этот ебанный REQUIRED ?#
+					Network REQUIRED )
 
-#################### Serching all "Types" files ####################
+#find_package(Qt6 COMPONENTS Core Network REQUIRED)
 
-# Searching for .cpp files #
-set(${PROJECT_NAME}_TypesSourceFiles
-		sources/Types/Animation.cpp
-		sources/Types/Audio.cpp
-		sources/Types/BotCommand.cpp
-		sources/Types/CallbackQuery.cpp
-		sources/Types/Chat.cpp
-		sources/Types/ChatMember.cpp
-		sources/Types/ChatPermissions.cpp
-		sources/Types/ChatPhoto.cpp
-		sources/Types/Contact.cpp
-		sources/Types/Dice.cpp
-		sources/Types/Document.cpp
-		sources/Types/File.cpp
-		sources/Types/ForceReply.cpp
-		sources/Types/InlineKeyboardButton.cpp
-		sources/Types/InlineKeyboardMarkup.cpp
-		sources/Types/InputFile.cpp
-		sources/Types/InputMedia.cpp
-		sources/Types/InputMediaAnimation.cpp
-		sources/Types/InputMediaAudio.cpp
-		sources/Types/InputMediaDocument.cpp
-		sources/Types/InputMediaPhoto.cpp
-		sources/Types/InputMediaVideo.cpp
-		sources/Types/KeyboardButton.cpp
-		sources/Types/KeyboardButtonPollType.cpp
-		sources/Types/Location.cpp
-		sources/Types/LoginUrl.cpp
-		sources/Types/Message.cpp
-		sources/Types/MessageEntity.cpp
-		sources/Types/PhotoSize.cpp
-		sources/Types/Poll.cpp
-		sources/Types/PollAnswer.cpp
-		sources/Types/PollOption.cpp
-		sources/Types/ReplyKeyboardMarkup.cpp
-		sources/Types/ReplyKeyboardRemove.cpp
-		sources/Types/ResponseParameters.cpp
-		sources/Types/Type.cpp
-		sources/Types/User.cpp
-		sources/Types/UserProfilePhotos.cpp
-		sources/Types/Venue.cpp
-		sources/Types/Video.cpp
-		sources/Types/VideoNote.cpp
-		sources/Types/Voice.cpp
-		)
-
-# Searching for .h files #
-set(${PROJECT_NAME}_TypesHeaderFiles 
-		headers/Types/Animation.h
-		headers/Types/Audio.h
-		headers/Types/BotCommand.h
-		headers/Types/CallbackQuery.h
-		headers/Types/Chat.h
-		headers/Types/ChatMember.h
-		headers/Types/ChatPermissions.h
-		headers/Types/ChatPhoto.h
-		headers/Types/Contact.h
-		headers/Types/Dice.h
-		headers/Types/Document.h
-		headers/Types/File.h
-		headers/Types/ForceReply.h
-		headers/Types/InlineKeyboardButton.h
-		headers/Types/InlineKeyboardMarkup.h
-		headers/Types/InputFile.h
-		headers/Types/InputMedia.h
-		headers/Types/InputMediaAnimation.h
-		headers/Types/InputMediaAudio.h
-		headers/Types/InputMediaDocument.h
-		headers/Types/InputMediaPhoto.h
-		headers/Types/InputMediaVideo.h
-		headers/Types/KeyboardButton.h
-		headers/Types/KeyboardButtonPollType.h
-		headers/Types/Location.h
-		headers/Types/LoginUrl.h
-		headers/Types/Message.h
-		headers/Types/MessageEntity.h
-		headers/Types/PhotoSize.h
-		headers/Types/Poll.h
-		headers/Types/PollAnswer.h
-		headers/Types/PollOption.h
-		headers/Types/ReplyKeyboardMarkup.h
-		headers/Types/ReplyKeyboardRemove.h
-		headers/Types/ResponseParameters.h
-		headers/Types/Type.h
-		headers/Types/User.h
-		headers/Types/UserProfilePhotos.h
-		headers/Types/Venue.h
-		headers/Types/Video.h
-		headers/Types/VideoNote.h
-		headers/Types/Voice.h
-		)
-
-# Making variable which includes all "Types" files #
-set(${PROJECT_NAME}_Types
-		${${PROJECT_NAME}_TypesSourceFiles}
-		${${PROJECT_NAME}_TypesHeaderFiles}
-   )
+# Link our library with QT #					
+target_link_libraries( ${PROJECT_NAME} 
+						PRIVATE Qt6::Core
+						PRIVATE Qt6::Network )
 
 
-#################### Putting all source files into lib ####################
+##### OpenSSL
 
-add_library(${PROJECT_NAME} STATIC
-				sources/TelegramBotAPI.cpp
-				${${PROJECT_NAME}_RequestManagerSourceFiles}
-				${${PROJECT_NAME}_TypesSourceFiles}
-		   )
+# Searching for OpenSSL package files (in directory of OPENSSL_ROOT_DIR variable) #
+find_package(OpenSSL REQUIRED )
 
+# Link our library with OpenSSL #					
+target_link_libraries( ${PROJECT_NAME} 
+						PRIVATE 
+							OpenSSL::SSL )
 
-#################### Adding include paths to our headers ####################
-
-target_include_directories(${PROJECT_NAME}
-	                        PUBLIC ${PROJECT_SOURCE_DIR}/headers/TelegramBotAPI.h
-							PUBLIC ${PROJECT_SOURCE_DIR}/${${PROJECT_NAME}_RequestManagerHeaderFiles}
-							PUBLIC ${PROJECT_SOURCE_DIR}/${${PROJECT_NAME}_TypesHeaderFiles}
-						  )
-
-
-#################### Adding definitions to our library ####################
-
-target_compile_definitions(${PROJECT_NAME}
-                           PRIVATE TELEGRAMBOTAPI_LIBRARY)

@@ -1,5 +1,5 @@
-#include "Chat.h"
-#include "Message.h"
+#include "Types/Chat.h"
+#include "Types/Message.h"
 
 /*!
     \brief A default constructor. Constructs an empty object

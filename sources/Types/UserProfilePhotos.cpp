@@ -1,4 +1,4 @@
-#include "UserProfilePhotos.h"
+#include "Types/UserProfilePhotos.h"
 
 UserProfilePhotos::UserProfilePhotos()
 {

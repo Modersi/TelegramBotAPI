@@ -1,9 +1,9 @@
 #ifndef INPUTMEDIA_H
 #define INPUTMEDIA_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT InputMedia : public Type
+class InputMedia : public Type
 {
 private:
 

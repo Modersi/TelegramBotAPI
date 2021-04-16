@@ -1,7 +1,7 @@
 #ifndef DICE_H
 #define DICE_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
 /*!
     \brief This class represents an animated emoji that displays a random value
@@ -15,7 +15,7 @@
     | **value** | `QInt32`  | Value of the dice, 1-6 for “🎲” (dice) and “🎯”(darts throw) base emoji, 1-5 for “🏀”(ball throw) base emoji |
 */
 
-class TELEGRAMAPI_EXPORT Dice : public Type
+class Dice : public Type
 {
 public:
     Dice();

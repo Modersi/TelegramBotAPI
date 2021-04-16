@@ -1,8 +1,8 @@
 #ifndef AUDIO_H
 #define AUDIO_H
 
-#include "Type.h"
-#include "PhotoSize.h"
+#include "Types/Type.h"
+#include "Types/PhotoSize.h"
 
 /*!
     \brief This class represents an Audio file to be treated as music by the Telegram clients
@@ -24,7 +24,7 @@
     In order to set **optional** fields use "set" methods ([setThumb](@ref setThumb), [setMimeType](@ref setMimeType), etc.)
 */
 
-class TELEGRAMAPI_EXPORT Audio : public Type
+class Audio : public Type
 {
 public:
     Audio();

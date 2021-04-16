@@ -1,4 +1,4 @@
-#include "InputMediaVideo.h"
+#include "Types/InputMediaVideo.h"
 
 InputMediaVideo::InputMediaVideo() {}
 

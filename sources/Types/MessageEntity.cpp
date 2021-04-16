@@ -1,4 +1,4 @@
-#include "MessageEntity.h"
+#include "Types/MessageEntity.h"
 
 MessageEntity::MessageEntity()
 {    

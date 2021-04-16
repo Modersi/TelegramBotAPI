@@ -1,11 +1,11 @@
 #ifndef POLL_H
 #define POLL_H
 
-#include "Type.h"
-#include "PollOption.h"
-#include "MessageEntity.h"
+#include "Types/Type.h"
+#include "Types/PollOption.h"
+#include "Types/MessageEntity.h"
 
-class TELEGRAMAPI_EXPORT Poll : public Type
+class Poll : public Type
 {
 public:
     Poll();

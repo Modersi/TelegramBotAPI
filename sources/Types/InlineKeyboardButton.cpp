@@ -1,4 +1,4 @@
-#include "InlineKeyboardButton.h"
+#include "Types/InlineKeyboardButton.h"
 
 /*!
     \brief A default constructor. Constructs an empty object

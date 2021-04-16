@@ -1,8 +1,6 @@
 #ifndef TYPE_H
 #define TYPE_H
 
-#include "TelegramAPI_global.h"
-
 #include "QJsonDocument"
 #include "QJsonObject"
 #include "QJsonValue"

@@ -1,9 +1,9 @@
 #ifndef INPUTMEDIAAUDIO_H
 #define INPUTMEDIAAUDIO_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT InputMediaAudio : public Type
+class InputMediaAudio : public Type
 {
 public:
     InputMediaAudio();

@@ -1,10 +1,10 @@
 #ifndef POLLANSWER_H
 #define POLLANSWER_H
 
-#include "Type.h"
-#include "User.h"
+#include "Types/Type.h"
+#include "Types/User.h"
 
-class TELEGRAMAPI_EXPORT PollAnswer : public Type
+class PollAnswer : public Type
 {
 public:
     PollAnswer();

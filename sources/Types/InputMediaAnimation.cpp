@@ -1,4 +1,4 @@
-#include "InputMediaAnimation.h"
+#include "Types/InputMediaAnimation.h"
 
 InputMediaAnimation::InputMediaAnimation() {}
 

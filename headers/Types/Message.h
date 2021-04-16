@@ -1,11 +1,11 @@
 #ifndef MESSAGE_H
 #define MESSAGE_H
 
-#include "Type.h"
-#include "Chat.h"
-#include "User.h"
+#include "Types/Type.h"
+#include "Types/Chat.h"
+#include "Types/User.h"
 
-class TELEGRAMAPI_EXPORT Message : public Type
+class Message : public Type
 {
 public:
     Message();

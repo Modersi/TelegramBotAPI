@@ -1,4 +1,4 @@
-#include "RequestManager.h"
+#include "RequestManager/RequestManager.h"
 
 RequestManager::RequestManager(const QString _botToken)
 {
@@ -8,9 +8,7 @@ RequestManager::RequestManager(const QString _botToken)
     networkAccessManager = new QNetworkAccessManager();
 
     eventLoop = new QEventLoop();
-    connect(networkAccessManager, SIGNAL(finished(QNetworkReply*)),
-            eventLoop, SLOT(quit())
-            );
+	QObject::connect(networkAccessManager, SIGNAL(finished(QNetworkReply*)), eventLoop, SLOT(quit()));
 }
 
 RequestManager::~RequestManager()
@@ -48,9 +46,6 @@ QJsonDocument RequestManager::sendMultiPartRequest(const QString methodName, con
     QNetworkReply *reply = networkAccessManager->post(*request, &multiPartBody);
     eventLoop->exec();
 
-    if(reply->error() != QNetworkReply::NoError)
-        emit error();
-
     reply->deleteLater();
     delete request;
 
@@ -68,9 +63,6 @@ QJsonDocument RequestManager::sendRequest(const QString methodName, const QJsonD
 
     QNetworkReply *reply = networkAccessManager->post(*request, jsonDocument.toJson());
     eventLoop->exec();
-
-    if(reply->error() != QNetworkReply::NoError)
-        emit error();
 
     reply->deleteLater();
     delete request;

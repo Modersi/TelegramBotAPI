@@ -1,9 +1,9 @@
 #ifndef VOICE_H
 #define VOICE_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT Voice : public Type
+class Voice : public Type
 {
 public:
     Voice();

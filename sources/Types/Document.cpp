@@ -1,4 +1,4 @@
-#include "Document.h"
+#include "Types/Document.h"
 
 /*!
     \brief A default constructor. Constructs an empty object

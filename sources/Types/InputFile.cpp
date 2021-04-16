@@ -1,4 +1,4 @@
-#include "InputFile.h"
+#include "Types/InputFile.h"
 
 InputFile::InputFile()
 {

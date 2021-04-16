@@ -1,4 +1,4 @@
-#include "Animation.h"
+#include "Types/Animation.h"
 /*!
     \brief A default constructor. Constructs an empty object
 */

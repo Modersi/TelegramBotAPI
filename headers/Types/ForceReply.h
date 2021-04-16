@@ -1,7 +1,7 @@
 #ifndef FORCEREPLY_H
 #define FORCEREPLY_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
 /*!
     \brief This class represents a Force Reply
@@ -23,7 +23,7 @@
     > The last option is definitely more attractive. And if you use ForceReply in your bot's questions, it will receive the user's answers even if it only receives replies, commands and mentions — without any extra work for the user
 */
 
-class TELEGRAMAPI_EXPORT ForceReply : public Type
+class ForceReply : public Type
 {
 public:
     ForceReply();

@@ -1,9 +1,9 @@
 #ifndef RESPONSEPARAMETERS_H
 #define RESPONSEPARAMETERS_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT ResponseParameters : public Type
+class ResponseParameters : public Type
 {
 public:
     ResponseParameters();

@@ -1,8 +1,8 @@
 #ifndef INLINEKEYBOARDBUTTON_H
 #define INLINEKEYBOARDBUTTON_H
 
-#include "Type.h"
-#include "LoginUrl.h"
+#include "Types/Type.h"
+#include "Types/LoginUrl.h"
 
 /*!
     \brief This object represents one button of an inline keyboard
@@ -26,7 +26,7 @@
     In order to set **optional** fields use "set" methods ([setTitle](@ref setTitle), [setUsername](@ref setUsername), etc.)
 */
 
-class TELEGRAMAPI_EXPORT InlineKeyboardButton : public Type
+class InlineKeyboardButton : public Type
 {
 public:
     InlineKeyboardButton();

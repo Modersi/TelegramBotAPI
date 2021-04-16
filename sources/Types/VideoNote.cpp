@@ -1,4 +1,4 @@
-#include "VideoNote.h"
+#include "Types/VideoNote.h"
 
 VideoNote::VideoNote() {}
 

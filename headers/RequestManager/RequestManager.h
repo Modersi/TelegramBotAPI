@@ -10,13 +10,12 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFile>
-#include <QHttpMultiPart>
+#include <QtNetwork/QHttpMultiPart>
 
 // Ебануть приватные поля классов как std_unique ptr
 
-class RequestManager : public QObject
+class RequestManager
 {
-    Q_OBJECT
 public:
     RequestManager(const QString);
     ~RequestManager();
@@ -28,9 +27,6 @@ private:
     QEventLoop* eventLoop;
     QString* botToken;
     QNetworkAccessManager* networkAccessManager;
-
-signals:
-    void error();
 };
 
 #endif // REQUESTMANAGER_H

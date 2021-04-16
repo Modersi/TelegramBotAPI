@@ -1,7 +1,7 @@
 #ifndef FILE_H
 #define FILE_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
 /*!
     \brief This class represents a file ready to be downloaded
@@ -24,7 +24,7 @@
     In order to set **optional** fields use "set" methods ([setFileSize](@ref setFileSize), [setFilePath](@ref setFilePath), etc.)
 */
 
-class TELEGRAMAPI_EXPORT File : public Type
+class File : public Type
 {
 public:
     File();

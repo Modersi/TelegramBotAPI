@@ -1,4 +1,4 @@
-#include "InputMediaPhoto.h"
+#include "Types/InputMediaPhoto.h"
 
 InputMediaPhoto::InputMediaPhoto() {}
 
