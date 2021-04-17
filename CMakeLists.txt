@@ -92,18 +92,18 @@ target_sources( ${PROJECT_NAME} PRIVATE ${${PROJECT_NAME}_SourceFiles} )
 
 ##### QT
 
-# Searching for QT6 package files (in directory of Qt6_DIR variable) #
-find_package( Qt6 
+# Searching for QT5 package files (in directory of Qt5_DIR variable) #
+find_package( Qt5 
 				COMPONENTS 
 					Core REQUIRED #? Раздупрлить этот ебанный REQUIRED ?#
 					Network REQUIRED )
 
-#find_package(Qt6 COMPONENTS Core Network REQUIRED)
+#find_package(Qt5 COMPONENTS Core Network REQUIRED)
 
 # Link our library with QT #					
 target_link_libraries( ${PROJECT_NAME} 
-						PRIVATE Qt6::Core
-						PRIVATE Qt6::Network )
+						PRIVATE Qt5::Core
+						PRIVATE Qt5::Network )
 
 
 ##### OpenSSL
