@@ -1,4 +1,4 @@
-#include "Contact.h"
+#include "Types/Contact.h"
 
 /*!
     \brief A default constructor. Constructs an empty object

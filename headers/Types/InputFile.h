@@ -1,7 +1,7 @@
 #ifndef INPUTFILE_H
 #define INPUTFILE_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
 class InputFile : public Type
 {

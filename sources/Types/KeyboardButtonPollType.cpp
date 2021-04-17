@@ -1,4 +1,4 @@
-#include "KeyboardButtonPollType.h"
+#include "Types/KeyboardButtonPollType.h"
 
 KeyboardButtonPollType::KeyboardButtonPollType() {}
 

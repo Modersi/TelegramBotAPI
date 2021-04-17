@@ -1,10 +1,10 @@
 #ifndef USERPROFILEPHOTOS_H
 #define USERPROFILEPHOTOS_H
 
-#include "Type.h"
-#include "PhotoSize.h"
+#include "Types/Type.h"
+#include "Types/PhotoSize.h"
 
-class TELEGRAMAPI_EXPORT UserProfilePhotos : public Type
+class UserProfilePhotos : public Type
 {
 public:
     UserProfilePhotos();

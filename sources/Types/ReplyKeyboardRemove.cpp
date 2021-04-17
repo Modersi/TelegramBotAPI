@@ -1,4 +1,4 @@
-#include "ReplyKeyboardRemove.h"
+#include "Types/ReplyKeyboardRemove.h"
 
 ReplyKeyboardRemove::ReplyKeyboardRemove()
 {

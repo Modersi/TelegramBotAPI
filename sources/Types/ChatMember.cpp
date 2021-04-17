@@ -1,4 +1,4 @@
-#include "ChatMember.h"
+#include "Types/ChatMember.h"
 
 /*!
     \brief A default constructor. Constructs an empty object

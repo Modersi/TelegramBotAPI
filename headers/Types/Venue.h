@@ -1,9 +1,9 @@
 #ifndef VENUE_H
 #define VENUE_H
 
-#include "Location.h"
+#include "Types/Location.h"
 
-class TELEGRAMAPI_EXPORT Venue : public Type
+class Venue : public Type
 {
 public:
     Venue();

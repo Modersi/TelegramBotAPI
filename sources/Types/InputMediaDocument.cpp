@@ -1,4 +1,4 @@
-#include "InputMediaDocument.h"
+#include "Types/InputMediaDocument.h"
 
 InputMediaDocument::InputMediaDocument() {}
 

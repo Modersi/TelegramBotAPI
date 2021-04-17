@@ -1,10 +1,10 @@
 #ifndef VIDEO_H
 #define VIDEO_H
 
-#include "Type.h"
-#include "PhotoSize.h"
+#include "Types/Type.h"
+#include "Types/PhotoSize.h"
 
-class TELEGRAMAPI_EXPORT Video : public Type
+class Video : public Type
 {
 public:
     Video();

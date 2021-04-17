@@ -1,9 +1,9 @@
 #ifndef CALLBACKQUERY_H
 #define CALLBACKQUERY_H
 
-#include "Type.h"
-#include "User.h"
-#include "Message.h"
+#include "Types/Type.h"
+#include "Types/User.h"
+#include "Types/Message.h"
 
 /*!
     \brief This object represents an incoming Callback Query from a callback button in an inline keyboard
@@ -30,7 +30,7 @@
     > (e.g., without specifying any of the optional parameters).
 */
 
-class TELEGRAMAPI_EXPORT CallbackQuery : public Type
+class CallbackQuery : public Type
 {
 public:
     CallbackQuery();

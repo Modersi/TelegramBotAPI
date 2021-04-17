@@ -1,8 +1,8 @@
 #ifndef DOCUMENT_H
 #define DOCUMENT_H
 
-#include "Type.h"
-#include "PhotoSize.h"
+#include "Types/Type.h"
+#include "Types/PhotoSize.h"
 
 /*!
     \brief This class represents a general file (as opposed to [photos](@ref PhotoSize), [voice messages](@ref Voice) and [audio](@ref Audio) files)
@@ -22,7 +22,7 @@
     In order to set **optional** fields use "set" methods ([setThumb](@ref setThumb), [setFileName](@ref setFileName), etc.)
 */
 
-class TELEGRAMAPI_EXPORT Document : public Type
+class Document : public Type
 {
 public:
     Document();

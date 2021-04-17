@@ -1,8 +1,8 @@
 #ifndef CHATMEMBER_H
 #define CHATMEMBER_H
 
-#include "Type.h"
-#include "User.h"
+#include "Types/Type.h"
+#include "Types/User.h"
 
 /*!
     \brief This class represents a Chat Member
@@ -35,7 +35,7 @@
     In order to set **optional** fields use "set" methods ([setCustomTitle](@ref setCustomTitle), [setUntilDate](@ref setUntilDate), etc.)
 */
 
-class TELEGRAMAPI_EXPORT ChatMember : public Type
+class ChatMember : public Type
 {
 public:
     ChatMember();

@@ -1,7 +1,7 @@
 #ifndef CONTACT_H
 #define CONTACT_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
 /*!
     \brief This class represents a phone Contact
@@ -20,7 +20,7 @@
     In order to set **optional** fields use "set" methods ([setLastName](@ref setLastName), [setUserId](@ref setUserId), etc.)
 */
 
-class TELEGRAMAPI_EXPORT Contact : public Type
+class Contact : public Type
 {
 public:
     Contact();

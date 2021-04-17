@@ -1,9 +1,9 @@
 #ifndef CHAT_H
 #define CHAT_H
 
-#include "Type.h"
-#include "ChatPhoto.h"
-#include "ChatPermissions.h"
+#include "Types/Type.h"
+#include "Types/ChatPhoto.h"
+#include "Types/ChatPermissions.h"
 
 class Message;
 
@@ -32,7 +32,7 @@ class Message;
     In order to set **optional** fields use "set" methods ([setTitle](@ref setTitle), [setUsername](@ref setUsername), etc.)
 */
 
-class TELEGRAMAPI_EXPORT Chat : public Type
+class Chat : public Type
 {
 public:
     Chat();

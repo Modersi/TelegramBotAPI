@@ -1,9 +1,9 @@
 #ifndef USER_H
 #define USER_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT User : public Type
+class User : public Type
 {
 public:
     User();

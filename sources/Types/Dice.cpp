@@ -1,4 +1,4 @@
-#include "Dice.h"
+#include "Types/Dice.h"
 
 /*!
     \brief A default constructor. Constructs an empty object

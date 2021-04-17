@@ -1,10 +1,10 @@
 #ifndef REPLYKEYBOARDMARKUP_H
 #define REPLYKEYBOARDMARKUP_H
 
-#include "Type.h"
-#include "KeyboardButton.h"
+#include "Types/Type.h"
+#include "Types/KeyboardButton.h"
 
-class TELEGRAMAPI_EXPORT ReplyKeyboardMarkup : public Type
+class ReplyKeyboardMarkup : public Type
 {
 public:
     ReplyKeyboardMarkup();

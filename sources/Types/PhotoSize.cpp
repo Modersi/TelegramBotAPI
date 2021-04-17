@@ -1,4 +1,4 @@
-#include "PhotoSize.h"
+#include "Types/PhotoSize.h"
 
 PhotoSize::PhotoSize() {}
 

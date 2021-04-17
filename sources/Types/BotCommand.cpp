@@ -1,4 +1,4 @@
-#include "BotCommand.h"
+#include "Types/BotCommand.h"
 
 /*!
     \brief A default constructor. Constructs an empty object

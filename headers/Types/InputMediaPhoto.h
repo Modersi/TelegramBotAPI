@@ -1,7 +1,7 @@
 #ifndef INPUTMEDIAPHOTO_H
 #define INPUTMEDIAPHOTO_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
 class InputMediaPhoto : public Type
 {

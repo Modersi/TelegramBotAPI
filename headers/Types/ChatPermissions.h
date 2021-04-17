@@ -1,7 +1,7 @@
 #ifndef CHATPERMISSIONS_H
 #define CHATPERMISSIONS_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
 /*!
     \brief This class describes actions that a non-administrator user is allowed to take in a chat
@@ -23,7 +23,7 @@
     In order to set **optional** fields use "set" methods ([setCustomTitle](@ref setCustomTitle), [setUntilDate](@ref setUntilDate), etc.)
 */
 
-class TELEGRAMAPI_EXPORT ChatPermissions : public Type
+class ChatPermissions : public Type
 {
 public:
     ChatPermissions();

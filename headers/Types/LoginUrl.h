@@ -1,9 +1,9 @@
 #ifndef LOGINURL_H
 #define LOGINURL_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT LoginUrl : public Type
+class LoginUrl : public Type
 {
 public:
     LoginUrl();

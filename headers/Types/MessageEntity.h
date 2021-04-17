@@ -1,10 +1,10 @@
 #ifndef MESSAGEENTITY_H
 #define MESSAGEENTITY_H
 
-#include "Type.h"
-#include "User.h"
+#include "Types/Type.h"
+#include "Types/User.h"
 
-class TELEGRAMAPI_EXPORT MessageEntity : public Type
+class MessageEntity : public Type
 {
 public:
     MessageEntity();

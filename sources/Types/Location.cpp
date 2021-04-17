@@ -1,4 +1,4 @@
-#include "Location.h"
+#include "Types/Location.h"
 
 Location::Location() {}
 

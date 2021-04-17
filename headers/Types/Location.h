@@ -1,9 +1,9 @@
 #ifndef LOCATION_H
 #define LOCATION_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT Location : public Type
+class Location : public Type
 {
 public:
     Location();

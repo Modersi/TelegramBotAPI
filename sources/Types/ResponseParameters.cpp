@@ -1,4 +1,4 @@
-#include "ResponseParameters.h"
+#include "Types/ResponseParameters.h"
 
 ResponseParameters::ResponseParameters() {}
 

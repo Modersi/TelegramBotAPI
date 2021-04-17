@@ -1,9 +1,9 @@
 #ifndef PHOTOSIZE_H
 #define PHOTOSIZE_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT PhotoSize : public Type
+class PhotoSize : public Type
 {
 public:
     PhotoSize();

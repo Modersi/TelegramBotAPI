@@ -1,9 +1,9 @@
 #ifndef REPLYKEYBOARDREMOVE_H
 #define REPLYKEYBOARDREMOVE_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT ReplyKeyboardRemove : public Type
+class ReplyKeyboardRemove : public Type
 {
 public:
     ReplyKeyboardRemove(); // Раздуплить с этой хуйней и вообще со всем бул значениями этой параши

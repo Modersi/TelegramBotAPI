@@ -1,7 +1,7 @@
 #ifndef CHATPHOTO_H
 #define CHATPHOTO_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
 /*!
     \brief This class represents a Chat Photo
@@ -18,7 +18,7 @@
 
 */
 
-class TELEGRAMAPI_EXPORT ChatPhoto : public Type
+class ChatPhoto : public Type
 {
 public:
     ChatPhoto();

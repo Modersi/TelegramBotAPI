@@ -1,8 +1,8 @@
 #ifndef ANIMATION_H
 #define ANIMATION_H
 
-#include "Type.h"
-#include "PhotoSize.h"
+#include "Types/Type.h"
+#include "Types/PhotoSize.h"
 
 /*!
     \brief This class represents an Animation file

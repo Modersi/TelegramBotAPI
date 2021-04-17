@@ -1,10 +1,10 @@
 #ifndef VIDEONOTE_H
 #define VIDEONOTE_H
 
-#include "Type.h"
-#include "PhotoSize.h"
+#include "Types/Type.h"
+#include "Types/PhotoSize.h"
 
-class TELEGRAMAPI_EXPORT VideoNote : public Type
+class VideoNote : public Type
 {
 public:
     VideoNote();

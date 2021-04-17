@@ -1,9 +1,9 @@
 #ifndef KEYBOARDBUTTONPOLLTYPE_H
 #define KEYBOARDBUTTONPOLLTYPE_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT KeyboardButtonPollType : public Type
+class KeyboardButtonPollType : public Type
 {
 public:
     KeyboardButtonPollType(); // Раздуплить с этой хуетой

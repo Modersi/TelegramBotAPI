@@ -1,4 +1,4 @@
-#include "Voice.h"
+#include "Types/Voice.h"
 
 Voice::Voice() {}
 

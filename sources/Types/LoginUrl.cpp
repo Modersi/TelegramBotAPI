@@ -1,4 +1,4 @@
-#include "LoginUrl.h"
+#include "Types/LoginUrl.h"
 
 LoginUrl::LoginUrl()
 {

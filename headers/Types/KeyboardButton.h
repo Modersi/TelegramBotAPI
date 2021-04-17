@@ -1,9 +1,9 @@
 #ifndef KEYBOARDBUTTON_H
 #define KEYBOARDBUTTON_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
-class TELEGRAMAPI_EXPORT KeyboardButton : public Type
+class KeyboardButton : public Type
 {
 public:
     KeyboardButton();

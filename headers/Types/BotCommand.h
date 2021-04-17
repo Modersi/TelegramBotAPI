@@ -1,7 +1,7 @@
 #ifndef BOTCOMMAND_H
 #define BOTCOMMAND_H
 
-#include "Type.h"
+#include "Types/Type.h"
 
 /*!
     \brief This class represents a Bot Command
@@ -15,7 +15,7 @@
     | **description**   | `QString`     | Description of the command. <U><B>Must be 3-256 characters</B></U> |
 */
 
-class TELEGRAMAPI_EXPORT BotCommand : public Type
+class BotCommand : public Type
 {
 public:
     BotCommand();

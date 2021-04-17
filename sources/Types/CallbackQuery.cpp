@@ -1,4 +1,4 @@
-#include "CallbackQuery.h"
+#include "Types/CallbackQuery.h"
 
 /*!
     \brief A default constructor. Constructs an empty object
