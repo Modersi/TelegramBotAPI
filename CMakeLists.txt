@@ -22,10 +22,11 @@ install( TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/Libraries )
 set_target_properties( ${PROJECT_NAME} 
 						PROPERTIES
 							CMAKE_CXX_STANDARD 20
-							CMAKE_CXX_STANDARD_REQUIRED ON )
+							CMAKE_CXX_STANDARD_REQUIRED ON
+							VERSION ${PROJECT_VERSION} )
 
 
-##### Library files
+##### Headers and sources handling
 
 # Including all header files #
 target_include_directories( ${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/Headers )

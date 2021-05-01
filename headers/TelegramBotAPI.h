@@ -26,8 +26,8 @@ public:
                         bool    disableNotification = false,        // Optional. Sends the message silently. Users will receive a notification with no sound
                         qint32  replyToMessageId = 0);              // Optional. If the message is a reply, ID of the original message
 
-    // !!  ADD reply_markup !! //
-    // Use this method to send text messages via username of the target channel. On success, the sent message in form of Message object is returned. On failure return empty Message object
+// !!  ADD reply_markup !! //
+// Use this method to send text messages via username of the target channel. On success, the sent message in form of Message object is returned. On failure return empty Message object
     Message sendMessage(QString chatId,                             // Username of the target channel (in the format @channelusername)
                         QString text,
                         QString parseMode = "",
@@ -43,7 +43,7 @@ public:
 
     UserProfilePhotos getUserProfilePhotos(qint32 userId, qint32 offset = 0, qint32 limit = 100);
 
-    Message sendPhoto(qint32 chatId, QFile *file);
+    Message sendPhoto(qint32 chatId, QFile* file);
 
     QJsonDocument getUpdates();
 
