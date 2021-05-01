@@ -6,6 +6,9 @@ TelegramAPI::TelegramAPI(const QString botToken)
     requestManager = new RequestManager(botToken);
 }
 
+// https://api.telegram.org/bot941725203:AAEL3nX3t0R9bRi1wfyMju4jez1fyUK2C5I/getMe
+// QString url = "https://api.telegram.org/bot" + *botToken + '/';
+
 User TelegramAPI::getMe()
 {
     QJsonDocument requestResultJsonDocument = requestManager->sendRequest("getMe", QJsonDocument());

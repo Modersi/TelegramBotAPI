@@ -1,71 +1,57 @@
-#include "RequestManager/RequestManager.h"
+#include "..\..\Headers\RequestManager\RequestManager.h"
 
-RequestManager::RequestManager(const QString _botToken)
+RequestManager::RequestManager() :
+    networkAccessManager(new QNetworkAccessManager()),
+    asynchronousSystem(new Asynchronous())
 {
-    botToken = new QString();
-    *botToken = _botToken;
+    /* Connect request finish signal to lambda which write request reply data to our "buffer" and freeing reply variable memory */
+    QObject::connect(RequestManager::GetInstance().networkAccessManager.get(), &QNetworkAccessManager::finished,
+                     this, [this](QNetworkReply* reply)
+                           {
+                               if(reply->error() == QNetworkReply::NoError) // If no errors occured - write reply to buffer, otherwise - write error string to buffer
+                                   asynchronousSystem->replyBuffer = reply->readAll();
+                               else                  
+                                   asynchronousSystem->replyBuffer = reply->errorString().toUtf8();
 
-    networkAccessManager = new QNetworkAccessManager();
-
-    eventLoop = new QEventLoop();
-	QObject::connect(networkAccessManager, SIGNAL(finished(QNetworkReply*)), eventLoop, SLOT(quit()));
+                               reply->deleteLater();
+                           });
 }
 
-RequestManager::~RequestManager()
+void RequestManager::Asynchronous::SendPostRequest(const QJsonDocument& requestJSON, const QUrl& requestURL)
 {
-    delete botToken;
-    delete networkAccessManager;
-    delete eventLoop;
+    /* Creating request and setting its headers */
+    QNetworkRequest request(requestURL);
+    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
+
+    /* Sending request with JSON document in body */
+    QNetworkReply* reply = RequestManager::GetInstance().networkAccessManager->post(request, requestJSON.toJson());
 }
 
-void RequestManager::setBotToken(const QString _botToken)
+void RequestManager::Asynchronous::SendPostRequest(const QFile* file, const QUrl& requestURL)
 {
-    *botToken = _botToken;
 }
 
-QJsonDocument RequestManager::sendMultiPartRequest(const QString methodName, const QJsonDocument jsonDocument, QFile *file)
+void RequestManager::Asynchronous::SendPostRequest(const QUrlQuery& requestURLQuery, const QUrl& requestURL)
 {
-    QString url = "https://api.telegram.org/bot" + *botToken + '/';
+    /* Creating request and setting URL query string */
+    QNetworkRequest request(requestURL);
 
-    QNetworkRequest* request = new QNetworkRequest(QUrl(url + methodName));
-
-    QHttpMultiPart multiPartBody(QHttpMultiPart::FormDataType);
-
-    QHttpPart textPart;
-    textPart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"chat_id\""));
-    textPart.setBody("424830375");
-
-    QHttpPart imagePart;
-    imagePart.setHeader(QNetworkRequest::ContentTypeHeader, QVariant("image/png"));
-    imagePart.setHeader(QNetworkRequest::ContentDispositionHeader, QVariant("form-data; name=\"photo\"; filename=\"\""));
-    imagePart.setBody(file->readAll());
-
-    multiPartBody.append(textPart);
-    multiPartBody.append(imagePart);
-
-    QNetworkReply *reply = networkAccessManager->post(*request, &multiPartBody);
-    eventLoop->exec();
-
-    reply->deleteLater();
-    delete request;
-
-    qDebug() << reply->readAll();
-
-    return QJsonDocument::fromJson(reply->readAll());
+    /* Sending request */
+    QNetworkReply* reply = RequestManager::GetInstance().networkAccessManager->post(request, requestURLQuery.toString().toUtf8());
 }
 
-QJsonDocument RequestManager::sendRequest(const QString methodName, const QJsonDocument jsonDocument)
+void RequestManager::Asynchronous::SendGetRequest(const QUrlQuery& requestURLQuery, const QUrl& requestURL)
 {
-    QString url = "https://api.telegram.org/bot" + *botToken + '/';
+    /* Creating request and setting URL query string */
+    QNetworkRequest request(requestURL.toString() + '?' + requestURLQuery.toString());
 
-    QNetworkRequest* request = new QNetworkRequest(QUrl(url + methodName));
-    request->setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
-
-    QNetworkReply *reply = networkAccessManager->post(*request, jsonDocument.toJson());
-    eventLoop->exec();
-
-    reply->deleteLater();
-    delete request;
-
-    return QJsonDocument::fromJson(reply->readAll());
+    /* Sending request */
+    QNetworkReply* reply = RequestManager::GetInstance().networkAccessManager->get(request);
 }
+
+QByteArray RequestManager::Asynchronous::GetLastRequestReply()
+{
+    return RequestManager::GetInstance().asynchronousSystem->replyBuffer;
+}
+
+
