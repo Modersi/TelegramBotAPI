@@ -1,68 +1,75 @@
-#ifndef AUDIO_H
-#define AUDIO_H
+#ifndef TELEGRAM_TYPES_AUDIO_H
+#define TELEGRAM_TYPES_AUDIO_H
 
-#include "Types/Type.h"
-#include "Types/PhotoSize.h"
+#include "PhotoSize.h"
 
-/*!
-    \brief This class represents an Audio file to be treated as music by the Telegram clients
-
-    Fields of Audio object
-    -----------------------------------
-
-    | Field             | Type          | Desription  |
-    | :---:             | :----:        | :---- |
-    | **fileId**        | `QString`     | Identifier for this file, which can be used to download or reuse the file |
-    | **fileUniqueId**  | `QString`     | Unique identifier for this file, which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file |
-    | **duration**      | `QInt32`      | Duration of the audio in seconds as defined by sender |
-    | **performer**     | `QString`     | **Optional**. Performer of the audio as defined by sender or by audio tags |
-    | **title**         | `QString`     | **Optional**. Title of the audio as defined by sender or by audio tags |
-    | **mimeType**      | `QString`     | **Optional**. [MIME](https://en.wikipedia.org/wiki/Media_type) type of the file as defined by sender |
-    | **fileSize**      | `QInt32`      | **Optional**. File size |
-    | **thumb**         | `PhotoSize`   | **Optional**. Thumbnail of the album cover to which the music file belongs |
-
-    In order to set **optional** fields use "set" methods ([setThumb](@ref setThumb), [setMimeType](@ref setMimeType), etc.)
-*/
-
-class Audio : public Type
+namespace Telegram 
 {
-public:
-    Audio();
+    /**
+     *
+     * @brief This structure represents an Audio file to be treated as music by the Telegram clients
+     *
+     */
 
-    Audio(QString   fileId,
-          QString   fileUniqueId,
-          qint32    duration);
+    struct Audio
+    {
+        /** @brief Default constructor. Constructs an empty Audio object
+         *
+         * All fields setted to 0, "", etc... All optional members setted to std::nullopt */
+        Audio();
 
-    Audio(QJsonObject jsonObject);
+        /** @brief Constructs Audio object from parameters */
+        Audio(const QString& file_id,
+              const QString& file_unique_id,
+              const qint32& duration,
+              const std::optional<QString>& performer = std::nullopt,
+              const std::optional<QString>& title = std::nullopt,
+              const std::optional<QString>& file_name = std::nullopt,
+              const std::optional<QString>& mime_type = std::nullopt,
+              const std::optional<qint32>& file_size = std::nullopt,
+              const std::optional<PhotoSize>& thumb = std::nullopt);
 
-    QString fileId();
-    void    setFileId(QString fileId);
+        /** @brief JSON constructor. Constructs Audio object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has all key-value pairs related to Audio class fields. For example it should contain pairs such as "file_id" = "...",
+         * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+        Audio(const QJsonObject& jsonObject);
 
-    QString fileUniqueId();
-    void    setFileUniqueId(QString fileUniqueId);
+        /* @brief Returns Audio in form of JSON object. Returns empty QJsonObject if Audio is empty */
+        QJsonObject toObject() const;
 
-    qint32  duration();
-    void    setDuration(qint32 duration);
+        /* @brief Returns true if Audio is empty */
+        bool isEmpty() const;
 
-    QString performer();
-    void    setPerformer(QString performer);
-    bool    hasPerformer();
+//** Fields **//
 
-    QString title();
-    void    setTitle(QString title);
-    bool    hasTitle();
+        /** @brief Identifier for this file, which can be used to download or reuse the file */
+        QString file_id;
 
-    QString mimeType();
-    void    setMimeType(QString mimeType);
-    bool    hasMimeType();
+        /** @brief Unique identifier for this file, which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file */
+        QString file_unique_id;
+        
+        /** @brief Duration of the audio in seconds as defined by sender */
+        qint32 duration;
 
-    qint32  fileSize();
-    void    setFileSize(qint32 fileSize);
-    bool    hasFileSize();
+        /** @brief Optional. Performer of the audio as defined by sender or by audio tags */
+        std::optional<QString> performer;
+        
+        /** @brief Optional. Title of the audio as defined by sender or by audio tags */
+        std::optional<QString> title;
+        
+        /** @brief Optional. Original filename as defined by sender */
+        std::optional<QString> file_name;
+        
+        /** @brief Optional. [MIME](https://en.wikipedia.org/wiki/Media_type) type of the file as defined by sender */
+        std::optional<QString> mime_type;
+        
+        /** @brief Optional. File size */
+        std::optional<qint32> file_size;
 
-    PhotoSize  thumb();
-    void       setThumb(PhotoSize thumb);
-    bool       hasThumb();
-};
+        /** @brief Optional. Thumbnail of the album cover to which the music file belongs */
+        std::optional<PhotoSize> thumb;
+    };
+}
 
-#endif // AUDIO_H
+#endif // TELEGRAM_TYPES_AUDIO_H

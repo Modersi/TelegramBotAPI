@@ -1,132 +1,99 @@
 #include "Types/MessageEntity.h"
 
-MessageEntity::MessageEntity()
-{    
+#include "qjsonobject.h"
+
+Telegram::MessageEntity::MessageEntity() :
+	type(Type::UNINITIALIZED_VALUE),
+	offset(0),
+	length(0),
+	url(std::nullopt),
+	user(std::nullopt),
+	language(std::nullopt)
+{
 }
 
-MessageEntity::MessageEntity(QString  type,
-                             qint32   offset,
-                             qint32   length,
-                             QString  url,
-                             User     user,
-                             QString  language)
+Telegram::MessageEntity::MessageEntity(const Type& type,
+									   const qint32& offset,
+									   const qint32& length,
+									   const std::optional<QString>& url,
+									   const std::optional<User>& user,
+									   const std::optional<QString>& language) :
+	type(type),
+	offset(offset),
+	length(length),
+	url(url),
+	user(user),
+	language(language)
 {
-    _jsonObject.insert("type", QJsonValue(type));
-    _jsonObject.insert("offset", QJsonValue(offset));
-    _jsonObject.insert("length", QJsonValue(length));
-
-    if(!url.isEmpty())
-        _jsonObject.insert("url", QJsonValue(url));
-    if(!user.isEmpty())
-        _jsonObject.insert("user", QJsonValue(user.toObject()));
-    if(!language.isEmpty())
-        _jsonObject.insert("language", QJsonValue(language));
 }
 
-MessageEntity::MessageEntity(QJsonObject jsonObject)
+Telegram::MessageEntity::MessageEntity(const QJsonObject& jsonObject)
 {
-    if(jsonObject.contains("type"))
-        _jsonObject.insert("type", jsonObject.value("type"));
+	auto GetMessageEntityType = [](const QJsonValue& messageEntityType) -> MessageEntity::Type
+								{
+									if (messageEntityType == "mention") return Type::MENTION;
+									if (messageEntityType == "hashtag") return Type::HASHTAG;
+									if (messageEntityType == "cashtag") return Type::CASHTAG;
+									if (messageEntityType == "bot_command") return Type::BOT_COMMAND;
+									if (messageEntityType == "url") return Type::URL;
+									if (messageEntityType == "phone_number") return Type::PHONE_NUMBER;
+									if (messageEntityType == "bold") return Type::BOLD;
+									if (messageEntityType == "italic") return Type::ITALIC;
+									if (messageEntityType == "underline") return Type::UNDERLINE;
+									if (messageEntityType == "strikethrough") return Type::STRIKETHROUGH;
+									if (messageEntityType == "code") return Type::CODE;
+									if (messageEntityType == "pre") return Type::PRE;
+									if (messageEntityType == "text_link") return Type::TEXT_LINK;
+									if (messageEntityType == "text_mention") return Type::TEXT_MENTION;
+									else return Type::UNINITIALIZED_VALUE;
+								};
 
-    if(jsonObject.contains("offset"))
-        _jsonObject.insert("offset", jsonObject.value("offset"));
-
-    if(jsonObject.contains("length"))
-        _jsonObject.insert("length", jsonObject.value("length"));
-
-    if(jsonObject.contains("url"))
-        _jsonObject.insert("url", jsonObject.value("url"));
-
-    if(jsonObject.contains("user"))
-        _jsonObject.insert("user", jsonObject.value("user"));
-
-    if(jsonObject.contains("language"))
-        _jsonObject.insert("language", jsonObject.value("language"));
+	jsonObject.contains("type")		? type = GetMessageEntityType(jsonObject["type"]) : type = Type::UNINITIALIZED_VALUE;
+	jsonObject.contains("offset")	? offset = jsonObject["offset"].toInt()			  : offset = 0;
+	jsonObject.contains("length")	? length = jsonObject["length"].toInt()			  : length = 0;
+	jsonObject.contains("url")		? url = jsonObject["url"].toString()			  : url = std::nullopt;
+	jsonObject.contains("user")		? user = User(jsonObject["user"].toObject())	  : user = std::nullopt;
+	jsonObject.contains("language") ? language = jsonObject["language"].toString()	  : language = std::nullopt;
 }
 
-// "get", "set" methods for "type" field //
-
-QString MessageEntity::type()
+QJsonObject Telegram::MessageEntity::toObject() const
 {
-    return _jsonObject.value("type").toString();
+	if(isEmpty())
+		return QJsonObject();
+
+	auto GetMessageEntityTypeInString = [](const MessageEntity::Type& messageEntityType) -> QString
+								{
+									if (messageEntityType == Type::MENTION) return "mention";
+									if (messageEntityType == Type::HASHTAG) return "hashtag";
+									if (messageEntityType == Type::CASHTAG) return "cashtag";
+									if (messageEntityType == Type::BOT_COMMAND) return "bot_command";
+									if (messageEntityType == Type::URL) return "url";
+									if (messageEntityType == Type::PHONE_NUMBER) return "phone_number";
+									if (messageEntityType == Type::BOLD) return "bold";
+									if (messageEntityType == Type::ITALIC) return "italic";
+									if (messageEntityType == Type::UNDERLINE) return "underline";
+									if (messageEntityType == Type::STRIKETHROUGH) return "strikethrough";
+									if (messageEntityType == Type::CODE) return "code";
+									if (messageEntityType == Type::PRE) return "pre";
+									if (messageEntityType == Type::TEXT_LINK) return "text_link";
+									if (messageEntityType == Type::TEXT_MENTION) return "text_mention";
+								};
+
+	QJsonObject messageEntityJsonObject{ {"type", GetMessageEntityTypeInString(type)}, {"offset", offset}, {"length", length} };
+
+	if (url.has_value())					messageEntityJsonObject.insert("url", *url);
+	if (user.has_value())					messageEntityJsonObject.insert("user", user->toObject());
+	if (language.has_value())				messageEntityJsonObject.insert("language", *language);
+
+	return messageEntityJsonObject;
 }
 
-void MessageEntity::setType(QString type)
+bool Telegram::MessageEntity::isEmpty() const
 {
-    _jsonObject.insert("type", type);
-}
-
-// "get", "set" methods for "offset" field //
-
-qint32 MessageEntity::offset()
-{
-    return _jsonObject.value("offset").toInt();
-}
-
-void MessageEntity::setOffset(qint32 offset)
-{
-    _jsonObject.insert("offset", offset);
-}
-
-// "get", "set" methods for "length" field //
-
-qint32 MessageEntity::length()
-{
-    return _jsonObject.value("length").toInt();
-}
-
-void MessageEntity::setLength(qint32 length)
-{
-    _jsonObject.insert("length", length);
-}
-
-// "get", "set", "has" methods for "from" field //
-
-QString MessageEntity::url()
-{
-    return _jsonObject.value("url").toString();
-}
-
-void MessageEntity::setUrl(QString url)
-{
-    _jsonObject.insert("url", url);
-}
-
-bool MessageEntity::hasUrl()
-{
-    return _jsonObject.contains("url");
-}
-
-// "get", "set", "has" methods for "from" field //
-
-User MessageEntity::user()
-{
-    return User(_jsonObject.value("user").toObject());
-}
-
-void MessageEntity::setUser(User user)
-{
-    _jsonObject.insert("user", user.toObject());
-}
-
-bool MessageEntity::hasUser()
-{
-    return _jsonObject.contains("user");
-}
-
-// "get", "set", "has" methods for "from" field //
-
-QString MessageEntity::language()
-{
-    return _jsonObject.value("language").toString();
-}
-
-void MessageEntity::setLanguage(QString language)
-{
-    _jsonObject.insert("language", language);
-}
-
-bool MessageEntity::hasLanguage()
-{
-    return _jsonObject.contains("language");
+	return type == Type::UNINITIALIZED_VALUE 
+		   and offset == 0 
+		   and length == 0 
+		   and url == std::nullopt
+		   and user == std::nullopt 
+		   and language == std::nullopt;
 }

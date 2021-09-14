@@ -1,26 +1,31 @@
 #include "Types/KeyboardButtonPollType.h"
 
-KeyboardButtonPollType::KeyboardButtonPollType() {}
+#include "qjsonobject.h"
 
-KeyboardButtonPollType::KeyboardButtonPollType(QString type)
+Telegram::KeyboardButtonPollType::KeyboardButtonPollType(const std::optional<Poll::Type>& type) :
+	type(type)
+{}
+
+Telegram::KeyboardButtonPollType::KeyboardButtonPollType(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("type", QJsonValue(type));
+	if (jsonObject.contains("type"))
+	{
+		if (jsonObject["type"] == "quiz") type = Poll::Type::QUIZ;
+		if (jsonObject["type"] == "regular") type = Poll::Type::REGULAR;
+	}
+	else type = std::nullopt;
 }
 
-KeyboardButtonPollType::KeyboardButtonPollType(QJsonObject jsonObject)
+QJsonObject Telegram::KeyboardButtonPollType::toObject() const
 {
-    if(jsonObject.contains("type"))
-        _jsonObject.insert("type", jsonObject.value("type"));
+	if (isEmpty())
+		return QJsonObject();
+
+	if (type == Poll::Type::QUIZ) return QJsonObject{ {"type", "quiz"} };
+	if (type == Poll::Type::REGULAR) return QJsonObject{ {"type", "regular"} };
 }
 
-// "get", "set" methods for "type" field //
-
-QString KeyboardButtonPollType::type()
+bool Telegram::KeyboardButtonPollType::isEmpty() const
 {
-    return _jsonObject.value("type").toString();
-}
-
-void KeyboardButtonPollType::setType(QString type)
-{
-     _jsonObject.insert("type", type);
+	return type == std::nullopt;
 }

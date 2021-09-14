@@ -1,159 +1,91 @@
 #include "Types/InputMediaAnimation.h"
+#include "Internal/ConversionFunctions.h"
 
-InputMediaAnimation::InputMediaAnimation() {}
+#include "qjsonobject.h"
+#include "qjsonarray.h"
 
-InputMediaAnimation::InputMediaAnimation(QString media)
+Telegram::InputMediaAnimation::InputMediaAnimation() :
+	media(nullptr),
+	thumb(std::nullopt),
+	caption(std::nullopt),
+	parse_mode(std::nullopt),
+	caption_entities(std::nullopt),
+	width(std::nullopt),
+	height(std::nullopt),
+	duration(std::nullopt)
+{}
+
+Telegram::InputMediaAnimation::InputMediaAnimation(const std::variant<QFile*, QString>& media,
+												   const std::optional<std::variant<QFile*, QString>>& thumb,
+												   const std::optional<QString>& caption,
+												   const std::optional<QString>& parse_mode,
+												   const std::optional<QVector<MessageEntity>>& caption_entities,
+												   const std::optional<qint32>& width,
+												   const std::optional<qint32>& height,
+												   const std::optional<qint32>& duration) :
+	media(media),
+	thumb(thumb),
+	caption(caption),
+	parse_mode(parse_mode),
+	caption_entities(caption_entities),
+	width(width),
+	height(height),
+	duration(duration)
+{}
+
+Telegram::InputMediaAnimation::InputMediaAnimation(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("type", "animation");
-    _jsonObject.insert("media", media);
+	jsonObject.contains("media")			? media = jsonObject["media"].toString()															: media = nullptr;
+	jsonObject.contains("thumb")			? thumb = jsonObject["thumb"].toString()															: thumb = std::nullopt;
+	jsonObject.contains("caption")			? caption = jsonObject["caption"].toString()														: caption = std::nullopt;
+	jsonObject.contains("parse_mode")		? parse_mode = jsonObject["parse_mode"].toString()													: parse_mode = std::nullopt;
+	jsonObject.contains("caption_entities") ? caption_entities = QJsonArrayToQVector<MessageEntity>(jsonObject["caption_entities"].toArray())	: caption_entities = std::nullopt;
+	jsonObject.contains("width")			? width = jsonObject["width"].toInt()																: width = std::nullopt;
+	jsonObject.contains("height")			? height = jsonObject["height"].toInt()																: height = std::nullopt;
+	jsonObject.contains("duration")			? duration = jsonObject["duration"].toInt()															: duration = std::nullopt;
 }
 
-InputMediaAnimation::InputMediaAnimation(QJsonObject jsonObject)
+QJsonObject Telegram::InputMediaAnimation::toObject() const
 {
-    if(jsonObject.contains("type"))
-        _jsonObject.insert("type", jsonObject.value("type"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("media"))
-        _jsonObject.insert("media", jsonObject.value("media"));
+	QJsonObject inputMediaAnimationJsonObject{ {"type", type} };
 
-    if(jsonObject.contains("thumb"))
-        _jsonObject.insert("thumb", jsonObject.value("thumb"));
+	if (std::holds_alternative<QFile*>(media))  inputMediaAnimationJsonObject.insert("media", QString("attach://%1").arg(std::get<QFile*>(media)->fileName()));
+	if (std::holds_alternative<QString>(media)) inputMediaAnimationJsonObject.insert("media", std::get<QString>(media));
 
-    if(jsonObject.contains("caption"))
-        _jsonObject.insert("caption", jsonObject.value("caption"));
+	if (thumb.has_value())
+	{
+		if (std::holds_alternative<QFile*>(*thumb))  inputMediaAnimationJsonObject.insert("thumb", QString("attach://%1").arg(std::get<QFile*>(*thumb)->fileName()));
+		if (std::holds_alternative<QString>(*thumb)) inputMediaAnimationJsonObject.insert("thumb", std::get<QString>(*thumb));
+	}
 
-    if(jsonObject.contains("parse_mode"))
-        _jsonObject.insert("parse_mode", jsonObject.value("parse_mode"));
+	if (caption.has_value())			inputMediaAnimationJsonObject.insert("caption", *caption);
+	if (parse_mode.has_value())			inputMediaAnimationJsonObject.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())	inputMediaAnimationJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (width.has_value())				inputMediaAnimationJsonObject.insert("width", *width);
+	if (height.has_value())				inputMediaAnimationJsonObject.insert("height", *height);
 
-    if(jsonObject.contains("width"))
-        _jsonObject.insert("width", jsonObject.value("width"));
-
-    if(jsonObject.contains("height"))
-        _jsonObject.insert("height", jsonObject.value("height"));
-
-    if(jsonObject.contains("duration"))
-        _jsonObject.insert("duration", jsonObject.value("duration"));
-}
-// "get", "set" methods for "media" field //
-
-QString InputMediaAnimation::media()
-{
-    return _jsonObject.value("media").toString();
+	return inputMediaAnimationJsonObject;
 }
 
-void InputMediaAnimation::setMedia(QString media)
+bool Telegram::InputMediaAnimation::isEmpty() const
 {
-    _jsonObject.insert("media", media);
-}
+	/* Check if std::variant<QFile*, QString> media contains any value */
+	bool holdsMedia(false);
+	if (std::holds_alternative<QFile*>(media))
+		if (std::get<QFile*>(media) != nullptr) holdsMedia = true;
 
-// "get", "set", "has" methods for "thumb" field //
+	if (std::holds_alternative<QString>(media))
+		if (std::get<QString>(media) != "") holdsMedia = true;
 
-//InputFile InputMediaAnimation::thumb()
-//{
-//    return InputFile(_jsonObject.value("thumb").toObject());
-//}
-
-QString InputMediaAnimation::thumb()
-{
-    return _jsonObject.value("thumb").toString();
-}
-
-//void InputMediaAnimation::setThumb(InputFile thumb)
-//{
-//    _jsonObject.insert("thumb", thumb);
-//}
-
-void InputMediaAnimation::setThumb(QString thumb)
-{
-    _jsonObject.insert("thumb", thumb);
-}
-
-bool InputMediaAnimation::hasThumb()
-{
-    return _jsonObject.contains("thumb");
-}
-
-// "get", "set", "has" methods for "caption" field //
-
-QString InputMediaAnimation::caption()
-{
-    return _jsonObject.value("caption").toString();
-}
-
-void InputMediaAnimation::setCaption(QString caption)
-{
-    _jsonObject.insert("caption", caption);
-}
-
-bool InputMediaAnimation::hasCaption()
-{
-    return _jsonObject.contains("caption");
-}
-
-// "get", "set", "has" methods for "parse_mode" field //
-
-QString InputMediaAnimation::parseMode()
-{
-    return _jsonObject.value("parse_mode").toString();
-}
-
-void InputMediaAnimation::setParseMode(QString parseMode)
-{
-    _jsonObject.insert("parse_mode", parseMode);
-}
-
-bool InputMediaAnimation::hasParseMode()
-{
-    return _jsonObject.contains("parse_mode");
-}
-
-// "get", "set", "has" methods for "width" field //
-
-qint32 InputMediaAnimation::width()
-{
-    return _jsonObject.value("width").toInt();
-}
-
-void InputMediaAnimation::setWidth(qint32 width)
-{
-    _jsonObject.insert("width", width);
-}
-
-bool InputMediaAnimation::hasWidth()
-{
-    return _jsonObject.contains("width");
-}
-
-// "get", "set", "has" methods for "height" field //
-
-qint32 InputMediaAnimation::height()
-{
-    return _jsonObject.value("height").toInt();
-}
-
-void InputMediaAnimation::setHeight(qint32 height)
-{
-    _jsonObject.insert("height", height);
-}
-
-bool InputMediaAnimation::hasHeight()
-{
-    return _jsonObject.contains("height");
-}
-
-// "get", "set", "has" methods for "duration" field //
-
-qint32 InputMediaAnimation::duration()
-{
-    return _jsonObject.value("duration").toInt();
-}
-
-void InputMediaAnimation::setDuration(qint32 duration)
-{
-    _jsonObject.insert("duration", duration);
-}
-
-bool InputMediaAnimation::hasDuration()
-{
-    return _jsonObject.contains("duration");
+	return holdsMedia == false
+		   and thumb == std::nullopt
+		   and caption == std::nullopt
+		   and parse_mode == std::nullopt
+		   and caption_entities == std::nullopt
+		   and width == std::nullopt
+		   and height == std::nullopt
+		   and duration == std::nullopt;
 }

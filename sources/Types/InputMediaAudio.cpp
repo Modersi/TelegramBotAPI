@@ -1,143 +1,94 @@
 #include "Types/InputMediaAudio.h"
+#include "Internal/ConversionFunctions.h"
 
-InputMediaAudio::InputMediaAudio() {}
+#include "qjsonobject.h"
+#include "qjsonarray.h"
 
-InputMediaAudio::InputMediaAudio(QString media)
+Telegram::InputMediaAudio::InputMediaAudio() :
+	media(nullptr),
+	thumb(std::nullopt),
+	caption(std::nullopt),
+	parse_mode(std::nullopt),
+	caption_entities(std::nullopt),
+	duration(std::nullopt),
+	performer(std::nullopt),
+	title(std::nullopt)
+{}
+
+Telegram::InputMediaAudio::InputMediaAudio(const std::variant<QFile*, QString>& media,
+										   const std::optional<std::variant<QFile*, QString>>& thumb,
+										   const std::optional<QString>& caption,
+										   const std::optional<QString>& parse_mode,
+										   const std::optional<QVector<MessageEntity>>& caption_entities,
+										   const std::optional<qint32>& duration,
+										   const std::optional<QString>& performer,
+										   const std::optional<QString>& title) :
+	media(media),
+	thumb(thumb),
+	caption(caption),
+	parse_mode(parse_mode),
+	caption_entities(caption_entities),
+	duration(duration),
+	performer(performer),
+	title(title)
+{}
+
+Telegram::InputMediaAudio::InputMediaAudio(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("type", "audio");
-    _jsonObject.insert("media", media);
+	jsonObject.contains("media")			? media = jsonObject["media"].toString()														  : media = nullptr;
+	jsonObject.contains("thumb")			? thumb = jsonObject["thumb"].toString()														  : thumb = std::nullopt;
+	jsonObject.contains("caption")			? caption = jsonObject["caption"].toString()													  : caption = std::nullopt;
+	jsonObject.contains("parse_mode")		? parse_mode = jsonObject["parse_mode"].toString()												  : parse_mode = std::nullopt;
+	jsonObject.contains("caption_entities") ? caption_entities = QJsonArrayToQVector<MessageEntity>(jsonObject["caption_entities"].toArray()) : caption_entities = std::nullopt;
+	jsonObject.contains("duration")			? duration = jsonObject["duration"].toInt()														  : duration = std::nullopt;
+	jsonObject.contains("performer")		? performer = jsonObject["performer"].toString()												  : performer = std::nullopt;
+	jsonObject.contains("title")			? title = jsonObject["title"].toString()														  : title = std::nullopt;
 }
 
-InputMediaAudio::InputMediaAudio(QJsonObject jsonObject)
+QJsonObject Telegram::InputMediaAudio::toObject() const
 {
-    if(jsonObject.contains("type"))
-        _jsonObject.insert("type", jsonObject.value("type"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("media"))
-        _jsonObject.insert("media", jsonObject.value("media"));
+	QJsonObject inputMediaAudioJsonObject{ {"type", type} };
 
-    if(jsonObject.contains("thumb"))
-        _jsonObject.insert("thumb", jsonObject.value("thumb"));
+	if (std::holds_alternative<QFile*>(media))  inputMediaAudioJsonObject.insert("media", QString("attach://%1").arg(std::get<QFile*>(media)->fileName()));
+	if (std::holds_alternative<QString>(media)) inputMediaAudioJsonObject.insert("media", std::get<QString>(media));
 
-    if(jsonObject.contains("caption"))
-        _jsonObject.insert("caption", jsonObject.value("caption"));
+	if (thumb.has_value())
+	{
+		if (std::holds_alternative<QFile*>(*thumb))  inputMediaAudioJsonObject.insert("thumb", QString("attach://%1").arg(std::get<QFile*>(*thumb)->fileName()));
+		if (std::holds_alternative<QString>(*thumb)) inputMediaAudioJsonObject.insert("thumb", std::get<QString>(*thumb));
+	}
+	
+	if (caption.has_value())			inputMediaAudioJsonObject.insert("caption", *caption);
+	if (parse_mode.has_value())			inputMediaAudioJsonObject.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())	inputMediaAudioJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (duration.has_value())			inputMediaAudioJsonObject.insert("duration", *duration);
+	if (performer.has_value())			inputMediaAudioJsonObject.insert("performer", *performer);
+	if (title.has_value())				inputMediaAudioJsonObject.insert("title", *title);
 
-    if(jsonObject.contains("parse_mode"))
-        _jsonObject.insert("parse_mode", jsonObject.value("parse_mode"));
-
-    if(jsonObject.contains("duration"))
-        _jsonObject.insert("duration", jsonObject.value("duration"));
-
-    if(jsonObject.contains("performer"))
-        _jsonObject.insert("performer", jsonObject.value("performer"));
-
-    if(jsonObject.contains("title"))
-        _jsonObject.insert("title", jsonObject.value("title"));
+	return inputMediaAudioJsonObject;
 }
 
-// "get", "set" methods for "media" field //
-
-QString InputMediaAudio::media()
+bool Telegram::InputMediaAudio::isEmpty() const
 {
-    return _jsonObject.value("media").toString();
+	/* Check if std::variant<QFile*, QString> media contains any value */
+	bool holdsMedia(false);
+	if (std::holds_alternative<QFile*>(media))
+		if (std::get<QFile*>(media) != nullptr) holdsMedia = true;
+
+	if (std::holds_alternative<QString>(media))
+		if (std::get<QString>(media) != "") holdsMedia = true;
+
+	return holdsMedia == false
+		   and thumb == std::nullopt
+		   and caption == std::nullopt
+		   and parse_mode == std::nullopt
+		   and caption_entities == std::nullopt
+		   and duration == std::nullopt
+		   and performer == std::nullopt
+		   and title == std::nullopt;
 }
 
-void InputMediaAudio::setMedia(QString media)
-{
-    _jsonObject.insert("media", media);
-}
 
-// "get", "set", "has" methods for "thumb" field //
-
-//InputFile InputMediaAudio::thumb()
-//{
-//    return InputFile(_jsonObject.value("thumb").toObject());
-//}
-
-QString InputMediaAudio::thumb()
-{
-    return _jsonObject.value("thumb").toString();
-}
-
-//void InputMediaAudio::setThumb(InputFile thumb)
-//{
-//    _jsonObject.insert("thumb", thumb);
-//}
-
-void InputMediaAudio::setThumb(QString thumb)
-{
-    _jsonObject.insert("thumb", thumb);
-}
-
-bool InputMediaAudio::hasThumb()
-{
-    return _jsonObject.contains("thumb");
-}
-
-// "get", "set", "has" methods for "caption" field //
-
-QString InputMediaAudio::caption()
-{
-    return _jsonObject.value("caption").toString();
-}
-
-void InputMediaAudio::setCaption(QString caption)
-{
-    _jsonObject.insert("caption", caption);
-}
-
-bool InputMediaAudio::hasCaption()
-{
-    return _jsonObject.contains("caption");
-}
-
-// "get", "set", "has" methods for "parse_mode" field //
-
-QString InputMediaAudio::parseMode()
-{
-    return _jsonObject.value("parse_mode").toString();
-}
-
-void InputMediaAudio::setParseMode(QString parseMode)
-{
-    _jsonObject.insert("parse_mode", parseMode);
-}
-
-bool InputMediaAudio::hasParseMode()
-{
-    return _jsonObject.contains("parse_mode");
-}
-
-// "get", "set", "has" methods for "performer" field //
-
-QString InputMediaAudio::performer()
-{
-    return _jsonObject.value("performer").toString();
-}
-
-void InputMediaAudio::setPerformer(QString performer)
-{
-    _jsonObject.insert("performer", performer);
-}
-
-bool InputMediaAudio::hasPerformer()
-{
-    return _jsonObject.contains("performer");
-}
-
-// "get", "set", "has" methods for "title" field //
-
-QString InputMediaAudio::title()
-{
-    return _jsonObject.value("title").toString();
-}
-
-void InputMediaAudio::setTitle(QString title)
-{
-    _jsonObject.insert("title", title);
-}
-
-bool InputMediaAudio::hasTitle()
-{
-    return _jsonObject.contains("title");
-}

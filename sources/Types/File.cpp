@@ -1,132 +1,59 @@
 #include "Types/File.h"
+#include "RequestManager.h"
+#include "Bot.h"
 
-/*!
-    \brief A default constructor. Constructs an empty object
-*/
-File::File() {}
+#include "qjsonobject.h"
 
-/*!
-    \brief Class contructor
-    \param fileId        Identifier for this file
-    \param fileUniqueId  Unique identifier for this file
-*/
-File::File(QString  fileId,
-           QString  fileUniqueId)
+Telegram::File::File() :
+	file_id(""),
+	file_unique_id(""),
+	file_size(std::nullopt),
+	file_path(std::nullopt)
+{}
+
+Telegram::File::File(const QString& file_id,
+	                 const QString& file_unique_id,
+	                 const std::optional<qint32>& file_size,
+	                 const std::optional<QString>& file_path) :
+	file_id(file_id),
+	file_unique_id(file_unique_id),
+	file_size(file_size),
+	file_path(file_path)
+{}
+
+Telegram::File::File(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("file_id", fileId);
-    _jsonObject.insert("file_unique_id", fileUniqueId);
-
+	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
+	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
+	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
+	jsonObject.contains("file_path")      ? file_path = jsonObject["file_path"].toString()			 : file_path = std::nullopt;
 }
 
-/*!
-    \brief Constructor from QJsonObject
-    \param QJsonObject QJsonObject which contains fields suitable for the class
-*/
-File::File(QJsonObject jsonObject)
+QJsonObject Telegram::File::toObject() const
 {
-    if(jsonObject.contains("file_id"))
-        _jsonObject.insert("file_id", jsonObject.value("file_id"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("file_unique_id"))
-        _jsonObject.insert("file_unique_id", jsonObject.value("file_unique_id"));
+	QJsonObject fileJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id} };
 
-    if(jsonObject.contains("file_size"))
-        _jsonObject.insert("file_size", jsonObject.value("file_size"));
+	if (file_size.has_value())	fileJsonObject.insert("file_size", *file_size);
+	if (file_path.has_value())	fileJsonObject.insert("file_path", *file_path);
 
-    if(jsonObject.contains("file_path"))
-        _jsonObject.insert("file_path", jsonObject.value("file_path"));
+	return fileJsonObject;
 }
 
-
-/***//*!
-    \brief Get **fileId** value
-    \return Value of **fileId**
-*/
-QString File::fileId()
+bool Telegram::File::isEmpty() const
 {
-    return _jsonObject.value("file_id").toString();
+	return file_id == ""
+		   and file_unique_id == ""
+		   and file_size == std::nullopt
+		   and file_path == std::nullopt;
 }
 
-/*!
-    \brief Set new value for **fileId**
-    \param QString New value of **fileId**
-*/
-void File::setFileId(QString fileId)
+QByteArray Telegram::File::downloadFile()
 {
-    _jsonObject.insert("file_id", fileId);
-}
-
-
-/***//*!
-    \brief Get **fileUniqueId** value
-    \return Value of **fileUniqueId**
-*/
-QString File::fileUniqueId()
-{
-    return _jsonObject.value("file_unique_id").toString();
-}
-
-/*!
-    \brief Set new value for **fileUniqueId**
-    \param QString New value of **fileUniqueId**
-*/
-void File::setFileUniqueId(QString fileUniqueId)
-{
-    _jsonObject.insert("file_unique_id", fileUniqueId);
-}
-
-
-/***//*!
-    \brief Get **fileSize** value
-    \return Value of **fileSize**
-*/
-qint32 File::fileSize()
-{
-    return _jsonObject.value("file_size").toInt();
-}
-
-/*!
-    \brief Set new value for **fileSize**
-    \param qint32 New value of **fileSize**
-*/
-void File::setFileSize(qint32 fileSize)
-{
-    _jsonObject.insert("file_size", fileSize);
-}
-
-/*!
-    \brief Check if object has **fileSize**
-    \return `True` if has **fileSize**, `false` if doesn't
-*/
-bool File::hasFileSize()
-{
-    return _jsonObject.contains("file_size");
-}
-
-
-/***//*!
-    \brief Get **filePath** value
-    \return Value of **filePath**
-*/
-QString File::filePath()
-{
-    return _jsonObject.value("file_path").toString();
-}
-
-/*!
-    \brief Set new value for **filePath**
-    \param QString New value of **filePath**
-*/
-void File::setFilePath(QString filePath)
-{
-    _jsonObject.insert("file_path", filePath);
-}
-
-/*!
-    \brief Check if object has **filePath**
-    \return `True` if has **filePath**, `false` if doesn't
-*/
-bool File::hasFilePath()
-{
-    return _jsonObject.contains("file_path");
+	if (file_path == std::nullopt)
+		return QByteArray();
+	else
+		return RequestManager().SendGetRequest(QUrlQuery(), QString("https://api.telegram.org/file/bot%1/%2").arg(BOT_TOKEN).arg(*file_path));
 }

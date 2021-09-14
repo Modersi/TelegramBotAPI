@@ -1,124 +1,59 @@
 #include "Types/VideoNote.h"
 
-VideoNote::VideoNote() {}
+#include "qjsonobject.h"
 
-VideoNote::VideoNote(QString    fileId,
-                     QString    fileUniqueId,
-                     qint32     length,
-                     qint32     duration,
-                     PhotoSize  thumb,
-                     qint32     fileSize)
+Telegram::VideoNote::VideoNote() :
+	file_id(""),
+	file_unique_id(""),
+	length(0),
+	duration(0),
+	thumb(std::nullopt),
+	file_size(std::nullopt)
+{}
+
+Telegram::VideoNote::VideoNote(const QString& file_id,
+							   const QString& file_unique_id,
+							   const qint32& length,
+							   const qint32& duration,
+							   const std::optional<PhotoSize>& thumb,
+							   const std::optional<qint32>& file_size) :
+	file_id(file_id),
+	file_unique_id(file_unique_id),
+	length(length),
+	duration(duration),
+	thumb(thumb),
+	file_size(file_size)
+{}
+
+Telegram::VideoNote::VideoNote(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("file_id", QJsonValue(fileId));
-    _jsonObject.insert("file_unique_id", QJsonValue(fileUniqueId));
-    _jsonObject.insert("length", QJsonValue(length));
-    _jsonObject.insert("duration", QJsonValue(duration));
-
-    if(!thumb.isEmpty())
-        _jsonObject.insert("thumb", QJsonValue(thumb.toObject()));
-    if(fileSize != 0)
-        _jsonObject.insert("file_size", QJsonValue(fileSize));
+	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
+	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
+	jsonObject.contains("length")		  ? length = jsonObject["length"].toInt()					 : length = 0;
+	jsonObject.contains("duration")		  ? duration = jsonObject["duration"].toInt()				 : duration = 0;
+	jsonObject.contains("thumb")		  ? thumb = jsonObject["thumb"].toObject()					 : thumb = std::nullopt;
+	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
 }
 
-VideoNote::VideoNote(QJsonObject jsonObject)
+QJsonObject Telegram::VideoNote::toObject() const
 {
-    if(jsonObject.contains("file_id"))
-        _jsonObject.insert("file_id", jsonObject.value("file_id"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("file_unique_id"))
-        _jsonObject.insert("file_unique_id", jsonObject.value("file_unique_id"));
+	QJsonObject videoNoteJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"length", length}, {"duration", duration} };
 
-    if(jsonObject.contains("length"))
-        _jsonObject.insert("length", jsonObject.value("length"));
+	if (thumb.has_value())		videoNoteJsonObject.insert("thumb", thumb->toObject());
+	if (file_size.has_value())	videoNoteJsonObject.insert("file_size", *file_size);
 
-    if(jsonObject.contains("duration"))
-        _jsonObject.insert("duration", jsonObject.value("duration"));
-
-    if(jsonObject.contains("thumb"))
-        _jsonObject.insert("thumb", jsonObject.value("thumb"));
-
-    if(jsonObject.contains("file_size"))
-        _jsonObject.insert("file_size", jsonObject.value("file_size"));
+	return videoNoteJsonObject;
 }
 
-// "get", "set" methods for "file_id" field //
-
-QString VideoNote::fileId()
+bool Telegram::VideoNote::isEmpty() const
 {
-    return _jsonObject.value("file_id").toString();
-}
-
-void VideoNote::setFileId(QString fileId)
-{
-    _jsonObject.insert("file_id", fileId);
-}
-
-// "get", "set" methods for "file_unique_id" field //
-
-QString VideoNote::fileUniqueId()
-{
-    return _jsonObject.value("file_unique_id").toString();
-}
-
-void VideoNote::setFileUniqueId(QString fileUniqueId)
-{
-    _jsonObject.insert("file_unique_id", fileUniqueId);
-}
-
-// "get", "set" methods for "length" field //
-
-qint32 VideoNote::length()
-{
-    return _jsonObject.value("length").toInt();
-}
-
-void VideoNote::setLength(qint32 length)
-{
-    _jsonObject.insert("length", length);
-}
-
-// "get", "set" methods for "duration" field //
-
-qint32 VideoNote::duration()
-{
-    return _jsonObject.value("duration").toInt();
-}
-
-void VideoNote::setDuration(qint32 duration)
-{
-    _jsonObject.insert("duration", duration);
-}
-
-// "get", "set", "has" methods for "thumb" field //
-
-PhotoSize VideoNote::thumb()
-{
-    return PhotoSize(_jsonObject.value("thumb").toObject());
-}
-
-void VideoNote::setThumb(PhotoSize thumb)
-{
-    _jsonObject.insert("thumb", thumb.toObject());
-}
-
-bool VideoNote::hasThumb()
-{
-    return _jsonObject.contains("thumb");
-}
-
-// "get", "set", "has" methods for "file_size" field //
-
-qint32 VideoNote::fileSize()
-{
-    return _jsonObject.value("file_size").toInt();
-}
-
-void VideoNote::setFileSize(qint32 fileSize)
-{
-    _jsonObject.insert("file_size", fileSize);
-}
-
-bool VideoNote::hasFileSize()
-{
-    return _jsonObject.contains("file_size");
+	return file_id == ""
+		   and file_unique_id == ""
+		   and length == 0
+		   and duration == 0
+		   and thumb == std::nullopt
+		   and file_size == std::nullopt;
 }

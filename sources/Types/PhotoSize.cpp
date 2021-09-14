@@ -1,102 +1,54 @@
 #include "Types/PhotoSize.h"
 
-PhotoSize::PhotoSize() {}
+#include "qjsonobject.h"
 
-PhotoSize::PhotoSize(QString fileId,
-                     QString fileUniqueId,
-                     qint32  width,
-                     qint32  height,
-                     qint32  fileSize)
+Telegram::PhotoSize::PhotoSize() :
+	file_id(""),
+	file_unique_id(""),
+	width(0),
+	height(0),
+	file_size(std::nullopt)
+{}
+
+Telegram::PhotoSize::PhotoSize(const QString& file_id,
+							   const QString& file_unique_id,
+							   const qint32& width,
+							   const qint32& height,
+							   const std::optional<qint32>& file_size) :
+	file_id(file_id),
+	file_unique_id(file_unique_id),
+	width(width),
+	height(height),
+	file_size(file_size)
 {
-    _jsonObject.insert("file_id", QJsonValue(fileId));
-    _jsonObject.insert("file_unique_id", QJsonValue(fileUniqueId));
-    _jsonObject.insert("width", QJsonValue(width));
-    _jsonObject.insert("height", QJsonValue(height));
-
-    if(fileSize != 0)
-        _jsonObject.insert("file_size", QJsonValue(fileSize));
 }
 
-PhotoSize::PhotoSize(QJsonObject jsonObject)
+Telegram::PhotoSize::PhotoSize(const QJsonObject& jsonObject)
 {
-    if(jsonObject.contains("file_id"))
-        _jsonObject.insert("file_id", jsonObject.value("file_id"));
-
-    if(jsonObject.contains("file_unique_id"))
-        _jsonObject.insert("file_unique_id", jsonObject.value("file_unique_id"));
-
-    if(jsonObject.contains("width"))
-        _jsonObject.insert("width", jsonObject.value("width"));
-
-    if(jsonObject.contains("height"))
-        _jsonObject.insert("height", jsonObject.value("height"));
-
-    if(jsonObject.contains("file_size"))
-        _jsonObject.insert("file_size", jsonObject.value("file_size"));
+	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
+	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
+	jsonObject.contains("width")		  ? width = jsonObject["width"].toInt()						 : width = 0;
+	jsonObject.contains("height")		  ? height = jsonObject["height"].toInt()					 : height = 0;
+	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
 }
 
-// "get", "set" methods for "file_id" field //
-
-QString PhotoSize::fileId()
+QJsonObject Telegram::PhotoSize::toObject() const
 {
-    return _jsonObject.value("file_id").toString();
+	if (isEmpty())
+		return QJsonObject();
+
+	QJsonObject photoSizeJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"width", width}, {"height", height}, };
+
+	if (file_size.has_value())	photoSizeJsonObject.insert("file_size", *file_size);
+
+	return photoSizeJsonObject;
 }
 
-void PhotoSize::setFileId(QString fileId)
+bool Telegram::PhotoSize::isEmpty() const
 {
-    _jsonObject.insert("file_id", fileId);
+	return file_id == ""
+		   and file_unique_id == ""
+		   and width == 0
+		   and height == 0
+		   and file_size == std::nullopt;
 }
-
-// "get", "set" methods for "file_unique_id" field //
-
-QString PhotoSize::fileUniqueId()
-{
-    return _jsonObject.value("file_unique_id").toString();
-}
-
-void PhotoSize::setFileUniqueId(QString fileUniqueId)
-{
-    _jsonObject.insert("file_unique_id", fileUniqueId);
-}
-
-// "get", "set" methods for "width" field //
-
-qint32 PhotoSize::width()
-{
-    return _jsonObject.value("width").toInt();
-}
-
-void PhotoSize::setWidth(qint32 width)
-{
-    _jsonObject.insert("width", width);
-}
-
-// "get", "set" methods for "height" field //
-
-qint32 PhotoSize::height()
-{
-    return _jsonObject.value("height").toInt();
-}
-
-void PhotoSize::setHeight(qint32 height)
-{
-    _jsonObject.insert("height", height);
-}
-
-// "get", "set", "has" methods for "file_size" field //
-
-qint32 PhotoSize::fileSize()
-{
-    return _jsonObject.value("file_size").toInt();
-}
-
-void PhotoSize::setFileSize(qint32 fileSize)
-{
-    _jsonObject.insert("file_size", fileSize);
-}
-
-bool PhotoSize::hasFileSize()
-{
-    return _jsonObject.contains("file_size");
-}
-

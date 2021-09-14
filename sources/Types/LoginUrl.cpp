@@ -1,100 +1,50 @@
-#include "Types/LoginUrl.h"
+#include "Types/LoginURL.h"
 
-LoginUrl::LoginUrl()
+#include "qjsonobject.h"
+
+Telegram::LoginURL::LoginURL() :
+	url(""),
+	forward_text(std::nullopt),
+	bot_username(std::nullopt),
+	request_write_access(std::nullopt)
+{}
+
+Telegram::LoginURL::LoginURL(const QString& url,
+							 const std::optional<QString>& forward_text,
+							 const std::optional<QString>& bot_username,
+							 const std::optional<bool>& request_write_access) :
+	url(url),
+	forward_text(forward_text),
+	bot_username(bot_username),
+	request_write_access(request_write_access)
+{}
+
+Telegram::LoginURL::LoginURL(const QJsonObject& jsonObject)
 {
-
+	jsonObject.contains("url")					? url = jsonObject["url"].toString()								 : url = "";
+	jsonObject.contains("forward_text")			? forward_text = jsonObject["forward_text"].toString()				 : forward_text = std::nullopt;
+	jsonObject.contains("bot_username")			? bot_username = jsonObject["bot_username"].toString()				 : bot_username = std::nullopt;
+	jsonObject.contains("request_write_access") ? request_write_access = jsonObject["request_write_access"].toBool() : request_write_access = std::nullopt;
 }
 
-LoginUrl::LoginUrl(QString url,
-                   QString forwardText,
-                   QString botUsername,
-                   bool    requestWriteAccess)
+QJsonObject Telegram::LoginURL::toObject() const
 {
-    _jsonObject.insert("url", QJsonValue(url));
+	if(isEmpty())
+		return QJsonObject();
 
-    if(!forwardText.isEmpty())
-        _jsonObject.insert("forward_text", QJsonValue(forwardText));
-    if(!botUsername.isEmpty())
-        _jsonObject.insert("bot_username", QJsonValue(botUsername));
-    if(requestWriteAccess != false)
-        _jsonObject.insert("request_write_access", QJsonValue(requestWriteAccess));
+	QJsonObject loginURLJsonObject{ {"url", url} };
+
+	if (forward_text.has_value())			loginURLJsonObject.insert("forward_text", *forward_text);
+	if (bot_username.has_value())			loginURLJsonObject.insert("bot_username", *bot_username);
+	if (request_write_access.has_value())	loginURLJsonObject.insert("request_write_access", *request_write_access);
+
+	return loginURLJsonObject;
 }
 
-LoginUrl::LoginUrl(QJsonObject jsonObject)
+bool Telegram::LoginURL::isEmpty() const
 {
-    if(jsonObject.contains("url"))
-        _jsonObject.insert("url", jsonObject.value("url"));
-
-    if(jsonObject.contains("forward_text"))
-        _jsonObject.insert("forward_text", jsonObject.value("forward_text"));
-
-    if(jsonObject.contains("bot_username"))
-        _jsonObject.insert("bot_username", jsonObject.value("bot_username"));
-
-    if(jsonObject.contains("request_write_access"))
-        _jsonObject.insert("request_write_access", jsonObject.value("request_write_access"));
-
-}
-
-// "get", "set" methods for "url" field //
-
-QString LoginUrl::url()
-{
-    return _jsonObject.value("url").toString();
-}
-
-void LoginUrl::setUrl(QString url)
-{
-    _jsonObject.insert("url", url);
-}
-
-// "get", "set", "has" methods for "forward_text" field //
-
-QString LoginUrl::forwardText()
-{
-    return _jsonObject.value("forward_text").toString();
-}
-
-void LoginUrl::setForwardText(QString forwardText)
-{
-    _jsonObject.insert("forward_text", forwardText);
-}
-
-bool LoginUrl::hasForwardText()
-{
-    return _jsonObject.contains("forward_text");
-}
-
-// "get", "set", "has" methods for "bot_username" field //
-
-QString LoginUrl::botUsername()
-{
-    return _jsonObject.value("bot_username").toString();
-}
-
-void LoginUrl::setBotUsername(QString botUsername)
-{
-    _jsonObject.insert("bot_username", botUsername);
-}
-
-bool LoginUrl::hasBotUsername()
-{
-    return _jsonObject.contains("bot_username");
-}
-
-// "get", "set", "has" methods for "request_write_access" field //
-
-bool LoginUrl::requestWriteAccess()
-{
-    return _jsonObject.value("request_write_access").toBool();
-}
-
-void LoginUrl::setRequestWriteAccess(bool requestWriteAccess)
-{
-    _jsonObject.insert("request_write_access", requestWriteAccess);
-}
-
-bool LoginUrl::hasRequestWriteAccess()
-{
-    return _jsonObject.contains("request_write_access");
+	return url == ""
+		   and forward_text == std::nullopt
+		   and bot_username == std::nullopt
+		   and request_write_access == std::nullopt;
 }

@@ -1,38 +1,25 @@
 #include "Types/ReplyKeyboardRemove.h"
 
-ReplyKeyboardRemove::ReplyKeyboardRemove()
+#include "qjsonobject.h"
+
+Telegram::ReplyKeyboardRemove::ReplyKeyboardRemove(const std::optional<bool>& selective) :
+	selective(selective)
+{}
+
+Telegram::ReplyKeyboardRemove::ReplyKeyboardRemove(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("remove_keyboard", true);
+	jsonObject.contains("selective") ? selective = jsonObject["selective"].toBool() : selective = std::nullopt;
 }
 
-ReplyKeyboardRemove::ReplyKeyboardRemove(bool selective)
+QJsonObject Telegram::ReplyKeyboardRemove::toObject() const
 {
-    _jsonObject.insert("remove_keyboard", true);
+	if (isEmpty())
+		return QJsonObject();
 
-    if(selective != false)
-        _jsonObject.insert("selective", QJsonValue(selective));
+	return QJsonObject{ {"remove_keyboard", remove_keyboard}, {"selective",* selective} };
 }
 
-ReplyKeyboardRemove::ReplyKeyboardRemove(QJsonObject jsonObject)
+bool Telegram::ReplyKeyboardRemove::isEmpty() const
 {
-    if(jsonObject.contains("remove_keyboard"))
-        _jsonObject.insert("remove_keyboard", jsonObject.value("remove_keyboard"));
-
-    if(jsonObject.contains("selective"))
-        _jsonObject.insert("selective", jsonObject.value("selective"));
-}
-
-bool ReplyKeyboardRemove::isSelective()
-{
-    return _jsonObject.value("selective").toBool();
-}
-
-void ReplyKeyboardRemove::setSelective(bool selective)
-{
-    _jsonObject.insert("selective", selective);
-}
-
-bool ReplyKeyboardRemove::hasSelective()
-{
-    return _jsonObject.contains("selective");
+	return selective == std::nullopt;
 }

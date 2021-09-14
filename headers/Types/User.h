@@ -1,54 +1,78 @@
-#ifndef USER_H
-#define USER_H
+#ifndef TELEGRAM_TYPES_USER_H
+#define TELEGRAM_TYPES_USER_H
 
-#include "Types/Type.h"
+#include "qstring.h"
+class QJsonObject;
 
-class User : public Type
+#include <optional>
+
+namespace Telegram
 {
-public:
-    User();
+    /**
+     *
+     * @brief This struct represents a Telegram user or bot
+     * 
+     */
 
-    User(qint32   id,
-         bool     isBot,
-         QString  firstName,
-         QString  lastName = "",
-         QString  username = "",
-         QString  languageCode = "");
+    struct User
+    {
+        /** @brief Default constructor. Constructs an empty User object
+         *
+         * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
+        User();
 
-    User(QJsonObject jsonObject);
+        /** @brief Constructs User object from parameters */
+        User(const qint64& id,
+             const bool& is_bot,
+             const QString& first_name,
+             const std::optional<QString>& last_name = std::nullopt,
+             const std::optional<QString>& username = std::nullopt,
+             const std::optional<QString>& language_code = std::nullopt,
+             const std::optional<bool>& can_join_groups = std::nullopt,
+             const std::optional<bool>& can_read_all_group_messages = std::nullopt,
+             const std::optional<bool>& supports_inline_queries = std::nullopt);
 
-    qint32  id();
-    void    setId(qint32 id);
+        /** @brief JSON constructor. Constructs User object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has all key-value pairs related to User class fields. For example it should contain pairs such as "id" = "...",
+         * "is_bot" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+        User(const QJsonObject& jsonObject);
 
-    bool    isBot();
-    void    setIsBot(bool isBot);
+        /* @brief Returns User in form of JSON object. Returns empty QJsonObject if User is empty */
+        QJsonObject toObject() const;
 
-    QString firstName();
-    void    setFirstName(QString firstName);
+        /* @brief Returns true if User is empty */
+        bool isEmpty() const;
 
-    QString lastName();
-    void    setLastName(QString lastName);
-    bool    hasLastName();
+    //** Fields **//
 
-    QString username();
-    void    setUsername(QString username);
-    bool    hasUsername();
+        /** @brief Unique identifier for this user or bot */
+        qint64 id;
+        
+        /** @brief True, if this user is a bot */
+        bool is_bot;
+        
+        /** @brief User's or bot's first name */
+        QString first_name;
+        
+        /** @brief Optional. User's or bot's last name */
+        std::optional<QString> last_name;
+        
+        /** @brief Optional. User's or bot's username */
+        std::optional<QString> username;
+        
+        /** @brief Optional. IETF language tag of the user's language */
+        std::optional<QString> language_code;
+        
+        /** @brief Optional. True, if the bot can be invited to groups.Returned only in getMe */
+        std::optional<bool> can_join_groups;
+        
+        /** @brief Optional.True, if privacy mode is disabled for the bot.Returned only in getMe */
+        std::optional<bool> can_read_all_group_messages;
+        
+        /** @brief Optional. True, if the bot supports inline queries.Returned only in getMe */
+        std::optional<bool> supports_inline_queries;
+    };
+}
 
-    QString languageCode();
-    void    setLanguageCode(QString languageCode);
-    bool    hasLanguageCode();
-
-    bool    canJoinGroups();
-    void    setCanJoinGroups(bool canJoinGroups);
-    bool    hasCanJoinGroups();
-
-    bool    canReadAllGroupMessages();
-    void    setCanReadAllGroupMessages(bool canReadAllGroupMessages);
-    bool    hasCanReadAllGroupMessages();
-
-    bool    supportsInlineQueries();
-    void    setSupportsInlineQueries(bool supportsInlineQueries);
-    bool    hasSupportsInlineQueries();
-};
-
-#endif // USER_H
+#endif // TELEGRAM_TYPES_USER_H

@@ -1,89 +1,50 @@
 #include "Types/KeyboardButton.h"
 
-KeyboardButton::KeyboardButton()
-{
+#include "qjsonobject.h"
 
+Telegram::KeyboardButton::KeyboardButton() :
+    text(""),
+    request_contact(std::nullopt),
+    request_location(std::nullopt),
+    request_poll(std::nullopt)
+{}
+
+Telegram::KeyboardButton::KeyboardButton(const QString& text, 
+                                         const std::optional<bool>& request_contact, 
+                                         const std::optional<bool>& request_location, 
+                                         const std::optional<KeyboardButtonPollType>& request_poll) :
+    text(text),
+    request_contact(request_contact),
+    request_location(request_location),
+    request_poll(request_poll)
+{}
+
+Telegram::KeyboardButton::KeyboardButton(const QJsonObject& jsonObject)
+{
+    jsonObject.contains("text")             ? text = jsonObject["text"].toString()                                         : text = "";
+    jsonObject.contains("request_contact")  ? request_contact = jsonObject["request_contact"].toBool()                     : request_contact = std::nullopt;
+    jsonObject.contains("request_location") ? request_location = jsonObject["request_location"].toBool()                   : request_location = std::nullopt;
+    jsonObject.contains("request_poll")     ? request_poll = KeyboardButtonPollType(jsonObject["request_poll"].toObject()) : request_poll = std::nullopt;
 }
 
-KeyboardButton::KeyboardButton(QString text)
+QJsonObject Telegram::KeyboardButton::toObject() const
 {
-    _jsonObject.insert("text", QJsonValue(text));
+    if (isEmpty())
+        return QJsonObject();
+
+    QJsonObject keyboardButtonJsonObject{ {"text", text} };
+
+    if (request_contact.has_value())		keyboardButtonJsonObject.insert("request_contact", *request_contact);
+    if (request_location.has_value())		keyboardButtonJsonObject.insert("request_location", *request_location);
+    if (request_poll.has_value())			keyboardButtonJsonObject.insert("request_poll", request_poll->toObject());
+
+    return keyboardButtonJsonObject;
 }
 
-KeyboardButton::KeyboardButton(QJsonObject jsonObject)
+bool Telegram::KeyboardButton::isEmpty() const
 {
-    if(jsonObject.contains("text"))
-        _jsonObject.insert("text", jsonObject.value("text"));
-
-    if(jsonObject.contains("request_contact"))
-        _jsonObject.insert("request_contact", jsonObject.value("request_contact"));
-
-    if(jsonObject.contains("request_location"))
-        _jsonObject.insert("request_location", jsonObject.value("request_location"));
-
-    if(jsonObject.contains("request_poll"))
-        _jsonObject.insert("request_poll", jsonObject.value("request_poll"));
+    return text == ""
+           and request_contact == std::nullopt
+           and request_location == std::nullopt
+           and request_poll == std::nullopt;
 }
-
-// "get", "set" methods for "text" field //
-
-QString KeyboardButton::text()
-{
-    return _jsonObject.value("text").toString();
-}
-
-void KeyboardButton::setText(QString text)
-{
-    _jsonObject.insert("text", text);
-}
-
-// "get", "set", "has" methods for "request_contact" field //
-
-bool KeyboardButton::requestContact()
-{
-    return _jsonObject.value("request_contact").toBool();
-}
-
-void KeyboardButton::setRequestContact(bool requestContact)
-{
-    _jsonObject.insert("request_contact", requestContact);
-}
-
-bool KeyboardButton::hasRequestContact()
-{
-    return _jsonObject.contains("request_contact");
-}
-
-// "get", "set", "has" methods for "request_contact" field //
-
-bool KeyboardButton::requestLocation()
-{
-    return _jsonObject.value("request_location").toBool();
-}
-
-void KeyboardButton::setRequestLocation(bool requestLocation)
-{
-    _jsonObject.insert("request_location", requestLocation);
-}
-
-bool KeyboardButton::hasRequestLocation()
-{
-    return _jsonObject.contains("request_location");
-}
-
-// "get", "set", "has" methods for "request_contact" field //
-
-//KeyboardButtonPollType KeyboardButton::requestPoll()
-//{
-//
-//}
-//
-//void KeyboardButton::setRequestPoll(KeyboardButtonPollType requestPoll)
-//{
-//
-//}
-//
-//bool KeyboardButton::hasRequestPoll()
-//{
-//
-//}

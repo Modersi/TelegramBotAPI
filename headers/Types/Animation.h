@@ -1,76 +1,77 @@
-#ifndef ANIMATION_H
-#define ANIMATION_H
+#ifndef TELEGRAM_TYPES_ANIMATION_H
+#define TELEGRAM_TYPES_ANIMATION_H
 
-#include "Types/Type.h"
-#include "Types/PhotoSize.h"
+#include "PhotoSize.h"
 
-/*!
-    \brief This class represents an Animation file
-
-    Animation can be only GIF or H.264/MPEG-4 AVC video without sound
-
-    Fields of Animation object
-    -----------------------------------
-
-    | Field             | Type          | Desription  |
-    | :---:             | :----:        | :---- |
-    | **fileId**        | `QString`     | Identifier for this file, which can be used to download or reuse the file |
-    | **fileUniqueId**  | `QString`     | Unique identifier for this file, which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file |
-    | **width**         | `QInt32`      | Animation width as defined by sender |
-    | **height**        | `QInt32`      | Animation height as defined by sender |
-    | **duration**      | `QInt32`      | Duration of the animation in seconds as defined by sender |
-    | **thumb**         | `PhotoSize`   | **Optional**. Animation thumbnail as defined by sender |
-    | **fileName**      | `QString`     | **Optional**. Original animation filename as defined by sender |
-    | **mimeType**      | `QString`     | **Optional**. [MIME](https://en.wikipedia.org/wiki/Media_type) type of the file as defined by sender |
-    | **fileSize**      | `QInt32`      | **Optional**. File size |
-
-    In order to set **optional** fields use "set" methods ([setThumb](@ref setThumb), [setMimeType](@ref setMimeType), etc.)
-*/
-
-
-class Animation : public Type
+namespace Telegram 
 {
-public:
-    Animation();
+	/**
+	 *
+	 * @brief This structure represents an Animation file
+	 *
+	 * Animation can only be GIF or H.264/MPEG-4 AVC video without sound
+	 *
+	 */
 
-    Animation(QString   fileId,
-              QString   fileUniqueId,
-              qint32    width,
-              qint32    height,
-              qint32    duration);
+	struct Animation
+	{
+		/** @brief Default constructor. Constructs an empty Animation object
+		 * 
+		 * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
+		Animation();
+	
+		/** @brief Constructs Animation object from parameters */
+		Animation(const QString& file_id,
+				  const QString& file_unique_id,
+				  const qint32& width,
+				  const qint32& height,
+				  const qint32& duration,
+				  const std::optional<PhotoSize>& thumb = std::nullopt,
+				  const std::optional<QString>& file_name = std::nullopt,
+				  const std::optional<QString>& mime_type = std::nullopt,
+				  const std::optional<qint32>& file_size = std::nullopt);
+		
+		/** @brief JSON constructor. Constructs Animation object from QJsonObject
+		 *
+		 * QJsonObject which is passed to constuctor has to has all key-value pairs related to Animation class fields. For example it should contain pairs such as "file_id" = "...",
+         * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+		Animation(const QJsonObject &jsonObject);
 
-    Animation(QJsonObject jsonObject);
+		/* @brief Returns Animation in form of JSON object. Returns empty QJsonObject if Animation is empty */
+		QJsonObject toObject() const;
 
-    QString fileId();
-    void    setFileId(QString fileId);
+		/* @brief Returns true if Animation is empty */
+		bool isEmpty() const;
+		
+//** Fields **//
 
-    QString fileUniqueId();
-    void    setFileUniqueId(QString fileUniqueId);
+		/** @brief Identifier for this file, which can be used to download or reuse the file */
+		QString file_id;
 
-    qint32  width();
-    void    setWidth(qint32 width);
+		/** @brief Unique identifier for this file, which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file */
+		QString file_unique_id;
 
-    qint32  height();
-    void    setHeight(qint32 height);
+		/** @brief Animation width as defined by sender */
+		qint32 width;
 
-    qint32  duration();
-    void    setDuration(qint32 duration);
+		/** @brief Animation height as defined by sender */
+		qint32 height;
 
-    PhotoSize  thumb();
-    void       setThumb(PhotoSize thumb);
-    bool       hasThumb();
+		/** @brief Duration of the animation in seconds as defined by sender */
+		qint32 duration;
 
-    QString fileName();
-    void    setFileName(QString fileName);
-    bool    hasFileName();
+		/** @brief Optional. Animation thumbnail as defined by sender */
+		std::optional<PhotoSize> thumb;
 
-    QString mimeType();
-    void    setMimeType(QString mimeType);
-    bool    hasMimeType();
+		/** @brief Optional. Original animation filename as defined by sender */
+		std::optional<QString> file_name;
 
-    qint32  fileSize();
-    void    setFileSize(qint32 fileSize);
-    bool    hasFileSize();
-};
+		/** @brief Optional. [MIME](https://en.wikipedia.org/wiki/Media_type) type of the file as defined by sender */
+		std::optional<QString> mime_type;
 
-#endif // ANIMATION_H
+		/** @brief Optional. File size */
+		std::optional<qint32> file_size;
+	};
+}
+
+#endif // TELEGRAM_TYPES_ANIMATION_H

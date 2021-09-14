@@ -1,51 +1,75 @@
-#ifndef VIDEO_H
-#define VIDEO_H
+#ifndef TELEGRAM_TYPES_VIDEO_H
+#define TELEGRAM_TYPES_VIDEO_H
 
-#include "Types/Type.h"
-#include "Types/PhotoSize.h"
+#include "PhotoSize.h"
 
-class Video : public Type
+namespace Telegram
 {
-public:
-    Video();
+    /**
+     *
+     * @brief This struct represents a video file
+     *
+     */
 
-    Video(QString   fileId,
-          QString   fileUniqueId,
-          qint32    width,
-          qint32    height,
-          qint32    duration,
-          PhotoSize thumb = PhotoSize(),
-          QString   mimeType = "",
-          qint32    fileSize = 0);
+    struct Video
+    {
+        /** @brief Default constructor. Constructs an empty Video object
+         *
+         * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
+        Video();
 
-    Video(QJsonObject jsonObject);
+        /** @brief Constructs Video object from parameters */
+        Video(const QString& file_id,
+              const QString& file_unique_id,
+              const qint32& width,
+              const qint32& height,
+              const qint32& duration,
+              const std::optional<PhotoSize>& thumb = std::nullopt,
+              const std::optional<QString>& file_name = std::nullopt,
+              const std::optional<QString>& mime_type = std::nullopt,
+              const std::optional<qint32>& file_size = std::nullopt);
 
-    QString fileId();
-    void    setFileId(QString fileId);
+        /** @brief JSON constructor. Constructs Video object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has all key-value pairs related to Video class fields. For example it should contain pairs such as "file_id" = "...",
+         * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+        Video(const QJsonObject& jsonObject);
 
-    QString fileUniqueId();
-    void    setFileUniqueId(QString fileUniqueId);
+        /* @brief Returns Video in form of JSON object. Returns empty QJsonObject if Video is empty */
+        QJsonObject toObject() const;
 
-    qint32  width();
-    void    setWidth(qint32 width);
+        /* @brief Returns true if Video is empty */
+        bool isEmpty() const;
 
-    qint32  height();
-    void    setHeight(qint32 height);
+//** Fields **//
 
-    qint32  duration();
-    void    setDuration(qint32 duration);
+        /** @brief Identifier for this file, which can be used to download or reuse the file*/
+        QString file_id;
+        
+        /** @brief Unique identifier for this file, which is supposed to be the same over timeand for different bots.Can't be used to download or reuse the file */
+        QString file_unique_id;
+        
+        /** @brief Video width as defined by sender */
+        qint32 width;
+        
+        /** @brief Video height as defined by sender */
+        qint32 height;
+        
+        /** @brief Duration of the video in seconds as defined by sender */
+        qint32 duration;
+        
+        /** @brief Optional. Video thumbnail */
+        std::optional<PhotoSize> thumb;
+        
+        /** @brief Optional. Original filename as defined by sender */
+        std::optional<QString> file_name;
+        
+        /** @brief Optional. Mime type of a file as defined by sender */
+        std::optional<QString> mime_type;
+        
+        /** @brief Optional. File size */
+        std::optional<qint32> file_size;
+    };
+}
 
-    PhotoSize  thumb();
-    void       setThumb(PhotoSize thumb);
-    bool       hasThumb();
-
-    QString mimeType();
-    void    setMimeType(QString mimeType);
-    bool    hasMimeType();
-
-    qint32  fileSize();
-    void    setFileSize(qint32 fileSize);
-    bool    hasFileSize();
-};
-
-#endif // VIDEO_H
+#endif // TELEGRAM_TYPES_VIDEO_H

@@ -1,35 +1,52 @@
-#ifndef BOTCOMMAND_H
-#define BOTCOMMAND_H
+#ifndef TELEGRAM_TYPES_BOTCOMMAND_H
+#define TELEGRAM_TYPES_BOTCOMMAND_H
 
-#include "Types/Type.h"
+#include "qstring.h"
+class QJsonObject;
 
-/*!
-    \brief This class represents a Bot Command
-
-    Fields of BotCommand object
-    -----------------------------------
-
-    | Field             | Type          | Desription  |
-    | :---:             | :----:        | :---- |
-    | **command**       | `QString`     | Text of the command. <U><B>Must be 1-32 characters. Can contain only lowercase English letters, digits and underscores</B></U> |
-    | **description**   | `QString`     | Description of the command. <U><B>Must be 3-256 characters</B></U> |
-*/
-
-class BotCommand : public Type
+namespace Telegram
 {
-public:
-    BotCommand();
+    /**
+     *
+     * @brief This class represents a Bot Command
+     *
+     */
 
-    BotCommand(QString command,
-               QString description);
+    struct BotCommand
+    {
+        /** @brief Default constructor. Constructs an empty object
+         *
+         * All fields setted to "" */
+        BotCommand();
 
-    BotCommand(QJsonObject jsonObject);
+        /** @brief Constructs BotCommand object from parameters */
+        BotCommand(const QString& command,
+                   const QString& description);
 
-    QString command();
-    void    setCommand(QString command);
+        /** @brief JSON constructor. Constructs BotCommand object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has key-value pairs such as "command" = "...", "description" = "..." to construct correct 
+         * object, otherwise if this pairs are missing empty object will be created */
+        BotCommand(const QJsonObject& jsonObject);
 
-    QString description();
-    void    setDescription(QString description);
-};
+        /* @brief Returns BotCommand in form of JSON object. Returns empty QJsonObject if BotCommand is empty */
+        QJsonObject toObject() const;
 
-#endif // BOTCOMMAND_H
+        /* @brief Returns true if BotCommand is empty */
+        bool isEmpty() const;
+
+//** Fields **//
+
+        /** @brief Text of the command 
+         * 
+         * Must be 1-32 characters. Can contain only lowercase English letters, digits and underscores */
+        QString command;
+
+        /** @brief Description of the command
+         *
+         * Must be 3-256 characters */
+        QString description;
+    };
+}
+
+#endif // TELEGRAM_TYPES_BOTCOMMAND_H

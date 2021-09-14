@@ -1,101 +1,80 @@
 #include "Types/InputMediaDocument.h"
+#include "Internal/ConversionFunctions.h"
 
-InputMediaDocument::InputMediaDocument() {}
+#include "qjsonobject.h"
+#include "qjsonarray.h"
 
-InputMediaDocument::InputMediaDocument(QString media)
+Telegram::InputMediaDocument::InputMediaDocument() :
+	media(nullptr),
+	thumb(std::nullopt),
+	caption(std::nullopt),
+	parse_mode(std::nullopt),
+	caption_entities(std::nullopt),
+	disable_content_type_detection(std::nullopt)
+{}
+
+Telegram::InputMediaDocument::InputMediaDocument(const std::variant<QFile*, QString>& media,
+												 const std::optional<std::variant<QFile*, QString>>& thumb,
+												 const std::optional<QString>& caption,
+												 const std::optional<QString>& parse_mode,
+												 const std::optional<QVector<MessageEntity>>& caption_entities,
+												 const std::optional<bool>& disable_content_type_detection) :
+	media(media),
+	thumb(thumb),
+	caption(caption),
+	parse_mode(parse_mode),
+	caption_entities(caption_entities),
+	disable_content_type_detection(disable_content_type_detection)
+{}
+
+Telegram::InputMediaDocument::InputMediaDocument(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("type", "document");
-    _jsonObject.insert("media", media);
+	jsonObject.contains("media")						  ? media = jsonObject["media"].toString()															: media = nullptr;
+	jsonObject.contains("thumb")						  ? thumb = jsonObject["thumb"].toString()															: thumb = std::nullopt;
+	jsonObject.contains("caption")						  ? caption = jsonObject["caption"].toString()														: caption = std::nullopt;
+	jsonObject.contains("parse_mode")					  ? parse_mode = jsonObject["parse_mode"].toString()												: parse_mode = std::nullopt;
+	jsonObject.contains("caption_entities")				  ? caption_entities = QJsonArrayToQVector<MessageEntity>(jsonObject["caption_entities"].toArray()) : caption_entities = std::nullopt;
+	jsonObject.contains("disable_content_type_detection") ? disable_content_type_detection = jsonObject["disable_content_type_detection"].toBool()			: disable_content_type_detection = std::nullopt;
 }
 
-InputMediaDocument::InputMediaDocument(QJsonObject jsonObject)
+QJsonObject Telegram::InputMediaDocument::toObject() const
 {
-    if(jsonObject.contains("type"))
-        _jsonObject.insert("type", jsonObject.value("type"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("media"))
-        _jsonObject.insert("media", jsonObject.value("media"));
+	QJsonObject inputMediaDocumentJsonObject{ {"type", type} };
 
-    if(jsonObject.contains("thumb"))
-        _jsonObject.insert("thumb", jsonObject.value("thumb"));
+	if (std::holds_alternative<QFile*>(media))  inputMediaDocumentJsonObject.insert("media", QString("attach://%1").arg(std::get<QFile*>(media)->fileName()));
+	if (std::holds_alternative<QString>(media)) inputMediaDocumentJsonObject.insert("media", std::get<QString>(media));
 
-    if(jsonObject.contains("caption"))
-        _jsonObject.insert("caption", jsonObject.value("caption"));
+	if (thumb.has_value())
+	{
+		if (std::holds_alternative<QFile*>(*thumb))  inputMediaDocumentJsonObject.insert("thumb", QString("attach://%1").arg(std::get<QFile*>(*thumb)->fileName()));
+		if (std::holds_alternative<QString>(*thumb)) inputMediaDocumentJsonObject.insert("thumb", std::get<QString>(*thumb));
+	}
 
-    if(jsonObject.contains("parse_mode"))
-        _jsonObject.insert("parse_mode", jsonObject.value("parse_mode"));
+	if (caption.has_value())							inputMediaDocumentJsonObject.insert("caption", *caption);
+	if (parse_mode.has_value())							inputMediaDocumentJsonObject.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())					inputMediaDocumentJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (disable_content_type_detection.has_value())		inputMediaDocumentJsonObject.insert("disable_content_type_detection", *disable_content_type_detection);
+
+	return inputMediaDocumentJsonObject;
 }
 
-// "get", "set" methods for "media" field //
-
-QString InputMediaDocument::media()
+bool Telegram::InputMediaDocument::isEmpty() const
 {
-    return _jsonObject.value("media").toString();
+	/* Check if std::variant<QFile*, QString> media contains any value */
+	bool holdsMedia(false);
+	if (std::holds_alternative<QFile*>(media))
+		if (std::get<QFile*>(media) != nullptr) holdsMedia = true;
+
+	if (std::holds_alternative<QString>(media))
+		if (std::get<QString>(media) != "") holdsMedia = true;
+
+	return holdsMedia == false
+		   and thumb == std::nullopt
+		   and caption == std::nullopt
+		   and parse_mode == std::nullopt
+		   and caption_entities == std::nullopt
+		   and disable_content_type_detection == std::nullopt;
 }
-
-void InputMediaDocument::setMedia(QString media)
-{
-    _jsonObject.insert("media", media);
-}
-
-// "get", "set", "has" methods for "thumb" field //
-
-//InputFile InputMediaDocument::thumb()
-//{
-//    return InputFile(_jsonObject.value("thumb").toObject());
-//}
-
-QString InputMediaDocument::thumb()
-{
-    return _jsonObject.value("thumb").toString();
-}
-
-//void InputMediaDocument::setThumb(InputFile thumb)
-//{
-//    _jsonObject.insert("thumb", thumb);
-//}
-
-void InputMediaDocument::setThumb(QString thumb)
-{
-    _jsonObject.insert("thumb", thumb);
-}
-
-bool InputMediaDocument::hasThumb()
-{
-    return _jsonObject.contains("thumb");
-}
-
-// "get", "set", "has" methods for "caption" field //
-
-QString InputMediaDocument::caption()
-{
-    return _jsonObject.value("caption").toString();
-}
-
-void InputMediaDocument::setCaption(QString caption)
-{
-    _jsonObject.insert("caption", caption);
-}
-
-bool InputMediaDocument::hasCaption()
-{
-    return _jsonObject.contains("caption");
-}
-
-// "get", "set", "has" methods for "parse_mode" field //
-
-QString InputMediaDocument::parseMode()
-{
-    return _jsonObject.value("parse_mode").toString();
-}
-
-void InputMediaDocument::setParseMode(QString parseMode)
-{
-    _jsonObject.insert("parse_mode", parseMode);
-}
-
-bool InputMediaDocument::hasParseMode()
-{
-    return _jsonObject.contains("parse_mode");
-}
-

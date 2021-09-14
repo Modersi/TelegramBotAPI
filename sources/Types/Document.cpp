@@ -1,193 +1,62 @@
 #include "Types/Document.h"
 
-/*!
-    \brief A default constructor. Constructs an empty object
-*/
-Document::Document() {}
+#include "qjsonobject.h"
 
-/*!
-    \brief Class contructor
-    \param fileId        Identifier for this file
-    \param fileUniqueId  Unique identifier for this file
-*/
-Document::Document(QString   fileId,
-                   QString   fileUniqueId)
+Telegram::Document::Document() : 
+	file_id(""),
+	file_unique_id(""),
+	thumb(std::nullopt),
+	file_name(std::nullopt),
+	mime_type(std::nullopt),
+	file_size(std::nullopt)
+{}
+
+Telegram::Document::Document(const QString& file_id,
+							 const QString& file_unique_id,
+							 const std::optional<PhotoSize>& thumb,
+							 const std::optional<QString>& file_name,
+							 const std::optional<QString>& mime_type,
+							 const std::optional<qint32>& file_size) :
+	file_id(file_id),
+	file_unique_id(file_unique_id),
+	thumb(thumb),
+	file_name(file_name),
+	mime_type(mime_type),
+	file_size(file_size)
+{}
+
+
+Telegram::Document::Document(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("file_id", fileId);
-    _jsonObject.insert("file_unique_id", fileUniqueId);
+	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
+	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
+	jsonObject.contains("thumb")		  ? thumb = PhotoSize(jsonObject["thumb"].toObject())		 : thumb = std::nullopt;
+	jsonObject.contains("file_name")	  ? file_name = jsonObject["file_name"].toString()			 : file_name = std::nullopt;
+	jsonObject.contains("mime_type")	  ? mime_type = jsonObject["mime_type"].toString()			 : mime_type = std::nullopt;
+	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
 }
 
-/*!
-    \brief Constructor from QJsonObject
-    \param QJsonObject QJsonObject which contains fields suitable for the class
-*/
-Document::Document(QJsonObject jsonObject)
+QJsonObject Telegram::Document::toObject() const
 {
-    if(jsonObject.contains("file_id"))
-        _jsonObject.insert("file_id", jsonObject.value("file_id"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("file_unique_id"))
-        _jsonObject.insert("file_unique_id", jsonObject.value("file_unique_id"));
+	QJsonObject documentJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id} };
 
-    if(jsonObject.contains("thumb"))
-        _jsonObject.insert("thumb", jsonObject.value("thumb"));
+	if (thumb.has_value())		documentJsonObject.insert("thumb", thumb->toObject());
+	if (file_name.has_value())	documentJsonObject.insert("file_name", *file_name);
+	if (mime_type.has_value())	documentJsonObject.insert("mime_type", *mime_type);
+	if (file_size.has_value())	documentJsonObject.insert("file_size", *file_size);
 
-    if(jsonObject.contains("file_name"))
-        _jsonObject.insert("file_name", jsonObject.value("file_name"));
-
-    if(jsonObject.contains("mime_type"))
-        _jsonObject.insert("mime_type", jsonObject.value("mime_type"));
-
-    if(jsonObject.contains("file_size"))
-        _jsonObject.insert("file_size", jsonObject.value("file_size"));
+	return documentJsonObject;
 }
 
-
-/***//*!
-    \brief Get **fileId** value
-    \return Value of **fileId**
-*/
-QString Document::fileId()
+bool Telegram::Document::isEmpty() const
 {
-    return _jsonObject.value("file_id").toString();
-}
-
-/*!
-    \brief Set new value for **fileId**
-    \param QString New value of **fileId**
-*/
-void Document::setFileId(QString fileId)
-{
-    _jsonObject.insert("file_id", fileId);
-}
-
-
-/***//*!
-    \brief Get **fileUniqueId** value
-    \return Value of **fileUniqueId**
-*/
-QString Document::fileUniqueId()
-{
-    return _jsonObject.value("file_unique_id").toString();
-}
-
-/*!
-    \brief Set new value for **fileUniqueId**
-    \param QString New value of **fileUniqueId**
-*/
-void Document::setFileUniqueId(QString fileUniqueId)
-{
-     _jsonObject.insert("file_unique_id", fileUniqueId);
-}
-
-
-/***//*!
-    \brief Get **thumb** value
-    \return Value of **thumb**
-*/
-PhotoSize Document::thumb()
-{
-    return PhotoSize(_jsonObject.value("thumb").toObject());
-}
-
-/*!
-    \brief Set new value for **thumb**
-    \param PhotoSize New value of **thumb**
-*/
-void Document::setThumb(PhotoSize thumb)
-{
-    _jsonObject.insert("thumb", thumb.toObject());
-}
-
-/*!
-    \brief Check if object has **thumb**
-    \return `True` if has **thumb**, `false` if doesn't
-*/
-bool Document::hasThumb()
-{
-    return _jsonObject.contains("thumb");
-}
-
-
-/***//*!
-    \brief Get **fileName** value
-    \return Value of **fileName**
-*/
-QString Document::fileName()
-{
-    return _jsonObject.value("file_name").toString();
-}
-
-/*!
-    \brief Set new value for **fileName**
-    \param QString New value of **fileName**
-*/
-void Document::setFileName(QString fileName)
-{
-    _jsonObject.insert("file_name", fileName);
-}
-
-/*!
-    \brief Check if object has **fileName**
-    \return `True` if has **fileName**, `false` if doesn't
-*/
-bool Document::hasFileName()
-{
-    return _jsonObject.contains("file_name");
-}
-
-
-/***//*!
-    \brief Get **mimeType** value
-    \return Value of **mimeType**
-*/
-QString Document::mimeType()
-{
-    return _jsonObject.value("mime_type").toString();
-}
-
-/*!
-    \brief Set new value for **mimeType**
-    \param QString New value of **mimeType**
-*/
-void Document::setMimeType(QString mimeType)
-{
-    _jsonObject.insert("mime_type", mimeType);
-}
-
-/*!
-    \brief Check if object has **mimeType**
-    \return `True` if has **mimeType**, `false` if doesn't
-*/
-bool Document::hasMimeType()
-{
-    return _jsonObject.contains("mime_type");
-}
-
-
-/***//*!
-    \brief Get **fileSize** value
-    \return Value of **fileSize**
-*/
-qint32 Document::fileSize()
-{
-    return _jsonObject.value("file_size").toInt();
-}
-
-/*!
-    \brief Set new value for **fileSize**
-    \param qint32 New value of **fileSize**
-*/
-void Document::setFileSize(qint32 fileSize)
-{
-    _jsonObject.insert("file_size", fileSize);
-}
-
-/*!
-    \brief Check if object has **fileSize**
-    \return `True` if has **fileSize**, `false` if doesn't
-*/
-bool Document::hasFileSize()
-{
-    return _jsonObject.contains("file_size");
+	return file_id == ""
+		   and file_unique_id == ""
+		   and thumb == std::nullopt
+		   and file_name == std::nullopt
+		   and mime_type == std::nullopt
+		   and file_size == std::nullopt;
 }

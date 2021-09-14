@@ -1,35 +1,50 @@
-#ifndef DICE_H
-#define DICE_H
+#ifndef TELEGRAM_TYPES_DICE_H
+#define TELEGRAM_TYPES_DICE_H
 
-#include "Types/Type.h"
+#include "qstring.h"
+class QJsonObject;
 
-/*!
-    \brief This class represents an animated emoji that displays a random value
-
-    Fields of Dice object
-    -----------------------------------
-
-    | Field     | Type      | Desription  |
-    | :---:     | :----:    | :---- |
-    | **emoji** | `QString` | Emoji on which the dice throw animation is based |
-    | **value** | `QInt32`  | Value of the dice, 1-6 for “🎲” (dice) and “🎯”(darts throw) base emoji, 1-5 for “🏀”(ball throw) base emoji |
-*/
-
-class Dice : public Type
+namespace Telegram
 {
-public:
-    Dice();
+    /**
+     *
+     * @brief This struct represents an animated emoji that displays a random value
+     *
+     */
 
-    Dice(QString emoji,
-         qint32  value);
+    struct Dice
+    {
+        /** @brief Default constructor. Constructs an empty Dice object
+         *
+         * All fields setted to 0 or "" */
+        Dice();
 
-    Dice(QJsonObject jsonObject);
+        /** @brief Constructs Dice object from parameters */
+        Dice(const QString& emoji,
+             const qint32&  value);
 
-    QString emoji();
-    void    setEmoji(QString text);
+        /** @brief JSON constructor. Constructs Dice object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has key-value pairs "emoji" = "..." and "value" = "..." to construct correct object,
+         * otherwise fields related to missing pairs will be setted to some default values(0, "") */
+        Dice(const QJsonObject& jsonObject);
 
-    qint32  value();
-    void    setValue(qint32 voterCount);
-};
+        /* @brief Returns Dice in form of JSON object. Returns empty QJsonObject if Dice is empty */
+        QJsonObject toObject() const;
 
-#endif // DICE_H
+        /* @brief Returns true if Dice is empty */
+        bool isEmpty() const;
+
+//** Fields **//
+
+        /** @brief Emoji on which the dice throw animation is based */
+        QString emoji;
+        
+        /** @brief Value of the dice
+         * 
+         *  1-6 for “🎲” (dice) and “🎯”(darts throw) base emoji, 1-5 for “🏀”(ball throw) base emoji */
+        qint32 value;
+    };
+}
+
+#endif // TELEGRAM_TYPES_DICE_H
