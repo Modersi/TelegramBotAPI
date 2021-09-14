@@ -1,442 +1,152 @@
 #include "Types/Chat.h"
 #include "Types/Message.h"
 
-/*!
-    \brief A default constructor. Constructs an empty object
-*/
-Chat::Chat() {}
+#include "qjsonobject.h"
 
-/*!
-    \brief Class contructor
-    \param id   Unique identifier for this chat
-    \param type Type of chat, can be either “private”, “group”, “supergroup” or “channel”
-*/
-Chat::Chat(qint64 id,
-           QString type)
+Telegram::Chat::Chat() :
+	id(0),
+	type(Type::UNINITIALIZED_VALUE),
+	title(std::nullopt),
+	username(std::nullopt),
+	first_name(std::nullopt),
+	last_name(std::nullopt),
+	photo(std::nullopt),
+	bio(std::nullopt),
+	description(std::nullopt),
+	invite_link(std::nullopt),
+	pinned_message(std::nullopt),
+	permissions(std::nullopt),
+	slow_mode_delay(std::nullopt),
+	message_auto_delete_time(std::nullopt),
+	sticker_set_name(std::nullopt),
+	can_set_sticker_set(std::nullopt),
+	linked_chat_id(std::nullopt),
+	location(std::nullopt)
+{}
+
+Telegram::Chat::Chat(const qint64& id,
+	                 const Type& type,
+	                 const std::optional<QString>& title,
+	                 const std::optional<QString>& username,
+	                 const std::optional<QString>& first_name,
+	                 const std::optional<QString>& last_name,
+	                 const std::optional<ChatPhoto>& photo,
+	                 const std::optional<QString>& bio,
+	                 const std::optional<QString>& description,
+	                 const std::optional<QString>& invite_link,
+	                 const std::optional<std::shared_ptr<Message>>& pinned_message,
+	                 const std::optional<ChatPermissions>& permissions,
+	                 const std::optional<qint32>& slow_mode_delay,
+	                 const std::optional<qint32>& message_auto_delete_time,
+	                 const std::optional<QString>& sticker_set_name,
+	                 const std::optional<bool>& can_set_sticker_set,
+	                 const std::optional<qint64>& linked_chat_id,
+	                 const std::optional<ChatLocation>& location) :
+	id(id),
+	type(type),
+	title(title),
+	username(username),
+	first_name(first_name),
+	last_name(last_name),
+	photo(photo),
+	bio(bio),
+	description(description),
+	invite_link(invite_link),
+	pinned_message(pinned_message),
+	permissions(permissions),
+	slow_mode_delay(slow_mode_delay),
+	message_auto_delete_time(message_auto_delete_time),
+	sticker_set_name(sticker_set_name),
+	can_set_sticker_set(can_set_sticker_set),
+	linked_chat_id(linked_chat_id),
+	location(location)
+{}
+
+Telegram::Chat::Chat(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("id", id);
-    _jsonObject.insert("type", type);
+	auto getChatType = [](const QJsonValue& chatType) -> Chat::Type
+						{
+							if (chatType == "private") return Type::PRIVATE;
+							if (chatType == "group") return Type::GROUP;
+							if (chatType == "supergroup") return Type::SUPERGROUP;
+							if (chatType == "channel") return Type::CHANNEL;
+							else return Type::UNINITIALIZED_VALUE;
+						};
+
+	jsonObject.contains("id")						? id = jsonObject["id"].toInt()														  : id = 0;
+	jsonObject.contains("type")						? type = getChatType(jsonObject["type"])											  : type = Type::UNINITIALIZED_VALUE;
+	jsonObject.contains("title")					? title = jsonObject["title"].toString()											  : title = std::nullopt;
+	jsonObject.contains("username")					? username = jsonObject["username"].toString()										  : username = std::nullopt;
+	jsonObject.contains("first_name")				? first_name = jsonObject["first_name"].toString()									  : first_name = std::nullopt;
+	jsonObject.contains("last_name")				? last_name = jsonObject["last_name"].toString()									  : last_name = std::nullopt;
+	jsonObject.contains("photo")					? photo = ChatPhoto(jsonObject["photo"].toObject())									  : photo = std::nullopt;
+	jsonObject.contains("bio")						? bio = jsonObject["bio"].toString()												  : bio = std::nullopt;
+	jsonObject.contains("description")				? description = jsonObject["description"].toString()								  : description = std::nullopt;
+	jsonObject.contains("invite_link")				? invite_link = jsonObject["invite_link"].toString()								  : invite_link = std::nullopt;
+	jsonObject.contains("pinned_message")			? pinned_message = std::make_shared<Message>(jsonObject["pinned_message"].toObject()) : pinned_message = std::nullopt;
+	jsonObject.contains("permissions")				? permissions = ChatPermissions(jsonObject["permissions"].toObject())				  : permissions = std::nullopt;
+	jsonObject.contains("slow_mode_delay")			? slow_mode_delay = jsonObject["slow_mode_delay"].toInt()							  : slow_mode_delay = std::nullopt;
+	jsonObject.contains("message_auto_delete_time") ? message_auto_delete_time = jsonObject["message_auto_delete_time"].toInt()			  : message_auto_delete_time = std::nullopt;
+	jsonObject.contains("sticker_set_name")			? sticker_set_name = jsonObject["sticker_set_name"].toString()						  : sticker_set_name = std::nullopt;
+	jsonObject.contains("can_set_sticker_set")		? can_set_sticker_set = jsonObject["can_set_sticker_set"].toBool()					  : can_set_sticker_set = std::nullopt;
+	jsonObject.contains("linked_chat_id")			? linked_chat_id = jsonObject["linked_chat_id"].toInt()								  : linked_chat_id = std::nullopt;
+	jsonObject.contains("location")					? location = ChatLocation(jsonObject["location"].toObject())						  : location = std::nullopt;
 }
 
-/*!
-    \brief Constructor from QJsonObject
-    \param QJsonObject QJsonObject which contains fields suitable for the class
-*/
-Chat::Chat(QJsonObject jsonObject)
+QJsonObject Telegram::Chat::toObject() const
 {
-    if(jsonObject.contains("id"))
-        _jsonObject.insert("id", jsonObject.value("id"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("type"))
-        _jsonObject.insert("type", jsonObject.value("type"));
+	auto getChatType = [](const Chat::Type& chatType) -> QString
+						{
+							if (chatType == Type::PRIVATE) return "private";
+							if (chatType == Type::GROUP) return "group";
+							if (chatType == Type::SUPERGROUP) return "supergroup";
+							if (chatType == Type::CHANNEL) return "channel";
+							else return "";
+						};
 
-    if(jsonObject.contains("title"))
-        _jsonObject.insert("title", jsonObject.value("title"));
+	QJsonObject chatJsonObject{ {"id", id}, {"type", getChatType(type)} };
 
-    if(jsonObject.contains("username"))
-        _jsonObject.insert("username", jsonObject.value("username"));
+	if (title.has_value())						chatJsonObject.insert("title", *title);
+	if (username.has_value())					chatJsonObject.insert("username", *username);
+	if (first_name.has_value())					chatJsonObject.insert("first_name", *first_name);
+	if (last_name.has_value())					chatJsonObject.insert("last_name", *last_name);
+	if (photo.has_value())						chatJsonObject.insert("photo", photo->toObject());
+	if (bio.has_value())						chatJsonObject.insert("bio", *bio);
+	if (description.has_value())				chatJsonObject.insert("description", *description);
+	if (invite_link.has_value())				chatJsonObject.insert("invite_link", *invite_link);
+	if (pinned_message.has_value())				chatJsonObject.insert("pinned_message", pinned_message.value()->toObject());
+	if (permissions.has_value())				chatJsonObject.insert("permissions", permissions->toObject());
+	if (slow_mode_delay.has_value())			chatJsonObject.insert("slow_mode_delay", *slow_mode_delay);
+	if (message_auto_delete_time.has_value())	chatJsonObject.insert("message_auto_delete_time", *message_auto_delete_time);
+	if (sticker_set_name.has_value())			chatJsonObject.insert("sticker_set_name", *sticker_set_name);
+	if (can_set_sticker_set.has_value())		chatJsonObject.insert("can_set_sticker_set", *can_set_sticker_set);
+	if (linked_chat_id.has_value())				chatJsonObject.insert("linked_chat_id", *linked_chat_id);
+	if (location.has_value())					chatJsonObject.insert("location", location->toObject());
 
-    if(jsonObject.contains("first_name"))
-        _jsonObject.insert("first_name", jsonObject.value("first_name"));
-
-    if(jsonObject.contains("last_name"))
-        _jsonObject.insert("last_name", jsonObject.value("last_name"));
-
-    if(jsonObject.contains("photo"))
-        _jsonObject.insert("photo", jsonObject.value("photo"));
-
-    if(jsonObject.contains("description"))
-        _jsonObject.insert("description", jsonObject.value("description"));
-
-    if(jsonObject.contains("invite_link"))
-        _jsonObject.insert("invite_link", jsonObject.value("invite_link"));
-
-    if(jsonObject.contains("pinned_message"))
-        _jsonObject.insert("pinned_message", jsonObject.value("pinned_message"));
-
-    if(jsonObject.contains("permissions"))
-        _jsonObject.insert("permissions", jsonObject.value("permissions"));
-
-    if(jsonObject.contains("slow_mode_delay"))
-        _jsonObject.insert("slow_mode_delay", jsonObject.value("slow_mode_delay"));
-
-    if(jsonObject.contains("sticker_set_name"))
-        _jsonObject.insert("sticker_set_name", jsonObject.value("sticker_set_name"));
-
-    if(jsonObject.contains("can_set_sticker_set"))
-        _jsonObject.insert("can_set_sticker_set", jsonObject.value("can_set_sticker_set"));
+	return chatJsonObject;
 }
 
-
-/***//*!
-    \brief Get **id** value
-    \return Value of **id**
-*/
-qint64 Chat::id()
+bool Telegram::Chat::isEmpty() const
 {
-    return _jsonObject.value("id").toInt();
-}
-
-/*!
-    \brief Set new value for **id**
-    \param qint64 New value of **id**
-*/
-void Chat::setId(qint64 id)
-{
-    _jsonObject.insert("id", id);
-}
-
-
-/***//*!
-    \brief Get **type** value
-    \return Value of **type**
-*/
-QString Chat::type()
-{
-    return _jsonObject.value("type").toString();
-}
-
-/*!
-    \brief Set new value for **type**
-    \param QString New value of **type**
-*/
-void Chat::setType(QString type)
-{
-    _jsonObject.insert("type", type);
-}
-
-
-/***//*!
-    \brief Get **title** value
-    \return Value of **title**
-*/
-QString Chat::title()
-{
-    return _jsonObject.value("title").toString();
-}
-
-/*!
-    \brief Set new value for **title**
-    \param QString New value of **title**
-*/
-void Chat::setTitle(QString title)
-{
-    _jsonObject.insert("title", title);
-}
-
-/*!
-    \brief Check if object has **title**
-    \return `True` if has **title**, `false` if doesn't
-*/
-bool Chat::hasTitle()
-{
-    return  _jsonObject.contains("title");
-}
-
-
-/***//*!
-    \brief Get **username** value
-    \return Value of **username**
-*/
-QString Chat::username()
-{
-    return _jsonObject.value("username").toString();
-}
-
-/*!
-    \brief Set new value for **username**
-    \param QString New value of **username**
-*/
-void Chat::setUsername(QString username)
-{
-    _jsonObject.insert("username", username);
-}
-
-/*!
-    \brief Check if object has **username**
-    \return `True` if has **username**, `false` if doesn't
-*/
-bool Chat::hasUsername()
-{
-    return _jsonObject.contains("username");
-}
-
-
-/***//*!
-    \brief Get **firstName** value
-    \return Value of **firstName**
-*/
-QString Chat::firstName()
-{
-    return _jsonObject.value("first_name").toString();
-}
-
-/*!
-    \brief Set new value for **firstName**
-    \param QString New value of **firstName**
-*/
-void Chat::setFirstName(QString firstName)
-{
-    _jsonObject.insert("first_name", firstName);
-}
-
-/*!
-    \brief Check if object has **firstName**
-    \return `True` if has **firstName**, `false` if doesn't
-*/
-bool Chat::hasFirstName()
-{
-    return _jsonObject.contains("first_name");
-}
-
-
-/***//*!
-    \brief Get **lastName** value
-    \return Value of **lastName**
-*/
-QString Chat::lastName()
-{
-    return _jsonObject.value("last_name").toString();
-}
-
-/*!
-    \brief Set new value for **lastName**
-    \param QString New value of **lastName**
-*/
-void Chat::setLastName(QString lastName)
-{
-    _jsonObject.insert("last_name", lastName);
-}
-
-/*!
-    \brief Check if object has **lastName**
-    \return `True` if has **lastName**, `false` if doesn't
-*/
-bool Chat::hasLastName()
-{
-    return _jsonObject.contains("last_name");
-}
-
-
-/***//*!
-    \brief Get **photo** value
-    \return Value of **photo** in form of `ChatPhoto` object
-*/
-ChatPhoto Chat::photo()
-{
-    return ChatPhoto(_jsonObject.value("photo").toObject());
-}
-
-/*!
-    \brief Set new value for **photo**
-    \param ChatPhoto New value of **photo**
-*/
-void Chat::setPhoto(ChatPhoto photo)
-{
-    _jsonObject.insert("photo", photo.toObject());
-}
-
-/*!
-    \brief Check if object has **photo**
-    \return `True` if has **photo**, `false` if doesn't
-*/
-bool Chat::hasPhoto()
-{
-    return _jsonObject.contains("photo");
-}
-
-
-/***//*!
-    \brief Get **description** value
-    \return Value of **description**
-*/
-QString Chat::description()
-{
-    return _jsonObject.value("description").toString();
-}
-
-/*!
-    \brief Set new value for **description**
-    \param QString New value of **description**
-*/
-void Chat::setDescription(QString description)
-{
-    _jsonObject.insert("description", description);
-}
-
-/*!
-    \brief Check if object has **description**
-    \return `True` if has **description**, `false` if doesn't
-*/
-bool Chat::hasDescription()
-{
-    return _jsonObject.contains("description");
-}
-
-
-/***//*!
-    \brief Get **inviteLink** value
-    \return Value of **inviteLink**
-*/
-QString Chat::inviteLink()
-{
-    return _jsonObject.value("invite_link").toString();
-}
-
-/*!
-    \brief Set new value for **inviteLink**
-    \param QString New value of **inviteLink**
-*/
-void Chat::setInviteLink(QString inviteLink)
-{
-    _jsonObject.insert("invite_link", inviteLink);
-}
-
-/*!
-    \brief Check if object has **inviteLink**
-    \return `True` if has **inviteLink**, `false` if doesn't
-*/
-bool Chat::hasInviteLink()
-{
-    return _jsonObject.contains("invite_link");
-}
-
-
-/***//*!
-    \brief Get **pinnedMessage** value
-    \return QSharedPointer on value of **pinnedMessage** in form of `Message` object
-*/
-QSharedPointer<Message> Chat::pinnedMessage()
-{
-    return QSharedPointer<Message>(new Message(_jsonObject.value("pinned_message").toObject()));
-}
-
-/*!
-    \brief Set new value for **pinnedMessage**
-    \param Message New value of **pinnedMessage**
-*/
-void Chat::setPinnedMessage(Message pinnedMessage)
-{
-    _jsonObject.insert("pinned_message", pinnedMessage.toObject());
-}
-
-/*!
-    \brief Check if object has **pinnedMessage**
-    \return `True` if has **pinnedMessage**, `false` if doesn't
-*/
-bool Chat::hasPinnedMessage()
-{
-    return _jsonObject.contains("pinned_message");
-}
-
-
-/***//*!
-    \brief Get **permissions** value
-    \return Value of **permissions** in form of `ChatPermissions` object
-*/
-ChatPermissions Chat::permissions()
-{
-    return ChatPermissions(_jsonObject.value("permissions").toObject());
-}
-
-/*!
-    \brief Set new value for **permissions**
-    \param ChatPermissions New value of **permissions**
-*/
-void Chat::setPermissions(ChatPermissions permissions)
-{
-    _jsonObject.insert("permissions", permissions.toObject());
-}
-
-/*!
-    \brief Check if object has **permissions**
-    \return `True` if has **permissions**, `false` if doesn't
-*/
-bool Chat::hasPermissions()
-{
-    return _jsonObject.contains("permissions");
-}
-
-
-/***//*!
-    \brief Get **slowModeDelay** value
-    \return Value of **slowModeDelay**
-*/
-qint32 Chat::slowModeDelay()
-{
-    return _jsonObject.value("slow_mode_delay").toInt();
-}
-
-/*!
-    \brief Set new value for **slowModeDelay**
-    \param qint32 New value of **slowModeDelay**
-*/
-void Chat::setSlowModeDelay(qint32 slowModeDelay)
-{
-    _jsonObject.insert("slow_mode_delay", slowModeDelay);
-}
-
-/*!
-    \brief Check if object has **slowModeDelay**
-    \return `True` if has **slowModeDelay**, `false` if doesn't
-*/
-bool Chat::hasSlowModeDelay()
-{
-    return _jsonObject.contains("slow_mode_delay");
-}
-
-
-/***//*!
-    \brief Get **stickerSetName** value
-    \return Value of **stickerSetName**
-*/
-QString Chat::stickerSetName()
-{
-    return _jsonObject.value("sticker_set_name").toString();
-}
-
-/*!
-    \brief Set new value for **stickerSetName**
-    \param QString New value of **stickerSetName**
-*/
-void Chat::setStickerSetName(QString stickerSetName)
-{
-    _jsonObject.insert("sticker_set_name", stickerSetName);
-}
-
-/*!
-    \brief Check if object has **stickerSetName**
-    \return `True` if has **stickerSetName**, `false` if doesn't
-*/
-bool Chat::hasStickerSetName()
-{
-    return _jsonObject.contains("sticker_set_name");
-}
-
-
-/***//*!
-    \brief Get **canSetStickerSet** value
-    \return Value of **canSetStickerSet**
-*/
-bool Chat::canSetStickerSet()
-{
-    return _jsonObject.value("can_set_sticker_set").toBool();
-}
-
-/*!
-    \brief Set new value for **canSetStickerSet**
-    \param bool New value of **canSetStickerSet**
-*/
-void Chat::setCanSetStickerSet(bool canSetStickerSet)
-{
-    _jsonObject.insert("can_set_sticker_set", canSetStickerSet);
-}
-
-/*!
-    \brief Check if object has **canSetStickerSet**
-    \return `True` if has **canSetStickerSet**, `false` if doesn't
-*/
-bool Chat::hasCanSetStickerSet()
-{
-    return _jsonObject.contains("can_set_sticker_set");
+	return id == 0
+		   and type == Type::UNINITIALIZED_VALUE
+		   and title == std::nullopt
+		   and username == std::nullopt
+		   and first_name == std::nullopt
+		   and last_name == std::nullopt
+		   and photo == std::nullopt
+		   and bio == std::nullopt
+		   and description == std::nullopt
+		   and invite_link == std::nullopt
+		   and pinned_message == std::nullopt
+		   and permissions == std::nullopt
+		   and slow_mode_delay == std::nullopt
+		   and message_auto_delete_time == std::nullopt
+		   and sticker_set_name == std::nullopt
+		   and can_set_sticker_set == std::nullopt
+		   and linked_chat_id == std::nullopt
+		   and location == std::nullopt;
 }

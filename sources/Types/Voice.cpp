@@ -1,107 +1,54 @@
 #include "Types/Voice.h"
 
-Voice::Voice() {}
+#include "qjsonobject.h"
 
-Voice::Voice(QString fileId,
-             QString fileUniqueId,
-             qint32  duration,
-             QString mimeType,
-             qint32  fileSize)
+Telegram::Voice::Voice() :
+	file_id(""),
+	file_unique_id(""),
+	duration(0),
+	mime_type(std::nullopt),
+	file_size(std::nullopt)
+{}
+
+Telegram::Voice::Voice(const QString& file_id,
+					   const QString& file_unique_id,
+					   const qint32& duration,
+					   const std::optional<QString>& mime_type,
+					   const std::optional<qint32>& file_size) :
+	file_id(file_id),
+	file_unique_id(file_unique_id),
+	duration(duration),
+	mime_type(mime_type),
+	file_size(file_size)
+{}
+
+Telegram::Voice::Voice(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("file_id", QJsonValue(fileId));
-    _jsonObject.insert("file_unique_id", QJsonValue(fileUniqueId));
-    _jsonObject.insert("duration", QJsonValue(duration));
-
-    if(!mimeType.isEmpty())
-        _jsonObject.insert("mime_type", QJsonValue(mimeType));
-    if(fileSize != 0)
-        _jsonObject.insert("file_size", QJsonValue(fileSize));
+	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
+	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
+	jsonObject.contains("duration")		  ? duration = jsonObject["duration"].toInt()				 : duration = 0;
+	jsonObject.contains("mime_type")	  ? mime_type = jsonObject["mime_type"].toString()			 : mime_type = std::nullopt;
+	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
 }
 
-Voice::Voice(QJsonObject jsonObject)
+QJsonObject Telegram::Voice::toObject() const
 {
-    if(jsonObject.contains("file_id"))
-        _jsonObject.insert("file_id", jsonObject.value("file_id"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("file_unique_id"))
-        _jsonObject.insert("file_unique_id", jsonObject.value("file_unique_id"));
+	QJsonObject videoJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"duration", duration} };
 
-    if(jsonObject.contains("duration"))
-        _jsonObject.insert("duration", jsonObject.value("duration"));
+	if (mime_type.has_value())	videoJsonObject.insert("mime_type", *mime_type);
+	if (file_size.has_value())	videoJsonObject.insert("file_size", *file_size);
 
-    if(jsonObject.contains("mime_type"))
-        _jsonObject.insert("mime_type", jsonObject.value("mime_type"));
-
-    if(jsonObject.contains("file_size"))
-        _jsonObject.insert("file_size", jsonObject.value("file_size"));
+	return videoJsonObject;
 }
 
-// "get", "set" methods for "file_id" field //
-
-QString Voice::fileId()
+bool Telegram::Voice::isEmpty() const
 {
-    return _jsonObject.value("file_id").toString();
-}
-
-void Voice::setFileId(QString fileId)
-{
-    _jsonObject.insert("file_id", fileId);
-}
-
-// "get", "set" methods for "file_unique_id" field //
-
-QString Voice::fileUniqueId()
-{
-    return _jsonObject.value("file_unique_id").toString();
-}
-
-void Voice::setFileUniqueId(QString fileUniqueId)
-{
-    _jsonObject.insert("file_unique_id", fileUniqueId);
-}
-
-// "get", "set" methods for "duration" field //
-
-qint32 Voice::duration()
-{
-    return _jsonObject.value("duration").toInt();
-}
-
-void Voice::setDuration(qint32 duration)
-{
-    _jsonObject.insert("duration", duration);
-}
-
-// "get", "set", "has" methods for "mime_type" field //
-
-QString Voice::mimeType()
-{
-    return _jsonObject.value("mime_type").toString();
-}
-
-void Voice::setMimeType(QString mimeType)
-{
-    _jsonObject.insert("mime_type", mimeType);
-}
-
-bool Voice::hasMimeType()
-{
-    return _jsonObject.contains("mime_type");
-}
-
-// "get", "set", "has" methods for "file_size" field //
-
-qint32 Voice::fileSize()
-{
-    return _jsonObject.value("file_size").toInt();
-}
-
-void Voice::setFileSize(qint32 fileSize)
-{
-    _jsonObject.insert("file_size", fileSize);
-}
-
-bool Voice::hasFileSize()
-{
-    return _jsonObject.contains("file_size");
+	return file_id == ""
+		   and file_unique_id == ""
+		   and duration == 0
+		   and mime_type == std::nullopt
+		   and file_size == std::nullopt;
 }

@@ -1,264 +1,115 @@
 #include "Types/Poll.h"
+#include "Internal/ConversionFunctions.h"
 
-Poll::Poll()
+#include "qjsonobject.h"
+#include "qjsonarray.h"
+
+Telegram::Poll::Poll() :
+	id(""),
+	question(""),
+	options(QVector<PollOption>()),
+	total_voter_count(0),
+	is_closed(false),
+	is_anonymous(false),
+	type(Type::UNINITIALIZED_VALUE),
+	allows_multiple_answers(false),
+	correct_option_id(std::nullopt),
+	explanation(std::nullopt),
+	explanation_entities(std::nullopt),
+	open_period(std::nullopt),
+	close_date(std::nullopt)
 {
-
 }
 
-Poll::Poll(QString                 id,
-           QString                 question,
-           QVector<PollOption>     options,
-           qint32                  totalVoterCount,
-           bool                    isClosed,
-           bool                    isAnonymous,
-           QString                 type,
-           bool                    allowsMultipleAnswers,
-           qint32                  correctOptionId,
-           QString                 explanation,
-           QVector<MessageEntity>  explanationEntities,
-           qint32                  openPeriod,
-           qint32                  closeDate)
-{
-    _jsonObject.insert("id", QJsonValue(id));
-    _jsonObject.insert("question", QJsonValue(question));
-    _jsonObject.insert("options", QJsonValue(Type::QVectorToQJsonArray(options)));
-    _jsonObject.insert("total_voter_count", QJsonValue(totalVoterCount));
-    _jsonObject.insert("is_closed", QJsonValue(isClosed));
-    _jsonObject.insert("is_anonymous", QJsonValue(isAnonymous));
-    _jsonObject.insert("type", QJsonValue(type));
-    _jsonObject.insert("allows_multiple_answers", QJsonValue(allowsMultipleAnswers));
+Telegram::Poll::Poll(const QString& id,
+					 const QString& question,
+					 const QVector<PollOption>& options,
+					 const qint32& total_voter_count,
+					 const bool& is_closed,
+					 const bool& is_anonymous,
+					 const Type& type,
+					 const bool& allows_multiple_answers,
+					 const std::optional<qint32>& correct_option_id,
+					 const std::optional<QString>& explanation,
+					 const std::optional<QVector<MessageEntity>>& explanation_entities,
+					 const std::optional<qint32>& open_period,
+					 const std::optional<qint32>& close_date) :
+	id(id),
+	question(question),
+	options(options),
+	total_voter_count(total_voter_count),
+	is_closed(is_closed),
+	is_anonymous(is_anonymous),
+	type(type),
+	allows_multiple_answers(allows_multiple_answers),
+	correct_option_id(correct_option_id),
+	explanation(explanation),
+	explanation_entities(explanation_entities),
+	open_period(open_period),
+	close_date(close_date)
+{}
 
-    if(correctOptionId != -1)
-        _jsonObject.insert("correct_option_id", QJsonValue(correctOptionId));
-    if(!explanation.isEmpty())
-        _jsonObject.insert("explanation", QJsonValue(explanation));
-    if(!explanationEntities.isEmpty())
-        _jsonObject.insert("explanation_entities", QJsonValue(Type::QVectorToQJsonArray(explanationEntities)));
-    if(openPeriod != 0)
-        _jsonObject.insert("open_period", QJsonValue(openPeriod));
-    if(closeDate != 0)
-        _jsonObject.insert("close_date", QJsonValue(closeDate));
+Telegram::Poll::Poll(const QJsonObject& jsonObject)
+{
+	auto GetPollType = [](const QJsonValue& pollType) -> Poll::Type
+								{
+									if (pollType == "quiz") return Type::QUIZ;
+									if (pollType == "regular") return Type::REGULAR;
+									else return Type::UNINITIALIZED_VALUE;
+								};
+
+	jsonObject.contains("id")						? id = jsonObject["id"].toString()																		   : id = "";
+	jsonObject.contains("question")					? question = jsonObject["question"].toString()															   : question = "";																												   
+	jsonObject.contains("options")					? options = QJsonArrayToQVector<PollOption>(jsonObject["options"].toArray())							   : options = QVector<PollOption>();
+	jsonObject.contains("total_voter_count")		? total_voter_count = jsonObject["total_voter_count"].toInt()											   : total_voter_count = 0;
+	jsonObject.contains("is_closed")				? is_closed = jsonObject["is_closed"].toBool()															   : is_closed = false;
+	jsonObject.contains("is_anonymous")				? is_anonymous = jsonObject["is_anonymous"].toBool()													   : is_anonymous = false;
+	jsonObject.contains("type")						? type = GetPollType(jsonObject["type"])																   : type = Type::UNINITIALIZED_VALUE;
+	jsonObject.contains("allows_multiple_answers")	? allows_multiple_answers = jsonObject["allows_multiple_answers"].toBool()								   : allows_multiple_answers = false;
+	jsonObject.contains("correct_option_id")		? correct_option_id = jsonObject["correct_option_id"].toInt()											   : correct_option_id = std::nullopt;
+	jsonObject.contains("explanation")				? explanation = jsonObject["explanation"].toString()													   : explanation = std::nullopt;
+	jsonObject.contains("explanation_entities")		? explanation_entities = QJsonArrayToQVector<MessageEntity>(jsonObject["explanation_entities"].toArray())  : explanation_entities = std::nullopt;
+	jsonObject.contains("open_period")				? open_period = jsonObject["open_period"].toInt()														   : open_period = std::nullopt;
+	jsonObject.contains("close_date")				? close_date = jsonObject["close_date"].toInt()															   : close_date = std::nullopt;
 }
 
-Poll::Poll(QJsonObject jsonObject)
+QJsonObject Telegram::Poll::toObject() const
 {
-    if(jsonObject.contains("id"))
-        _jsonObject.insert("id", jsonObject.value("id"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("question"))
-        _jsonObject.insert("question", jsonObject.value("question"));
+	auto GetPollTypeInString = [](const Poll::Type& pollType) -> QString
+								{
+									if (pollType == Type::QUIZ) return "quiz";
+									if (pollType == Type::REGULAR) return "regular";
+									else return "";
+								};
 
-    if(jsonObject.contains("options"))
-        _jsonObject.insert("options", jsonObject.value("options"));
+	QJsonObject pollJsonObject{ {"id", id}, {"question", question}, {"options", QVectorToQJsonArray(options)}, {"total_voter_count", total_voter_count},
+								{"is_closed", is_closed}, {"is_anonymous", is_anonymous}, {"type", GetPollTypeInString(type)}, {"allows_multiple_answers", allows_multiple_answers} };
 
-    if(jsonObject.contains("total_voter_count"))
-        _jsonObject.insert("total_voter_count", jsonObject.value("total_voter_count"));
+	if (correct_option_id.has_value())		pollJsonObject.insert("correct_option_id", *correct_option_id);
+	if (explanation.has_value())			pollJsonObject.insert("explanation", *explanation);
+	if (explanation_entities.has_value())	pollJsonObject.insert("explanation_entities", QVectorToQJsonArray(*explanation_entities));
+	if (open_period.has_value())			pollJsonObject.insert("open_period", *open_period);
+	if (close_date.has_value())				pollJsonObject.insert("close_date", *close_date);
 
-    if(jsonObject.contains("is_closed"))
-        _jsonObject.insert("is_closed", jsonObject.value("is_closed"));
-
-    if(jsonObject.contains("is_anonymous"))
-        _jsonObject.insert("is_anonymous", jsonObject.value("is_anonymous"));
-
-    if(jsonObject.contains("type"))
-        _jsonObject.insert("type", jsonObject.value("type"));
-
-    if(jsonObject.contains("allows_multiple_answers"))
-        _jsonObject.insert("allows_multiple_answers", jsonObject.value("allows_multiple_answers"));
-
-    if(jsonObject.contains("correct_option_id"))
-        _jsonObject.insert("correct_option_id", jsonObject.value("correct_option_id"));
-
-    if(jsonObject.contains("explanation"))
-        _jsonObject.insert("explanation", jsonObject.value("explanation"));
-
-    if(jsonObject.contains("explanation_entities"))
-        _jsonObject.insert("explanation_entities", jsonObject.value("explanation_entities"));
-
-    if(jsonObject.contains("open_period"))
-        _jsonObject.insert("open_period", jsonObject.value("open_period"));
-
-    if(jsonObject.contains("close_date"))
-        _jsonObject.insert("close_date", jsonObject.value("close_date"));
+	return pollJsonObject;
 }
 
-// "get", "set" methods for "id" field //
-
-QString Poll::id()
+bool Telegram::Poll::isEmpty() const
 {
-    return _jsonObject.value("id").toString();
-}
-
-void Poll::setId(QString id)
-{
-    _jsonObject.insert("id", id);
-}
-
-// "get", "set" methods for "question" field //
-
-QString Poll::question()
-{
-    return _jsonObject.value("question").toString();
-}
-
-void Poll::setQuestion(QString question)
-{
-    _jsonObject.insert("question", question);
-}
-
-// "get", "set" methods for "options" field //
-
-QVector<PollOption> Poll::options()
-{
-    return Type::QJsonArrayToQVector(_jsonObject.value("options").toArray(), PollOption());
-}
-
-void Poll::setOptions(QVector<PollOption> options)
-{
-    _jsonObject.insert("options", Type::QVectorToQJsonArray(options));
-}
-
-// "get", "set" methods for "total_voter_count" field //
-
-qint32 Poll::totalVoterCount()
-{
-    return _jsonObject.value("total_voter_count").toInt();
-}
-
-void Poll::setTotalVoterCount(qint32 totalVoterCount)
-{
-    _jsonObject.insert("total_voter_count", totalVoterCount);
-}
-
-// "get", "set" methods for "is_closed" field //
-
-bool Poll::isClosed()
-{
-    return _jsonObject.value("is_closed").toBool();
-}
-
-void Poll::setIsClosed(bool isClosed)
-{
-    _jsonObject.insert("is_closed", isClosed);
-}
-
-// "get", "set" methods for "is_anonymous" field //
-
-bool Poll::isAnonymous()
-{
-    return _jsonObject.value("is_anonymous").toBool();
-}
-
-void Poll::setIsAnonymous(bool isAnonymous)
-{
-    _jsonObject.insert("is_anonymous", isAnonymous);
-}
-
-// "get", "set" methods for "type" field //
-
-QString Poll::type()
-{
-    return _jsonObject.value("type").toString();
-}
-
-void Poll::setType(QString type)
-{
-    _jsonObject.insert("type", type);
-}
-
-// "get", "set" methods for "allows_multiple_answers" field //
-
-bool Poll::allowsMultipleAnswers()
-{
-    return _jsonObject.value("allows_multiple_answers").toBool();
-}
-
-void Poll::setAllowsMultipleAnswers(bool allowsMultipleAnswers)
-{
-    _jsonObject.insert("allows_multiple_answers", allowsMultipleAnswers);
-}
-
-// "get", "set", "has" methods for "correct_option_id" field //
-
-qint32 Poll::correctOptionId()
-{
-    return _jsonObject.value("correct_option_id").toInt();
-}
-
-void Poll::setCorrectOptionId(qint32 correctOptionId)
-{
-    _jsonObject.insert("correct_option_id", correctOptionId);
-}
-
-bool Poll::hasCorrectOptionId()
-{
-    return _jsonObject.contains("correct_option_id");
-}
-
-// "get", "set", "has" methods for "explanation" field //
-
-QString Poll::explanation()
-{
-    return _jsonObject.value("explanation").toString();
-}
-
-void Poll::setExplanation(QString explanation)
-{
-    _jsonObject.insert("explanation", explanation);
-}
-
-bool Poll::hasExplanation()
-{
-    return _jsonObject.contains("explanation");
-}
-
-// "get", "set", "has" methods for "explanation_entities" field //
-
-QVector<MessageEntity> Poll::explanationEntities()
-{
-    return Type::QJsonArrayToQVector(_jsonObject.value("explanation_entities").toArray(), MessageEntity());
-}
-
-void Poll::setExplanationEntities(QVector<MessageEntity> explanationEntities)
-{
-    _jsonObject.insert("explanation_entities", Type::QVectorToQJsonArray(explanationEntities));
-}
-
-bool Poll::hasExplanationEntities()
-{
-    return _jsonObject.contains("explanation_entities");
-}
-
-// "get", "set", "has" methods for "open_period" field //
-
-qint32 Poll::openPeriod()
-{
-    return _jsonObject.value("open_period").toInt();
-}
-
-void Poll::setOpenPeriod(qint32 openPeriod)
-{
-    _jsonObject.insert("open_period", openPeriod);
-}
-
-bool Poll::hasOpenPeriod()
-{
-    return _jsonObject.contains("open_period");
-}
-
-// "get", "set", "has" methods for "close_date" field //
-
-qint32 Poll::closeDate()
-{
-    return _jsonObject.value("close_date").toInt();
-}
-
-void Poll::setCloseDate(qint32 closeDate)
-{
-    _jsonObject.insert("close_date", closeDate);
-}
-
-bool Poll::hasCloseDate()
-{
-    return _jsonObject.contains("close_date");
+	return id == ""
+		   and question == ""
+		   and options.isEmpty()
+		   and total_voter_count == 0
+		   and is_closed == false
+		   and is_anonymous == false
+		   and type == Type::UNINITIALIZED_VALUE
+		   and allows_multiple_answers == false
+		   and correct_option_id == std::nullopt
+		   and explanation == std::nullopt
+		   and explanation_entities == std::nullopt
+		   and open_period == std::nullopt
+		   and close_date == std::nullopt;
 }

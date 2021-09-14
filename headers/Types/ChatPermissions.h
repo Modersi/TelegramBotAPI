@@ -1,66 +1,69 @@
-#ifndef CHATPERMISSIONS_H
-#define CHATPERMISSIONS_H
+#ifndef TELEGRAM_TYPES_CHATPERMISSIONS_H
+#define TELEGRAM_TYPES_CHATPERMISSIONS_H
 
-#include "Types/Type.h"
+class QJsonObject;
+#include "qstring.h"
 
-/*!
-    \brief This class describes actions that a non-administrator user is allowed to take in a chat
+#include <optional>
 
-    Fields of ChatPermissions object
-    -----------------------------------
-
-    | Field                     | Type      | Desription  |
-    | :---:                     | :----:    | :---- |
-    | **canSendMessages**       | `Bool`    | **Optional**. True, if the user is allowed to send text messages, contacts, locations and venues |
-    | **canSendMediaMessages**  | `Bool`    | **Optional**. True, if the user is allowed to send audios, documents, photos, videos, video notes and voice notes, implies canSendMessages |
-    | **canSendPolls**          | `Bool`    | **Optional**. True, if the user is allowed to send polls, implies canSendMessages |
-    | **canSendOtherMessages**  | `Bool`    | **Optional**. Restricted only. True, if the user is allowed to send animations, games, stickers and use inline bots, implies canSendMediaMessages |
-    | **canAddWebPagePreviews** | `Bool`    | **Optional**. Restricted only. True, if the user is allowed to add web page previews to their messages, implies canSendMediaMessages |
-    | **canChangeInfo**         | `Bool`    | **Optional**. True, if the user is allowed to change the chat title, photo and other settings. Ignored in public supergroups |
-    | **canInviteUsers**        | `Bool`    | **Optional**. True, if the user is allowed to invite new users to the chat |
-    | **canPinMessages**        | `Bool`    | **Optional**. True, if the user is allowed to pin messages. Ignored in public supergroups |
-
-    In order to set **optional** fields use "set" methods ([setCustomTitle](@ref setCustomTitle), [setUntilDate](@ref setUntilDate), etc.)
-*/
-
-class ChatPermissions : public Type
+namespace Telegram
 {
-public:
-    ChatPermissions();
+    /**
+     *
+     * @brief This struct represent information about actions that a non-administrator user is allowed to take in a chat
+     *
+     */
 
-    ChatPermissions(QJsonObject jsonObject);
+    struct ChatPermissions
+    {
+        /** @brief Constructs Chat object from parameters, constructs an empty object if no parameters are passed */
+        ChatPermissions(const std::optional<bool>& can_send_messages = std::nullopt,
+                        const std::optional<bool>& can_send_media_messages = std::nullopt,
+                        const std::optional<bool>& can_send_polls = std::nullopt,
+                        const std::optional<bool>& can_send_other_messages = std::nullopt,
+                        const std::optional<bool>& can_add_web_page_previews = std::nullopt,
+                        const std::optional<bool>& can_change_info = std::nullopt,
+                        const std::optional<bool>& can_invite_users = std::nullopt,
+                        const std::optional<bool>& can_pin_messages = std::nullopt);
 
-    bool    canSendMessages();
-    void    setCanSendMessages(bool canSendMessages);
-    bool    hasCanSendMessages();
+        /** @brief JSON constructor. Constructs ChatPermissions object from QJsonObject
+        *
+        * QJsonObject which is passed to constuctor has to has all key-value pairs related to ChatPermissions class fields. For example it should contain pairs such as "can_send_messages" = "...",
+        * "can_send_media_messages" = "..." and so on, otherwise fields related to missing pairs will be setted to std::nullopt */
+        ChatPermissions(const QJsonObject& jsonObject);
 
-    bool    canSendMediaMessages();
-    void    setCanSendMediaMessages(bool canSendMediaMessages);
-    bool    hasCanSendMediaMessages();
+        /* @brief Returns ChatPermissions in form of JSON object. Returns empty QJsonObject if ChatPermissions is empty */
+        QJsonObject toObject() const;
 
-    bool    canSendPolls();
-    void    setCanSendPolls(bool canSendPolls);
-    bool    hasCanSendPolls();
+        /* @brief Returns true if ChatPermissions is empty */
+        bool isEmpty() const;
 
-    bool    canSendOtherMessages();
-    void    setCanSendOtherMessagess(bool canSendOtherMessages);
-    bool    hasCanSendOtherMessagess();
+//** Fields **//
 
-    bool    canAddWebPagePreviews();
-    void    setCanAddWebPagePreviews(bool canAddWebPagePreviews);
-    bool    hasCanAddWebPagePreviews();
-
-    bool    canChangeInfo();
-    void    setCanChangeInfo(bool canChangeInfo);
-    bool    hasCanChangeInfo();
-
-    bool    canInviteUsers();
-    void    setCanInviteUsers(bool canInviteUsers);
-    bool    hasCanInviteUsers();
-
-    bool    canPinMessages();
-    void    setCanPinMessages(bool canPinMessages);
-    bool    hasCanPinMessages();
-};
+        /** @brief Optional. True, if the user is allowed to send text messages, contacts, locations and venues */
+        std::optional<bool> can_send_messages;
+        
+        /** @brief Optional. True, if the user is allowed to send audios, documents, photos, videos, video notes and voice notes, implies can_send_messages */
+        std::optional<bool> can_send_media_messages;
+        
+        /** @brief Optional. True, if the user is allowed to send polls, implies can_send_messages */
+        std::optional<bool> can_send_polls;
+        
+        /** @brief Optional. True, if the user is allowed to send animations, games, stickers and use inline bots, implies can_send_media_messages */
+        std::optional<bool> can_send_other_messages;
+        
+        /** @brief Optional. True, if the user is allowed to add web page previews to their messages, implies can_send_media_messages */
+        std::optional<bool> can_add_web_page_previews;
+        
+        /** @brief Optional. True, if the user is allowed to change the chat title, photo and other settings. Ignored in public supergroups */
+        std::optional<bool> can_change_info;
+        
+        /** @brief Optional. True, if the user is allowed to invite new users to the chat */
+        std::optional<bool> can_invite_users;
+        
+        /** @brief Optional. True, if the user is allowed to pin messages. Ignored in public supergroups */
+        std::optional<bool> can_pin_messages;
+    };
+}
 
 #endif // CHATPERMISSIONS_H

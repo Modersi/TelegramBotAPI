@@ -1,180 +1,98 @@
 #include "Types/InputMediaVideo.h"
+#include "Internal/ConversionFunctions.h"
 
-InputMediaVideo::InputMediaVideo() {}
+#include "qjsonobject.h"
+#include "qjsonarray.h"
 
-InputMediaVideo::InputMediaVideo(QString media)
+Telegram::InputMediaVideo::InputMediaVideo() :
+	media(nullptr),
+	thumb(std::nullopt),
+	caption(std::nullopt),
+	parse_mode(std::nullopt),
+	caption_entities(std::nullopt),
+	width(std::nullopt),
+	height(std::nullopt),
+	duration(std::nullopt),
+	supports_streaming(std::nullopt)
+{}
+
+Telegram::InputMediaVideo::InputMediaVideo(const std::variant<QFile*, QString>& media,
+										   const std::optional<std::variant<QFile*, QString>>& thumb,
+										   const std::optional<QString>& caption,
+										   const std::optional<QString>& parse_mode,
+										   const std::optional<QVector<MessageEntity>>& caption_entities,
+										   const std::optional<qint32>& width,
+										   const std::optional<qint32>& height,
+										   const std::optional<qint32>& duration,
+										   const std::optional<bool>& supports_streaming) :
+	media(media),
+	thumb(thumb),
+	caption(caption),
+	parse_mode(parse_mode),
+	caption_entities(caption_entities),
+	width(width),
+	height(height),
+	duration(duration),
+	supports_streaming(supports_streaming)
+{}
+
+Telegram::InputMediaVideo::InputMediaVideo(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("type", "video");
-    _jsonObject.insert("media", media);
+	jsonObject.contains("media")			  ? media = jsonObject["media"].toString()															: media = nullptr;
+	jsonObject.contains("thumb")			  ? thumb = jsonObject["thumb"].toString()															: thumb = std::nullopt;
+	jsonObject.contains("caption")			  ? caption = jsonObject["caption"].toString()														: caption = std::nullopt;
+	jsonObject.contains("parse_mode")		  ? parse_mode = jsonObject["parse_mode"].toString()												: parse_mode = std::nullopt;									  																   
+	jsonObject.contains("caption_entities")   ? caption_entities = QJsonArrayToQVector<MessageEntity>(jsonObject["caption_entities"].toArray()) : caption_entities = std::nullopt;
+	jsonObject.contains("width")			  ? width = jsonObject["width"].toInt()																: width = std::nullopt;
+	jsonObject.contains("height")			  ? height = jsonObject["height"].toInt()															: height = std::nullopt;
+	jsonObject.contains("duration")			  ? duration = jsonObject["duration"].toInt()														: duration = std::nullopt;
+	jsonObject.contains("supports_streaming") ? supports_streaming = jsonObject["supports_streaming"].toBool()									: supports_streaming = std::nullopt;
 }
 
-InputMediaVideo::InputMediaVideo(QJsonObject jsonObject)
+QJsonObject Telegram::InputMediaVideo::toObject() const
 {
-    if(jsonObject.contains("type"))
-        _jsonObject.insert("type", jsonObject.value("type"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("media"))
-        _jsonObject.insert("media", jsonObject.value("media"));
+	QJsonObject inputMediaVideoJsonObject{ {"type", type} };
 
-    if(jsonObject.contains("thumb"))
-        _jsonObject.insert("thumb", jsonObject.value("thumb"));
+	if (std::holds_alternative<QFile*>(media))  inputMediaVideoJsonObject.insert("media", QString("attach://%1").arg(std::get<QFile*>(media)->fileName()));
+	if (std::holds_alternative<QString>(media)) inputMediaVideoJsonObject.insert("media", std::get<QString>(media));
 
-    if(jsonObject.contains("caption"))
-        _jsonObject.insert("caption", jsonObject.value("caption"));
+	if (thumb.has_value())
+	{
+		if (std::holds_alternative<QFile*>(*thumb))  inputMediaVideoJsonObject.insert("thumb", QString("attach://%1").arg(std::get<QFile*>(*thumb)->fileName()));
+		if (std::holds_alternative<QString>(*thumb)) inputMediaVideoJsonObject.insert("thumb", std::get<QString>(*thumb));
+	}
 
-    if(jsonObject.contains("parse_mode"))
-        _jsonObject.insert("parse_mode", jsonObject.value("parse_mode"));
+	if (caption.has_value())			inputMediaVideoJsonObject.insert("caption", *caption);
+	if (parse_mode.has_value())			inputMediaVideoJsonObject.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())	inputMediaVideoJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (width.has_value())				inputMediaVideoJsonObject.insert("width", *width);
+	if (height.has_value())				inputMediaVideoJsonObject.insert("height", *height);
+	if (duration.has_value())			inputMediaVideoJsonObject.insert("duration", *duration);
+	if (supports_streaming.has_value())	inputMediaVideoJsonObject.insert("supports_streaming", *supports_streaming);
 
-    if(jsonObject.contains("width"))
-        _jsonObject.insert("width", jsonObject.value("width"));
-
-    if(jsonObject.contains("height"))
-        _jsonObject.insert("height", jsonObject.value("height"));
-
-    if(jsonObject.contains("duration"))
-        _jsonObject.insert("duration", jsonObject.value("duration"));
-
-    if(jsonObject.contains("supports_streaming"))
-        _jsonObject.insert("supports_streaming", jsonObject.value("supports_streaming"));
+	return inputMediaVideoJsonObject;
 }
 
-// "get", "set" methods for "media" field //
-
-QString InputMediaVideo::media()
+bool Telegram::InputMediaVideo::isEmpty() const
 {
-    return _jsonObject.value("media").toString();
-}
+	/* Check if std::variant<QFile*, QString> media contains any value */
+	bool holdsMedia(false);
+	if (std::holds_alternative<QFile*>(media))
+		if (std::get<QFile*>(media) != nullptr) holdsMedia = true;
 
-void InputMediaVideo::setMedia(QString media)
-{
-    _jsonObject.insert("media", media);
-}
+	if (std::holds_alternative<QString>(media))
+		if (std::get<QString>(media) != "") holdsMedia = true;
 
-// "get", "set", "has" methods for "thumb" field //
-
-//InputFile InputMediaVideo::thumb()
-//{
-//    return InputFile(_jsonObject.value("thumb").toObject());
-//}
-
-QString InputMediaVideo::thumb()
-{
-    return _jsonObject.value("thumb").toString();
-}
-
-//void InputMediaVideo::setThumb(InputFile thumb)
-//{
-//    _jsonObject.insert("thumb", thumb);
-//}
-
-void InputMediaVideo::setThumb(QString thumb)
-{
-    _jsonObject.insert("thumb", thumb);
-}
-
-bool InputMediaVideo::hasThumb()
-{
-    return _jsonObject.contains("thumb");
-}
-
-// "get", "set", "has" methods for "caption" field //
-
-QString InputMediaVideo::caption()
-{
-    return _jsonObject.value("caption").toString();
-}
-
-void InputMediaVideo::setCaption(QString caption)
-{
-    _jsonObject.insert("caption", caption);
-}
-
-bool InputMediaVideo::hasCaption()
-{
-    return _jsonObject.contains("caption");
-}
-
-// "get", "set", "has" methods for "parse_mode" field //
-
-QString InputMediaVideo::parseMode()
-{
-    return _jsonObject.value("parse_mode").toString();
-}
-
-void InputMediaVideo::setParseMode(QString parseMode)
-{
-    _jsonObject.insert("parse_mode", parseMode);
-}
-
-bool InputMediaVideo::hasParseMode()
-{
-    return _jsonObject.contains("parse_mode");
-}
-
-// "get", "set", "has" methods for "width" field //
-
-qint32 InputMediaVideo::width()
-{
-    return _jsonObject.value("width").toInt();
-}
-
-void InputMediaVideo::setWidth(qint32 width)
-{
-    _jsonObject.insert("width", width);
-}
-
-bool InputMediaVideo::hasWidth()
-{
-    return _jsonObject.contains("width");
-}
-
-// "get", "set", "has" methods for "height" field //
-
-qint32 InputMediaVideo::height()
-{
-    return _jsonObject.value("height").toInt();
-}
-
-void InputMediaVideo::setHeight(qint32 height)
-{
-    _jsonObject.insert("height", height);
-}
-
-bool InputMediaVideo::hasHeight()
-{
-    return _jsonObject.contains("height");
-}
-
-// "get", "set", "has" methods for "duration" field //
-
-qint32 InputMediaVideo::duration()
-{
-    return _jsonObject.value("duration").toInt();
-}
-
-void InputMediaVideo::setDuration(qint32 duration)
-{
-    _jsonObject.insert("duration", duration);
-}
-
-bool InputMediaVideo::hasDuration()
-{
-    return _jsonObject.contains("duration");
-}
-
-// "get", "set", "has" methods for "supports_streaming" field //
-
-bool InputMediaVideo::supportsStreaming()
-{
-    return _jsonObject.value("supports_streaming").toBool();
-}
-
-void InputMediaVideo::setSupportsStreaming(bool supportsStreaming)
-{
-    _jsonObject.insert("supports_streaming", supportsStreaming);
-}
-
-bool InputMediaVideo::hasSupportsStreaming()
-{
-    return _jsonObject.contains("supports_streaming");
+	return holdsMedia == false
+		   and thumb == std::nullopt
+		   and caption == std::nullopt
+		   and parse_mode == std::nullopt
+		   and caption_entities == std::nullopt
+		   and width == std::nullopt
+		   and height == std::nullopt
+		   and duration == std::nullopt
+		   and supports_streaming == std::nullopt;
 }

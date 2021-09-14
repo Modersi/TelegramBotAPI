@@ -1,52 +1,70 @@
-#ifndef FILE_H
-#define FILE_H
+#ifndef TELEGRAM_TYPES_FILE_H
+#define TELEGRAM_TYPES_FILE_H
 
-#include "Types/Type.h"
+#include "qstring.h"
+class QJsonObject;
 
-/*!
-    \brief This class represents a file ready to be downloaded
+#include <optional>
 
-    Fields of Document object
-    -----------------------------------
-
-    | Field             | Type          | Desription  |
-    | :---:             | :----:        | :---- |
-    | **fileId**        | `QString`     | Identifier for this file, which can be used to download or reuse the file |
-    | **fileUniqueId**  | `QString`     | Unique identifier for this file, which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file |
-    | **fileSize**      | `QInt32`      | **Optional**. File size, if known |
-    | **filePath**      | `QString`     | **Optional**. File path. Use `"https://api.telegram.org/file/bot<token>/<file_path>"` to get the file |
-
-    The file can be downloaded via the link `"https://api.telegram.org/file/bot<token>/<file_path>"`.
-    It is guaranteed that the link will be valid for at least 1 hour. When the link expires, a new one can be requested by calling [getFile](@ref getFile)
-
-    > Maximum file size to download is 20 MB
-
-    In order to set **optional** fields use "set" methods ([setFileSize](@ref setFileSize), [setFilePath](@ref setFilePath), etc.)
-*/
-
-class File : public Type
+namespace Telegram
 {
-public:
-    File();
+    /**
+     *
+     * @brief This struct represents a file ready to be downloaded
+     *
+     * The file can be downloaded via the link "https://api.telegram.org/file/bot<token>/<file_path>"
+     * It is guaranteed that the link will be valid for at least 1 hour. When the link expires, a new one can be requested by calling [getFile](@ref getFile)
+     *
+     * > Maximum file size to download is 20 MB
+     * 
+     */
 
-    File(QString fileId,
-         QString fileUniqueId);
+    struct File
+    {
+        /** @brief Default constructor. Constructs an empty File object
+         *
+         * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
+        File();
 
-    File(QJsonObject jsonObject);
+        /** @brief Constructs File object from parameters */
+        File(const QString& file_id,
+             const QString& file_unique_id,
+             const std::optional<qint32>& file_size = std::nullopt,
+             const std::optional<QString>& file_path = std::nullopt);
 
-    QString fileId();
-    void    setFileId(QString fileId);
+        /** @brief JSON constructor. Constructs File object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has all key-value pairs related to File class fields. For example it should contain pairs such as "file_id" = "...",
+         * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+        File(const QJsonObject& jsonObject);
 
-    QString fileUniqueId();
-    void    setFileUniqueId(QString fileUniqueId);
+        /* @brief Returns File in form of JSON object. Returns empty QJsonObject if File is empty */
+        QJsonObject toObject() const;
 
-    qint32  fileSize();
-    void    setFileSize(qint32 fileSize);
-    bool    hasFileSize();
+        /* @brief Returns true if File is empty */
+        bool isEmpty() const;
 
-    QString filePath();
-    void    setFilePath(QString filePath);
-    bool    hasFilePath();
-};
+        /* @brief Downloads file using file_path from https://api.telegram.org/file/bot<token>/<file_path>. Returns empty QByteArray on error */
+        QByteArray downloadFile();
 
-#endif // FILE_H
+//** Fields **//
+
+        /** @brief Identifier for this file, which can be used to download or reuse the file */
+        QString file_id;
+        
+        /** @brief Unique identifier for this file, which is supposed to be the same over timeand for different bots. Can't be used to download or reuse the file. */
+        QString file_unique_id;
+        
+        /** @brief Optional. File size, if known */
+        std::optional<qint32> file_size;
+        
+        /** @brief Optional. File path
+         * 
+         * Use https://api.telegram.org/file/bot<token>/<file_path> to get the file */
+        std::optional<QString> file_path;
+
+
+    };
+}
+
+#endif // TELEGRAM_TYPES_FILE_H

@@ -1,13 +1,18 @@
-#ifndef INPUTMEDIA_H
-#define INPUTMEDIA_H
+#ifndef TELEGRAM_TYPES_INPUTMEDIA_H
+#define TELEGRAM_TYPES_INPUTMEDIA_H
 
-#include "Types/Type.h"
-
-class InputMedia : public Type
+namespace Telegram
 {
-private:
+	struct InputMedia
+	{
+		InputMedia();
 
-      
-};
+		/* @brief Returns InputMedia in form of JSON object. Returns empty QJsonObject if InputMedia is empty */
+		QJsonObject toObject() const;
 
-#endif // INPUTMEDIA_H
+		/* @brief Returns true if InputMedia is empty */
+		bool isEmpty() const;
+	};
+}
+
+#endif // TELEGRAM_TYPES_INPUTMEDIA_H

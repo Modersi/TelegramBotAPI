@@ -1,255 +1,74 @@
 #include "Types/InlineKeyboardButton.h"
 
-/*!
-    \brief A default constructor. Constructs an empty object
-*/
-InlineKeyboardButton::InlineKeyboardButton() {}
+#include "qjsonobject.h"
 
-/*!
-    \brief Class contructor
-    \param text Label text on the button
-*/
-InlineKeyboardButton::InlineKeyboardButton(QString text)
+Telegram::InlineKeyboardButton::InlineKeyboardButton() :
+	text(""),
+	url(std::nullopt),
+	login_url(std::nullopt),
+	callback_data(std::nullopt),
+	switch_inline_query(std::nullopt),
+	switch_inline_query_current_chat(std::nullopt),
+	//callback_game(std::nullopt),
+	pay(std::nullopt)
+{}
+
+Telegram::InlineKeyboardButton::InlineKeyboardButton(const QString& text,
+													 const std::optional<QString>& url,
+													 const std::optional<LoginURL>& login_url,
+													 const std::optional<QString>& callback_data,
+													 const std::optional<QString>& switch_inline_query,
+													 const std::optional<QString>& switch_inline_query_current_chat,
+													 //const std::optional<CallbackGame>& callback_game,
+													 const std::optional<bool>& pay) :
+	text(text),
+	url(url),
+	login_url(login_url),
+	callback_data(callback_data),
+	switch_inline_query(switch_inline_query),
+	switch_inline_query_current_chat(switch_inline_query_current_chat),
+	//callback_game(callback_game),
+	pay(pay)
+{}
+
+Telegram::InlineKeyboardButton::InlineKeyboardButton(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("text", text);
+	jsonObject.contains("text")								? text = jsonObject["text"].toString()														   : text = "";
+	jsonObject.contains("url")								? url = jsonObject["url"].toString()														   : url = std::nullopt;
+	jsonObject.contains("login_url")						? login_url = LoginURL(jsonObject["login_url"].toObject())									   : login_url = std::nullopt;
+	jsonObject.contains("callback_data")					? callback_data = jsonObject["callback_data"].toString()									   : callback_data = std::nullopt;
+	jsonObject.contains("switch_inline_query")				? switch_inline_query = jsonObject["switch_inline_query"].toString()						   : switch_inline_query = std::nullopt;
+	jsonObject.contains("switch_inline_query_current_chat") ? switch_inline_query_current_chat = jsonObject["switch_inline_query_current_chat"].toString() : switch_inline_query_current_chat = std::nullopt;
+	//jsonObject.contains("callback_game")					? callback_game = CallbackGame(jsonObject["callback_game"].toObject())						   : callback_game = std::nullopt;
+	jsonObject.contains("pay")								? pay = jsonObject["pay"].toBool()															   : pay = std::nullopt;
 }
 
-/*!
-    \brief Constructor from QJsonObject
-    \param QJsonObject QJsonObject which contains fields suitable for the class
-*/
-InlineKeyboardButton::InlineKeyboardButton(QJsonObject jsonObject)
+QJsonObject Telegram::InlineKeyboardButton::toObject() const
 {
-    if(jsonObject.contains("text"))
-        _jsonObject.insert("text", jsonObject.value("text"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("url"))
-        _jsonObject.insert("url", jsonObject.value("url"));
+	QJsonObject inlineKeyboardButtonJsonObject{ {"text", text} };
 
-    if(jsonObject.contains("login_url"))
-        _jsonObject.insert("login_url", jsonObject.value("login_url"));
+	if (url.has_value())								inlineKeyboardButtonJsonObject.insert("url", *url);
+	if (login_url.has_value())							inlineKeyboardButtonJsonObject.insert("login_url", login_url->toObject());
+	if (callback_data.has_value())						inlineKeyboardButtonJsonObject.insert("callback_data", *callback_data);
+	if (switch_inline_query.has_value())				inlineKeyboardButtonJsonObject.insert("switch_inline_query", *switch_inline_query);
+	if (switch_inline_query_current_chat.has_value())	inlineKeyboardButtonJsonObject.insert("switch_inline_query_current_chat", *switch_inline_query_current_chat);
+	//if (callback_game.has_value())						inlineKeyboardButtonJsonObject.insert("callback_game", *callback_game);
+	if (pay.has_value())								inlineKeyboardButtonJsonObject.insert("pay", *pay);
 
-    if(jsonObject.contains("callback_data"))
-        _jsonObject.insert("callback_data", jsonObject.value("callback_data"));
-
-    if(jsonObject.contains("switch_inline_query"))
-        _jsonObject.insert("switch_inline_query", jsonObject.value("switch_inline_query"));
-
-    if(jsonObject.contains("switch_inline_query_current_chat"))
-        _jsonObject.insert("switch_inline_query_current_chat", jsonObject.value("switch_inline_query_current_chat"));
-
-    if(jsonObject.contains("callback_game"))
-        _jsonObject.insert("callback_game", jsonObject.value("callback_game"));
-
-    if(jsonObject.contains("pay"))
-        _jsonObject.insert("pay", jsonObject.value("pay"));
+	return inlineKeyboardButtonJsonObject;
 }
 
-
-/***//*!
-    \brief Get **text** value
-    \return Value of **text**
-*/
-QString InlineKeyboardButton::text()
+bool Telegram::InlineKeyboardButton::isEmpty() const
 {
-    return _jsonObject.value("text").toString();
+	return text == ""
+		   and url == std::nullopt
+		   and login_url == std::nullopt
+		   and callback_data == std::nullopt
+		   and switch_inline_query == std::nullopt
+		   and switch_inline_query_current_chat == std::nullopt
+		   //and callback_game == std::nullopt
+		   and pay == std::nullopt;
 }
-
-/*!
-    \brief Set new value for **text**
-    \param QString New value of **text**
-*/
-void InlineKeyboardButton::setText(QString text)
-{
-    _jsonObject.insert("text", text);
-}
-
-
-/***//*!
-    \brief Get **url** value
-    \return Value of **url**
-*/
-QString InlineKeyboardButton::url()
-{
-    return _jsonObject.value("url").toString();
-}
-
-/*!
-    \brief Set new value for **url**
-    \param QString New value of **url**
-*/
-void InlineKeyboardButton::setUrl(QString url)
-{
-    _jsonObject.insert("url", url);
-}
-
-/*!
-    \brief Check if object has **url**
-    \return `True` if has **url**, `false` if doesn't
-*/
-bool InlineKeyboardButton::hasUrl()
-{
-    return _jsonObject.contains("url");
-}
-
-
-/***//*!
-    \brief Get **loginUrl** value
-    \return Value of **loginUrl**
-*/
-LoginUrl InlineKeyboardButton::loginUrl()
-{
-    return LoginUrl(_jsonObject.value("login_url").toObject());
-}
-
-/*!
-    \brief Set new value for **loginUrl**
-    \param LoginUrl New value of **loginUrl**
-*/
-void InlineKeyboardButton::setLoginUrl(LoginUrl loginUrl)
-{
-    _jsonObject.insert("login_url", loginUrl.toObject());
-}
-
-/*!
-    \brief Check if object has **loginUrl**
-    \return `True` if has **loginUrl**, `false` if doesn't
-*/
-bool InlineKeyboardButton::hasLoginUrl()
-{
-    return _jsonObject.contains("login_url");
-}
-
-
-/***//*!
-    \brief Get **callbackData** value
-    \return Value of **callbackData**
-*/
-QString InlineKeyboardButton::callbackData()
-{
-    return _jsonObject.value("callback_data").toString();
-}
-
-/*!
-    \brief Set new value for **callbackData**
-    \param QString New value of **callbackData**
-*/
-void InlineKeyboardButton::setCallbackData(QString callbackData)
-{
-    _jsonObject.insert("callback_data", callbackData);
-}
-
-
-/*!
-    \brief Check if object has **callbackData**
-    \return `True` if has **callbackData**, `false` if doesn't
-*/
-bool InlineKeyboardButton::hasCallbackData()
-{
-    return _jsonObject.contains("callback_data");
-}
-
-
-/***//*!
-    \brief Get **switchInlineQuery** value
-    \return Value of **switchInlineQuery**
-*/
-QString InlineKeyboardButton::switchInlineQuery()
-{
-    return _jsonObject.value("switch_inline_query").toString();
-}
-
-/*!
-    \brief Set new value for **switchInlineQuery**
-    \param QString New value of **switchInlineQuery**
-*/
-void InlineKeyboardButton::setSwitchInlineQuery(QString switchInlineQuery)
-{
-    _jsonObject.insert("switch_inline_query", switchInlineQuery);
-}
-
-/*!
-    \brief Check if object has **switchInlineQuery**
-    \return `True` if has **switchInlineQuery**, `false` if doesn't
-*/
-bool InlineKeyboardButton::hasSwitchInlineQuery()
-{
-    return _jsonObject.contains("switch_inline_query");
-}
-
-
-/***//*!
-    \brief Get **switchInlineQueryCurrentChat** value
-    \return Value of **switchInlineQueryCurrentChat**
-*/
-QString InlineKeyboardButton::switchInlineQueryCurrentChat()
-{
-    return _jsonObject.value("switch_inline_query_current_chat").toString();
-}
-
-/*!
-    \brief Set new value for **switchInlineQueryCurrentChat**
-    \param QString New value of **switchInlineQueryCurrentChat**
-*/
-void InlineKeyboardButton::setSwitchInlineQueryCurrentChat(QString switchInlineQueryCurrentChat)
-{
-    _jsonObject.insert("switch_inline_query_current_chat", switchInlineQueryCurrentChat);
-}
-
-/*!
-    \brief Check if object has **switchInlineQueryCurrentChat**
-    \return `True` if has **switchInlineQueryCurrentChat**, `false` if doesn't
-*/
-bool InlineKeyboardButton::hasSwitchInlineQueryCurrentChat()
-{
-    return _jsonObject.contains("switch_inline_query_current_chat");
-}
-
-///***//*!
-//    \brief Get **smallFileId** value
-//    \return Value of **smallFileId**
-//*/
-//CallbackGame InlineKeyboardButton::callbackGame()
-//{
-//    return CallbackGame(_jsonObject.value("callback_game").toObject());
-//}
-//
-//void InlineKeyboardButton::setCallbackGame(CallbackGame callbackGame)
-//{
-//    _jsonObject.insert("callback_game", callbackGame);
-//}
-//
-//bool InlineKeyboardButton::hasCallbackGame()
-//{
-//    return _jsonObject.contains("callback_game");
-//}
-
-
-/***//*!
-    \brief Get **isPay** value
-    \return Value of **isPay**
-*/
-bool InlineKeyboardButton::isPay()
-{
-    return _jsonObject.value("pay").toBool();
-}
-
-/*!
-    \brief Set new value for **isPay**
-    \param bool New value of **isPay**
-*/
-void InlineKeyboardButton::setPay(bool pay)
-{
-    _jsonObject.insert("pay", pay);
-}
-
-/*!
-    \brief Check if object has **isPay** field
-    \return `True` if has **isPay** field, `false` if doesn't
-*/
-bool InlineKeyboardButton::hasPay()
-{
-    return _jsonObject.contains("pay");
-}
-
-

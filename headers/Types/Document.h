@@ -1,58 +1,65 @@
-#ifndef DOCUMENT_H
-#define DOCUMENT_H
+#ifndef TELEGRAM_TYPES_DOCUMENT_H
+#define TELEGRAM_TYPES_DOCUMENT_H
 
-#include "Types/Type.h"
-#include "Types/PhotoSize.h"
+#include "PhotoSize.h"
 
-/*!
-    \brief This class represents a general file (as opposed to [photos](@ref PhotoSize), [voice messages](@ref Voice) and [audio](@ref Audio) files)
-
-    Fields of Document object
-    -----------------------------------
-
-    | Field             | Type          | Desription  |
-    | :---:             | :----:        | :---- |
-    | **fileId**        | `QString`     | Identifier for this file, which can be used to download or reuse the file |
-    | **fileUniqueId**  | `QString`     | Unique identifier for this file, which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file |
-    | **thumb**         | `PhotoSize`   | **Optional**. Document thumbnail as defined by sender |
-    | **fileName**      | `QString`     | **Optional**. Original filename as defined by sender |
-    | **mimeType**      | `QString`     | **Optional**. [MIME](https://en.wikipedia.org/wiki/Media_type) type of the file as defined by sender |
-    | **fileSize**      | `QInt32`      | **Optional**. File size |
-
-    In order to set **optional** fields use "set" methods ([setThumb](@ref setThumb), [setFileName](@ref setFileName), etc.)
-*/
-
-class Document : public Type
+namespace Telegram
 {
-public:
-    Document();
+    /**
+     *
+     * @brief This struct represents a general file (as opposed to photos, voice messages and audio files)
+     *
+     */
 
-    Document(QString   fileId,
-             QString   fileUniqueId);
+    struct Document
+    {
+//** Constructors **//
 
-    Document(QJsonObject jsonObject);
+        /** @brief Default constructor. Constructs an empty Document object
+         *
+         * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
+        Document();
 
-    QString fileId();
-    void    setFileId(QString fileId);
+        /** @brief Constructs Document object from parameters */
+        Document(const QString& file_id,
+                 const QString& file_unique_id,
+                 const std::optional<PhotoSize>& thumb = std::nullopt,
+                 const std::optional<QString>& file_name = std::nullopt,
+                 const std::optional<QString>& mime_type = std::nullopt,
+                 const std::optional<qint32>& file_size = std::nullopt);
 
-    QString fileUniqueId();
-    void    setFileUniqueId(QString fileUniqueId);
+        /** @brief JSON constructor. Constructs Document object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has all key-value pairs related to Document class fields. For example it should contain pairs such as "file_id" = "...",
+         * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+        Document(const QJsonObject& jsonObject);
 
-    PhotoSize  thumb();
-    void       setThumb(PhotoSize thumb);
-    bool       hasThumb();
+        /* @brief Returns Document in form of JSON object. Returns empty QJsonObject if Document is empty */
+        QJsonObject toObject() const;
 
-    QString fileName();
-    void    setFileName(QString fileName);
-    bool    hasFileName();
+        /* @brief Returns true if Document is empty */
+        bool isEmpty() const;
 
-    QString mimeType();
-    void    setMimeType(QString mimeType);
-    bool    hasMimeType();
+//** Fields **//
 
-    qint32  fileSize();
-    void    setFileSize(qint32 fileSize);
-    bool    hasFileSize();
-};
+        /** @brief Identifier for this file, which can be used to download or reuse the file */
+        QString file_id;
+        
+        /** @brief Unique identifier for this file, which is supposed to be the same over timeand for different bots. Can't be used to download or reuse the file */
+        QString file_unique_id;
+        
+        /** @brief Optional. Document thumbnail as defined by sender */
+        std::optional<PhotoSize> thumb;
+        
+        /** @brief Optional. Original filename as defined by sender */
+        std::optional<QString> file_name;
+        
+        /** @brief Optional. [MIME](https://en.wikipedia.org/wiki/Media_type) type of the file as defined by sender */
+        std::optional<QString> mime_type;
+        
+        /** @brief Optional. File size */
+        std::optional<qint32> file_size;
+    };
+}
 
-#endif // DOCUMENT_H
+#endif // TELEGRAM_TYPES_DOCUMENT_H

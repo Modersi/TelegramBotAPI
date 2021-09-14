@@ -1,167 +1,76 @@
 #include "Types/Video.h"
 
-Video::Video()
-{
+#include "qjsonobject.h"
 
+Telegram::Video::Video() :
+	file_id(""),
+	file_unique_id(""),
+	width(0),
+	height(0),
+	duration(0),
+	thumb(std::nullopt),
+	file_name(std::nullopt),
+	mime_type(std::nullopt),
+	file_size(std::nullopt)
+{}
+
+Telegram::Video::Video(const QString& file_id,
+					   const QString& file_unique_id,
+					   const qint32& width,
+					   const qint32& height,
+					   const qint32& duration,
+					   const std::optional<PhotoSize>& thumb,
+					   const std::optional<QString>& file_name,
+					   const std::optional<QString>& mime_type,
+					   const std::optional<qint32>& file_size) :
+	file_id(file_id),
+	file_unique_id(file_unique_id),
+	width(width),
+	height(height),
+	duration(duration),
+	thumb(thumb),
+	file_name(file_name),
+	mime_type(mime_type),
+	file_size(file_size)
+{}
+
+Telegram::Video::Video(const QJsonObject& jsonObject)
+{
+	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
+	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
+	jsonObject.contains("width")		  ? width = jsonObject["width"].toInt()						 : width = 0;
+	jsonObject.contains("height")		  ? height = jsonObject["height"].toInt()					 : height = 0;
+	jsonObject.contains("duration")		  ? duration = jsonObject["duration"].toInt()				 : duration = 0;
+	jsonObject.contains("thumb")		  ? thumb = PhotoSize(jsonObject["thumb"].toObject())		 : thumb = std::nullopt;
+	jsonObject.contains("file_name")	  ? file_name = jsonObject["file_name"].toString()			 : file_name = std::nullopt;
+	jsonObject.contains("mime_type")	  ? mime_type = jsonObject["mime_type"].toString()			 : mime_type = std::nullopt;
+	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
 }
 
-Video::Video(QString    fileId,
-             QString    fileUniqueId,
-             qint32     width,
-             qint32     height,
-             qint32     duration,
-             PhotoSize  thumb,
-             QString    mimeType,
-             qint32     fileSize)
+QJsonObject Telegram::Video::toObject() const
 {
-    _jsonObject.insert("file_id", QJsonValue(fileId));
-    _jsonObject.insert("file_unique_id", QJsonValue(fileUniqueId));
-    _jsonObject.insert("width", QJsonValue(width));
-    _jsonObject.insert("height", QJsonValue(height));
-    _jsonObject.insert("duration", QJsonValue(duration));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(!thumb.isEmpty())
-        _jsonObject.insert("thumb", QJsonValue(thumb.toObject()));
-    if(!mimeType.isEmpty())
-        _jsonObject.insert("mime_type", QJsonValue(mimeType));
-    if(fileSize != 0)
-        _jsonObject.insert("file_size", QJsonValue(fileSize));
+	QJsonObject videoJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"width", width}, {"height", height}, {"duration", duration} };
+
+	if (thumb.has_value())		videoJsonObject.insert("thumb", thumb->toObject());
+	if (file_name.has_value())	videoJsonObject.insert("file_name", *file_name);
+	if (mime_type.has_value())	videoJsonObject.insert("mime_type", *mime_type);
+	if (file_size.has_value())	videoJsonObject.insert("file_size", *file_size);
+
+	return videoJsonObject;
 }
 
-Video::Video(QJsonObject jsonObject)
+bool Telegram::Video::isEmpty() const
 {
-    if(jsonObject.contains("file_id"))
-        _jsonObject.insert("file_id", jsonObject.value("file_id"));
-
-    if(jsonObject.contains("file_unique_id"))
-        _jsonObject.insert("file_unique_id", jsonObject.value("file_unique_id"));
-
-    if(jsonObject.contains("width"))
-        _jsonObject.insert("width", jsonObject.value("width"));
-
-    if(jsonObject.contains("height"))
-        _jsonObject.insert("height", jsonObject.value("height"));
-
-    if(jsonObject.contains("duration"))
-        _jsonObject.insert("duration", jsonObject.value("duration"));
-
-    if(jsonObject.contains("thumb"))
-        _jsonObject.insert("thumb", jsonObject.value("thumb"));
-
-    if(jsonObject.contains("mime_type"))
-        _jsonObject.insert("mime_type", jsonObject.value("mime_type"));
-
-    if(jsonObject.contains("file_size"))
-        _jsonObject.insert("file_size", jsonObject.value("file_size"));
-}
-
-// "get", "set" methods for "file_id" field //
-
-QString Video::fileId()
-{
-    return _jsonObject.value("file_id").toString();
-}
-
-void Video::setFileId(QString fileId)
-{
-    _jsonObject.insert("file_id", fileId);
-}
-
-// "get", "set" methods for "file_unique_id" field //
-
-QString Video::fileUniqueId()
-{
-    return _jsonObject.value("file_unique_id").toString();
-}
-
-void Video::setFileUniqueId(QString fileUniqueId)
-{
-    _jsonObject.insert("file_unique_id", fileUniqueId);
-}
-
-// "get", "set" methods for "width" field //
-
-qint32 Video::width()
-{
-    return _jsonObject.value("width").toInt();
-}
-
-void Video::setWidth(qint32 width)
-{
-    _jsonObject.insert("width", width);
-}
-
-// "get", "set" methods for "height" field //
-
-qint32 Video::height()
-{
-    return _jsonObject.value("height").toInt();
-}
-
-void Video::setHeight(qint32 height)
-{
-    _jsonObject.insert("height", height);
-}
-
-// "get", "set" methods for "duration" field //
-
-qint32 Video::duration()
-{
-    return _jsonObject.value("duration").toInt();
-}
-
-void Video::setDuration(qint32 duration)
-{
-    _jsonObject.insert("duration", duration);
-}
-
-// "get", "set", "has" methods for "thumb" field //
-
-PhotoSize Video::thumb()
-{
-    return PhotoSize(_jsonObject.value("thumb").toObject());
-}
-
-void Video::setThumb(PhotoSize thumb)
-{
-    _jsonObject.insert("thumb", thumb.toObject());
-}
-
-bool Video::hasThumb()
-{
-    return _jsonObject.contains("thumb");
-}
-
-// "get", "set", "has" methods for "mime_type" field //
-
-QString Video::mimeType()
-{
-    return _jsonObject.value("mime_type").toString();
-}
-
-void Video::setMimeType(QString mimeType)
-{
-    _jsonObject.insert("mime_type", mimeType);
-}
-
-bool Video::hasMimeType()
-{
-    return _jsonObject.contains("mime_type");
-}
-
-// "get", "set", "has" methods for "file_size" field //
-
-qint32 Video::fileSize()
-{
-    return _jsonObject.value("file_size").toInt();
-}
-
-void Video::setFileSize(qint32 fileSize)
-{
-    _jsonObject.insert("file_size", fileSize);
-}
-
-bool Video::hasFileSize()
-{
-    return _jsonObject.contains("file_size");
+	return file_id == ""
+		   and file_unique_id == ""
+		   and width == 0
+		   and height == 0
+		   and duration == 0
+		   and thumb == std::nullopt
+		   and file_name == std::nullopt
+		   and mime_type == std::nullopt
+		   and file_size == std::nullopt;
 }

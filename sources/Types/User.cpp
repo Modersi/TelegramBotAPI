@@ -1,182 +1,79 @@
 #include "Types/User.h"
 
-User::User() {}
+#include "qjsonobject.h"
 
-User::User(qint32 id, bool isBot, QString firstName, QString lastName, QString username, QString languageCode)
+Telegram::User::User() :
+	id(0),
+	is_bot(false),
+	first_name(""),
+	last_name(std::nullopt),
+	username(std::nullopt),
+	language_code(std::nullopt),
+	can_join_groups(std::nullopt),
+	can_read_all_group_messages(std::nullopt),
+	supports_inline_queries(std::nullopt)
+{}
+
+Telegram::User::User(const qint64& id,
+					 const bool& is_bot,
+					 const QString& first_name,
+					 const std::optional<QString>& last_name,
+					 const std::optional<QString>& username,
+					 const std::optional<QString>& language_code,
+					 const std::optional<bool>& can_join_groups,
+					 const std::optional<bool>& can_read_all_group_messages,
+					 const std::optional<bool>& supports_inline_queries) :
+	id(id),
+	is_bot(is_bot),
+	first_name(first_name),
+	last_name(last_name),
+	username(username),
+	language_code(language_code),
+	can_join_groups(can_join_groups),
+	can_read_all_group_messages(can_read_all_group_messages),
+	supports_inline_queries(supports_inline_queries)
 {
-    _jsonObject.insert("id", QJsonValue(id));
-    _jsonObject.insert("is_bot", QJsonValue(isBot));
-    _jsonObject.insert("first_name", QJsonValue(firstName));
-
-    if(!lastName.isEmpty())
-        _jsonObject.insert("last_name", QJsonValue(lastName));
-    if(!username.isEmpty())
-        _jsonObject.insert("username", QJsonValue(username));
-    if(!languageCode.isEmpty())
-        _jsonObject.insert("language_code", QJsonValue(languageCode));
 }
 
-User::User(QJsonObject jsonObject)
+Telegram::User::User(const QJsonObject& jsonObject)
 {
-    if(jsonObject.contains("id"))
-        _jsonObject.insert("id", jsonObject.value("id"));
-
-    if(jsonObject.contains("is_bot"))
-        _jsonObject.insert("is_bot", jsonObject.value("is_bot"));
-
-    if(jsonObject.contains("first_name"))
-        _jsonObject.insert("first_name", jsonObject.value("first_name"));
-
-    if(jsonObject.contains("last_name"))
-        _jsonObject.insert("last_name", jsonObject.value("last_name"));
-
-    if(jsonObject.contains("username"))
-        _jsonObject.insert("username", jsonObject.value("username"));
-
-    if(jsonObject.contains("can_join_groups"))
-        _jsonObject.insert("can_join_groups", jsonObject.value("can_join_groups"));
-
-    if(jsonObject.contains("can_read_all_group_messages"))
-        _jsonObject.insert("can_read_all_group_messages", jsonObject.value("can_read_all_group_messages"));
-
-    if(jsonObject.contains("supports_inline_queries"))
-        _jsonObject.insert("supports_inline_queries", jsonObject.value("supports_inline_queries"));
+	jsonObject.contains("id")							? id = jsonObject["id"].toInt()													   : id = 0;
+	jsonObject.contains("is_bot")						? is_bot = jsonObject["is_bot"].toBool()										   : is_bot = false;
+	jsonObject.contains("first_name")					? first_name = jsonObject["first_name"].toString()								   : first_name = "";
+	jsonObject.contains("last_name")					? last_name = jsonObject["last_name"].toString()								   : last_name = std::nullopt;
+	jsonObject.contains("username")						? username = jsonObject["username"].toString()									   : username = std::nullopt;
+	jsonObject.contains("language_code")				? language_code = jsonObject["language_code"].toString()						   : language_code = std::nullopt;
+	jsonObject.contains("can_join_groups")				? can_join_groups = jsonObject["can_join_groups"].toBool()						   : can_join_groups = std::nullopt;
+	jsonObject.contains("can_read_all_group_messages")  ? can_read_all_group_messages = jsonObject["can_read_all_group_messages"].toBool() : can_read_all_group_messages = std::nullopt;
+	jsonObject.contains("supports_inline_queries")		? supports_inline_queries = jsonObject["supports_inline_queries"].toBool()		   : supports_inline_queries = std::nullopt;
 }
 
-// "get", "set" methods for "id" field //
-
-qint32 User::id()
+QJsonObject Telegram::User::toObject() const
 {
-    return _jsonObject.value("id").toInt();
+	if(isEmpty())
+		return QJsonObject();
+
+	QJsonObject userJsonObject{ {"id", id}, {"is_bot", is_bot}, {"first_name", first_name} };
+
+	if (last_name.has_value())						userJsonObject.insert("last_name", *last_name);
+	if (username.has_value())						userJsonObject.insert("username", *username);
+	if (language_code.has_value())					userJsonObject.insert("language_code", *language_code);
+	if (can_join_groups.has_value())				userJsonObject.insert("can_join_groups", *can_join_groups);
+	if (can_read_all_group_messages.has_value())	userJsonObject.insert("can_read_all_group_messages", *can_read_all_group_messages);
+	if (supports_inline_queries.has_value())		userJsonObject.insert("supports_inline_queries", *supports_inline_queries);
+
+	return userJsonObject;
 }
 
-void User::setId(qint32 id)
+bool Telegram::User::isEmpty() const
 {
-    _jsonObject.insert("id", id);
-}
-
-// "get", "set" methods for "is_bot" field //
-
-bool User::isBot()
-{
-    return _jsonObject.value("is_bot").toBool();
-}
-
-void User::setIsBot(bool isBot)
-{
-    _jsonObject.insert("is_bot", isBot);
-}
-
-// "get", "set" methods for "first_name" field //
-
-QString User::firstName()
-{
-    return _jsonObject.value("first_name").toString();
-}
-
-void User::setFirstName(QString firstName)
-{
-    _jsonObject.insert("first_name", firstName);
-}
-
-// "get", "set", "has" methods for "last_name" field //
-
-QString User::lastName()
-{
-    return _jsonObject.value("last_name").toString();
-}
-
-void User::setLastName(QString lastName)
-{
-    _jsonObject.insert("last_name", lastName);
-}
-
-bool User::hasLastName()
-{
-    return _jsonObject.contains("last_name");
-}
-
-// "get", "set", "has" methods for "username" field //
-
-QString User::username()
-{
-    return _jsonObject.value("username").toString();
-}
-
-void User::setUsername(QString username)
-{
-    _jsonObject.insert("username", username);
-}
-
-bool User::hasUsername()
-{
-    return _jsonObject.contains("username");
-}
-
-// "get", "set", "has" methods for "language_code" field //
-
-QString User::languageCode()
-{
-    return _jsonObject.value("language_code").toString();
-}
-
-void User::setLanguageCode(QString languageCode)
-{
-    _jsonObject.insert("language_code", languageCode);
-}
-
-bool User::hasLanguageCode()
-{
-    return _jsonObject.contains("language_code");
-}
-
-// "get", "set", "has" methods for "can_join_groups" field //
-
-bool User::canJoinGroups()
-{
-    return _jsonObject.value("can_join_groups").toBool();
-}
-
-void User::setCanJoinGroups(bool canJoinGroups)
-{
-    _jsonObject.insert("can_join_groups", canJoinGroups);
-}
-
-bool User::hasCanJoinGroups()
-{
-    return _jsonObject.contains("can_join_groups");
-}
-
-// "get", "set", "has" methods for "can_read_all_group_messages" field //
-
-bool User::canReadAllGroupMessages()
-{
-    return _jsonObject.value("can_read_all_group_messages").toBool();
-}
-
-void User::setCanReadAllGroupMessages(bool canReadAllGroupMessages)
-{
-    _jsonObject.insert("can_read_all_group_messages", canReadAllGroupMessages);
-}
-
-bool User::hasCanReadAllGroupMessages()
-{
-    return _jsonObject.contains("can_read_all_group_messages");
-}
-
-// "get", "set", "has" methods for "supports_inline_queries" field //
-
-bool User::supportsInlineQueries()
-{
-    return _jsonObject.value("supports_inline_queries").toBool();
-}
-
-void User::setSupportsInlineQueries(bool supportsInlineQueries)
-{
-    _jsonObject.insert("can_read_all_group_messages", supportsInlineQueries);
-}
-
-bool User::hasSupportsInlineQueries()
-{
-    return _jsonObject.contains("supports_inline_queries");
+	return id == 0 
+		   and is_bot == false 
+		   and first_name == "" 
+		   and last_name == std::nullopt 
+		   and username == std::nullopt 
+		   and language_code == std::nullopt 
+		   and can_join_groups == std::nullopt 
+		   and can_read_all_group_messages == std::nullopt 
+		   and supports_inline_queries == std::nullopt;
 }

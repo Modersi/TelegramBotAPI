@@ -1,42 +1,33 @@
 #include "Types/PollOption.h"
 
-PollOption::PollOption() {}
+#include "qjsonobject.h"
 
-PollOption::PollOption(QString text, qint32 voterCount)
+Telegram::PollOption::PollOption() :
+	text(""),
+	voter_count(0)
+{}
+
+Telegram::PollOption::PollOption(const QString& text,
+								 const qint32& voter_count) :
+	text(text),
+	voter_count(voter_count)
+{}
+
+Telegram::PollOption::PollOption(const QJsonObject& jsonObject)
 {
-    _jsonObject.insert("text", QJsonValue(text));
-    _jsonObject.insert("voter_count", QJsonValue(voterCount));
+	jsonObject.contains("text")			? text = jsonObject["text"].toString()			  : text = "";
+	jsonObject.contains("voter_count")	? voter_count = jsonObject["voter_count"].toInt() : voter_count = 0;
 }
 
-PollOption::PollOption(QJsonObject jsonObject)
+QJsonObject Telegram::PollOption::toObject() const
 {
-    if(jsonObject.contains("text"))
-        _jsonObject.insert("text", jsonObject.value("text"));
+	if (isEmpty())
+		return QJsonObject();
 
-    if(jsonObject.contains("voter_count"))
-        _jsonObject.insert("voter_count", jsonObject.value("voter_count"));
+	return QJsonObject{ {"text", text}, {"voter_count", voter_count} };
 }
 
-// "get", "set" methods for "text" field //
-
-QString PollOption::text()
+bool Telegram::PollOption::isEmpty() const
 {
-    return _jsonObject.value("text").toString();
-}
-
-void PollOption::setText(QString text)
-{
-    _jsonObject.insert("text", text);
-}
-
-// "get", "set" methods for "voter_count" field //
-
-qint32 PollOption::voterCount()
-{
-    return _jsonObject.value("voter_count").toInt();
-}
-
-void PollOption::setVoterCount(qint32 voterCount)
-{
-    _jsonObject.insert("voter_count", voterCount);
+	return text == "" and voter_count == 0;
 }

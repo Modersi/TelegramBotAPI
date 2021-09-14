@@ -1,23 +1,50 @@
-#ifndef POLLOPTION_H
-#define POLLOPTION_H
+#ifndef TELEGRAM_TYPES_POLLOPTION_H
+#define TELEGRAM_TYPES_POLLOPTION_H
 
-#include "Types/Type.h"
+#include "qstring.h"
+class QJsonObject;
 
-class PollOption : public Type
+#include <optional>
+
+namespace Telegram
 {
-public:
-    PollOption();
+    /**
+     *
+     * @brief This object contains information about one answer option in a poll
+     *
+     */
 
-    PollOption(QString text,
-               qint32  voterCount);
+    struct PollOption
+    {
+        /** @brief Default constructor. Constructs an empty PollOption object
+         *
+         * All fields setted to 0, "", etc... */
+        PollOption();
 
-    PollOption(QJsonObject jsonObject);
+        /** @brief Constructs PollOption object from parameters */
+        PollOption(const QString& text,
+                   const qint32& voter_count);
 
-    QString text();
-    void    setText(QString text);
+        /** @brief JSON constructor. Constructs PollOption object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has key-value pair "text" = "...", "voterCount" = "..." to construct correct object,
+         * otherwise empty PollOption object will be constructed */
+        PollOption(const QJsonObject& jsonObject);
 
-    qint32  voterCount();
-    void    setVoterCount(qint32 voterCount);
-};
+        /* @brief Returns PollOption in form of JSON object. Returns empty QJsonObject if PollOption is empty */
+        QJsonObject toObject() const;
 
-#endif // POLLOPTION_H
+        /* @brief Returns true if PollOption is empty */
+        bool isEmpty() const;
+
+//** Fields **//
+
+        /** @brief Option text, 1-100 characters */
+        QString text;
+
+        /** @brief Number of users that voted for this option */
+        qint32 voter_count;
+    };
+}
+
+#endif // TELEGRAM_TYPES_POLLOPTION_H

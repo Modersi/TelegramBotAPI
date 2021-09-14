@@ -1,55 +1,69 @@
-#ifndef TELEGRAMAPI_H
-#define TELEGRAMAPI_H
+#ifndef TELEGRAM_API_H
+#define TELEGRAM_API_H
 
-#include "RequestManager/RequestManager.h"
+#include "WebhookManager.h"
+#include "RequestManager.h"
 
+#include "Bot.h"
+
+#include "Types/Update.h"
+#include "Types/Animation.h"
+#include "Types/Audio.h"
+#include "Types/BotCommand.h"
+#include "Types/BotCommandScopeAllChatAdministrators.h"
+#include "Types/BotCommandScopeAllGroupChats.h"
+#include "Types/BotCommandScopeAllPrivateChats.h"
+#include "Types/BotCommandScopeChat.h"
+#include "Types/BotCommandScopeChatAdministrators.h"
+#include "Types/BotCommandScopeChatMember.h"
+#include "Types/BotCommandScopeDefault.h"
+#include "Types/CallbackQuery.h"
 #include "Types/Chat.h"
-#include "Types/User.h"
+#include "Types/ChatInviteLink.h"
+#include "Types/ChatLocation.h"
+#include "Types/ChatMember.h"
+#include "Types/ChatMemberUpdated.h"
+#include "Types/ChatPermissions.h"
+#include "Types/ChatPhoto.h"
+#include "Types/Contact.h"
+#include "Types/Dice.h"
+#include "Types/Document.h"
+#include "Types/Error.h"
+#include "Types/File.h"
+#include "Types/ForceReply.h"
+#include "Types/InlineKeyboardButton.h"
+#include "Types/InlineKeyboardMarkup.h"
+#include "Types/InputMedia.h"
+#include "Types/InputMediaAnimation.h"
+#include "Types/InputMediaAudio.h"
+#include "Types/InputMediaDocument.h"
+#include "Types/InputMediaPhoto.h"
+#include "Types/InputMediaVideo.h"
+#include "Types/KeyboardButton.h"
+#include "Types/KeyboardButtonPollType.h"
+#include "Types/Location.h"
+#include "Types/LoginURL.h"
 #include "Types/Message.h"
+#include "Types/MessageAutoDeleteTimerChanged.h"
+#include "Types/MessageEntity.h"
+#include "Types/MessageId.h"
+#include "Types/PhotoSize.h"
+#include "Types/Poll.h"
+#include "Types/PollAnswer.h"
+#include "Types/PollOption.h"
+#include "Types/ProximityAlertTriggered.h"
+#include "Types/ReplyKeyboardMarkup.h"
+#include "Types/ReplyKeyboardRemove.h"
+#include "Types/ResponseParameters.h"
+#include "Types/User.h"
 #include "Types/UserProfilePhotos.h"
+#include "Types/Venue.h"
+#include "Types/Video.h"
+#include "Types/VideoNote.h"
+#include "Types/Voice.h"
+#include "Types/VoiceChatEnded.h"
+#include "Types/VoiceChatParticipantsInvited.h"
+#include "Types/VoiceChatScheduled.h"
+#include "Types/VoiceChatStarted.h"
 
-class TelegramAPI
-{
-public:
-    TelegramAPI(const QString);
-
-    // A simple method for testing your bot's auth token. Requires no parameters. Returns basic information about the bot in form of a User object.
-    User getMe();
-
-    // !!  Раздуплить ексепшоны !! //
-    // !!  ADD reply_markup !! //
-    // Use this method to send text messages via chat ID. On success, the sent message in form of Message object is returned. On failure return empty Message object
-    Message sendMessage(qint32  chatId,                             // Unique identifier for the target chat
-                        QString text,                               // Text of the message to be sent, 1-4096 characters after entities parsing
-                        QString parseMode = "",                     // Optional. Mode for parsing entities in the message text
-                        bool    disableWebPagePreview = false,      // Optional. Disables link previews for links in this message
-                        bool    disableNotification = false,        // Optional. Sends the message silently. Users will receive a notification with no sound
-                        qint32  replyToMessageId = 0);              // Optional. If the message is a reply, ID of the original message
-
-// !!  ADD reply_markup !! //
-// Use this method to send text messages via username of the target channel. On success, the sent message in form of Message object is returned. On failure return empty Message object
-    Message sendMessage(QString chatId,                             // Username of the target channel (in the format @channelusername)
-                        QString text,
-                        QString parseMode = "",
-                        bool    disableWebPagePreview = false,
-                        bool    disableNotification = false,
-                        qint32  replyToMessageId = 0);
-
-    // Use this method to get up to date information about the chat via username of the target channel (current name of the user for one-on-one conversations, current username of a user, group or channel, etc.). Returns a Chat object on success.
-    Chat getChat(const QString chatId);
-
-    // Use this method to get up to date information about the chat via chat ID (current name of the user for one-on-one conversations, current username of a user, group or channel, etc.). Returns a Chat object on success.
-    Chat getChat(const qint32 chatId);
-
-    UserProfilePhotos getUserProfilePhotos(qint32 userId, qint32 offset = 0, qint32 limit = 100);
-
-    Message sendPhoto(qint32 chatId, QFile* file);
-
-    QJsonDocument getUpdates();
-
-private:
-    RequestManager* requestManager;
-
-};
-
-#endif // TELEGRAMAPI_H
+#endif // TELEGRAM_API_H

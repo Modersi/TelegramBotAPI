@@ -1,20 +1,45 @@
-#ifndef RESPONSEPARAMETERS_H
-#define RESPONSEPARAMETERS_H
+#ifndef TELEGRAM_TYPES_RESPONSEPARAMETERS_H
+#define TELEGRAM_TYPES_RESPONSEPARAMETERS_H
 
-#include "Types/Type.h"
+#include "qglobal.h"
+class QJsonObject;
 
-class ResponseParameters : public Type
+#include <optional>
+
+namespace Telegram
 {
-public:
-    ResponseParameters();
+    /**
+     *
+     * @brief Contains information about why a request was unsuccessful
+     * 
+     */
 
-    ResponseParameters(QJsonObject jsonObject);
+    struct ResponseParameters
+    {
+        /** @brief Constructs ResponseParameters object from parameters */
+        ResponseParameters(const std::optional<qint64>& migrate_to_chat_id = std::nullopt,
+                           const std::optional<qint32>& retry_after = std::nullopt);
 
-    qint64  migrateToChatId();
-    void    setMigrateToChatId(qint64 migrateToChatId);
+        /** @brief JSON constructor. Constructs ResponseParameters object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has key-value pairs such as "migrate_to_chat_id" = "...", "retry_after" = "..." to construct correct ResponseParameters'
+         * object, otherwise fields related to missing pairs will be setted to std::nullopt */
+        ResponseParameters(const QJsonObject& jsonObject);
 
-    qint32  retryAfter();
-    void    setRetryAfter(qint32 retryAfter);
-};
+        /* @brief Returns ResponseParameters in form of JSON object. Returns empty QJsonObject if ResponseParameters is empty */
+        QJsonObject toObject() const;
 
-#endif // RESPONSEPARAMETERS_H
+        /* @brief Returns true if ResponseParameters is empty */
+        bool isEmpty() const;
+
+//** Fields **//
+
+        /** @brief Optional. The group has been migrated to a supergroup with the specified identifier */
+        std::optional<qint64> migrate_to_chat_id;
+       
+        /** @brief Optional. In case of exceeding flood control, the number of seconds left to wait before the request can be repeated */
+        std::optional<qint32> retry_after;
+    };
+}
+
+#endif // TELEGRAM_TYPES_RESPONSEPARAMETERS_H

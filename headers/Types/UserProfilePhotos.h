@@ -1,24 +1,49 @@
-#ifndef USERPROFILEPHOTOS_H
-#define USERPROFILEPHOTOS_H
+#ifndef TELEGRAM_TYPES_USERPROFILEPHOTOS_H
+#define TELEGRAM_TYPES_USERPROFILEPHOTOS_H
 
-#include "Types/Type.h"
-#include "Types/PhotoSize.h"
+#include "qvector.h"
 
-class UserProfilePhotos : public Type
+#include "PhotoSize.h"
+
+namespace Telegram
 {
-public:
-    UserProfilePhotos();
+    /**
+     *
+     * @brief This struct represent a user's profile pictures
+     *
+     */
 
-    UserProfilePhotos(qint32                      totalCount,
-                      QVector<QVector<PhotoSize>> photos);
+    struct UserProfilePhotos
+    {
+        /** @brief Default constructor. Constructs an empty UserProfilePhotos object
+         *
+         * All fields setted to 0, "", etc... */
+        UserProfilePhotos();
 
-    UserProfilePhotos(QJsonObject jsonObject);
+        /** @brief Constructs UserProfilePhotos object from parameters */
+        UserProfilePhotos(const qint32& total_count,
+                          const QVector<QVector<PhotoSize>>& photos);
 
-    qint32 totalCount();
-    void   setTotalCount(qint32 totalCount);
+        /** @brief JSON constructor. Constructs UserProfilePhotos object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has key-value pair "total_count" = "..." and JSON Array of JSON Array of PhotoSize to construct correct UserProfilePhotos 
+         * object, otherwise emtpy object will be constructed */
+        UserProfilePhotos(const QJsonObject& jsonObject);
 
-    QVector<QVector<PhotoSize>> photos();
-    void                        setPhotos(QVector<QVector<PhotoSize>> photos);
-};
+        /* @brief Returns UserProfilePhotos in form of JSON object. Returns empty QJsonObject if UserProfilePhotos is empty */
+        QJsonObject toObject() const;
 
-#endif // USERPROFILEPHOTOS_H
+        /* @brief Returns true if UserProfilePhotos is empty */
+        bool isEmpty() const;
+
+//** Fields **//
+
+        /** @brief Total number of profile pictures the target user has */
+        qint32 total_count;
+
+        /** @brief Requested profile pictures(in up to 4 sizes each) */
+        QVector<QVector<PhotoSize>> photos;
+    };
+}
+
+#endif // TELEGRAM_TYPES_USERPROFILEPHOTOS_H

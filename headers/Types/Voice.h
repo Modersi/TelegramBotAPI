@@ -1,37 +1,60 @@
-#ifndef VOICE_H
-#define VOICE_H
+#ifndef TELEGRAM_TYPES_VOICE_H
+#define TELEGRAM_TYPES_VOICE_H
 
-#include "Types/Type.h"
+#include "PhotoSize.h"
 
-class Voice : public Type
+namespace Telegram
 {
-public:
-    Voice();
+    /**
+     *
+     * @brief This object represents a voice note
+     *
+     */
 
-    Voice(QString   fileId,
-          QString   fileUniqueId,
-          qint32    duration,
-          QString   mimeType = "",
-          qint32    fileSize = 0);
+    struct Voice
+    {
+        /** @brief Default constructor. Constructs an empty Voice object
+         *
+         * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
+        Voice();
 
-    Voice(QJsonObject jsonObject);
+        /** @brief Constructs Voice object from parameters */
+        Voice(const QString& file_id,
+              const QString& file_unique_id,
+              const qint32& duration,
+              const std::optional<QString>& mime_type = std::nullopt,
+              const std::optional<qint32>& file_size = std::nullopt);
 
-    QString fileId();
-    void    setFileId(QString fileId);
+        /** @brief JSON constructor. Constructs Voice object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has all key-value pairs related to Voice class fields. For example it should contain pairs such as "file_id" = "...",
+         * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+        Voice(const QJsonObject& jsonObject);
 
-    QString fileUniqueId();
-    void    setFileUniqueId(QString fileUniqueId);
+        /** @brief Returns Voice in form of JSON object. Returns empty QJsonObject if Voice is empty */
+        QJsonObject toObject() const;
 
-    qint32  duration();
-    void    setDuration(qint32 duration);
+        /** @brief Returns true if Voice is empty */
+        bool isEmpty() const;
 
-    QString mimeType();
-    void    setMimeType(QString mimeType);
-    bool    hasMimeType();
+//** Fields **//
 
-    qint32  fileSize();
-    void    setFileSize(qint32 fileSize);
-    bool    hasFileSize();
-};
+        /** @brief Identifier for this file, which can be used to download or reuse the file */
+        QString file_id;
 
-#endif // VOICE_H
+        /** @brief Unique identifier for this file, which is supposed to be the same over timeand for different bots. Can't be used to download or reuse the file */
+        QString file_unique_id;
+
+        /** @brief Duration of the video in seconds as defined by sender */
+        qint32 duration;
+
+        /** @brief Optional. Mime type of a file as defined by sender */
+        std::optional<QString> mime_type;
+
+        /** @brief Optional. File size */
+        std::optional<qint32> file_size;
+    };
+}
+
+#endif // TELEGRAM_TYPES_VOICE_H
+

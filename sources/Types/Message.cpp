@@ -1,791 +1,372 @@
+#include "Types/Chat.h"
 #include "Types/Message.h"
-
-
-Message::Message()
-{
-}
-
-Message::Message(qint32                 messageId,
-                 qint32                 date,
-                 Chat                  chat,
-                 User                  from,
-                 Chat                  forwardFromChat,
-                 User                  forwardFrom,
-                 qint32                 forwardFromMessageId,
-                 QString                forwardSignature,
-                 QString                forwardSenderName,
-                 qint32                 forwardDate,
-                 Message               replyToMessage,
-                 User                  viaBot,
-                 qint32                 editDate,
-                 QString                mediaGroupId,
-                 QString                authorSignature,
-                 QString                text,
-                 //MessageEntity entities[],
-                 //Animation animation,
-                 //Audio audio,
-                 //Document document,
-                 //PhotoSize photo[],
-                 //Sticker sticker,
-                 //Video video,
-                 //VideoNote videoNote,
-                 //Voice voice,
-                 QString                caption,
-                 //MessageEntity captionEntities[],
-                 //Contact contact,
-                 //Dice dice,
-                 //Game game,
-                 //Poll poll,
-                 //Venue venue,
-                 //Location location,
-                 QVector<User>            newChatMembers,
-                 User                   leftChatMember,
-                 QString                newChatTitle,
-                 //PhotoSize newChatPhoto[],
-                 bool                   deleteChatPhoto,
-                 bool                   groupChatCreated,
-                 bool                   supergroupChatCreated,
-                 bool                   channelChatCreated,
-                 qint64                 migrateToChatId,
-                 qint64                 migrateFromChatId,
-                 Message               pinnedMessage,
-                 //Invoice invoice,
-                 //SuccessfulPayment    successfulPayment,
-                 //PassportData         passportData,
-                 //InlineKeyboardMarkup replyMarkup,
-                 QString                connectedWebsite)
-{
-    _jsonObject.insert("message_id", QJsonValue(messageId));
-    _jsonObject.insert("date", QJsonValue(date));
-    _jsonObject.insert("chat", QJsonValue(chat.toObject()));
-
-    if(!from.isEmpty())
-        _jsonObject.insert("from", QJsonValue(from.toObject()));
-
-    if(!forwardFromChat.isEmpty())
-        _jsonObject.insert("forward_from_chat", QJsonValue(forwardFromChat.toObject()));
-
-    if(!forwardFrom.isEmpty())
-        _jsonObject.insert("forward_from", QJsonValue(forwardFrom.toObject()));
-
-    if(forwardFromMessageId != 0)
-        _jsonObject.insert("forward_from_message_id", QJsonValue(forwardFromMessageId));
-
-    if(!forwardSignature.isEmpty())
-        _jsonObject.insert("forward_signature", QJsonValue(forwardSignature));
-
-    if(!forwardSenderName.isEmpty())
-        _jsonObject.insert("forward_sender_name", QJsonValue(forwardSenderName));
-
-    if(forwardDate != 0)
-        _jsonObject.insert("forward_date", QJsonValue(forwardDate));
-
-    if(!replyToMessage.isEmpty())
-        _jsonObject.insert("reply_to_message", QJsonValue(replyToMessage.toObject()));
-
-    if(!viaBot.isEmpty())
-        _jsonObject.insert("via_bot", QJsonValue(viaBot.toObject()));
-
-    if(editDate != 0)
-        _jsonObject.insert("edit_date", QJsonValue(editDate));
-
-    if(!mediaGroupId.isEmpty())
-        _jsonObject.insert("media_group_id", QJsonValue(mediaGroupId));
-
-    if(!authorSignature.isEmpty())
-        _jsonObject.insert("author_signature", QJsonValue(authorSignature));
-
-    if(!text.isEmpty())
-        _jsonObject.insert("text", QJsonValue(text));
-
-    //if(!entities.isEmpty())
-    //    _jsonObject.insert("entities", QJsonValue(entities.toObject()));
-    //
-    //if(!animation.isEmpty())
-    //    _jsonObject.insert("animation", QJsonValue(animation.toObject()));
-    //
-    //if(!audio.isEmpty())
-    //    _jsonObject.insert("audio", QJsonValue(audio.toObject()));
-    //
-    //if(!document.isEmpty())
-    //    _jsonObject.insert("document", QJsonValue(document.toObject()));
-    //
-    //if(!photo.isEmpty())
-    //    _jsonObject.insert("photo", QJsonValue(photo.toObject()));
-    //
-    //if(!video.isEmpty())
-    //    _jsonObject.insert("video", QJsonValue(video.toObject()));
-    //
-    //if(!videoNote.isEmpty())
-    //    _jsonObject.insert("videoNote", QJsonValue(videoNote.toObject()));
-    //
-    //if(!voice.isEmpty())
-    //    _jsonObject.insert("voice", QJsonValue(voice.toObject()));
-
-    if(!caption.isEmpty())
-        _jsonObject.insert("caption", QJsonValue(caption));
-
-    //if(!captionEntities.isEmpty())
-    //    _jsonObject.insert("caption_entities", QJsonValue(captionEntities.toObject()));
-    //
-    //if(!contact.isEmpty())
-    //    _jsonObject.insert("contact", QJsonValue(contact.toObject()));
-    //
-    //if(!dice.isEmpty())
-    //    _jsonObject.insert("dice", QJsonValue(dice.toObject()));
-    //
-    //if(!game.isEmpty())
-    //    _jsonObject.insert("game", QJsonValue(game.toObject()));
-    //
-    //if(!poll.isEmpty())
-    //    _jsonObject.insert("poll", QJsonValue(poll.toObject()));
-    //
-    //if(!venue.isEmpty())
-    //    _jsonObject.insert("venue", QJsonValue(venue.toObject()));
-    //
-    //if(!location.isEmpty())
-    //    _jsonObject.insert("location", QJsonValue(location.toObject()));
-
-    if(!newChatMembers.isEmpty())
-        _jsonObject.insert("new_chat_members", QJsonValue(Type::QVectorToQJsonArray(newChatMembers)));
-
-    if(!leftChatMember.isEmpty())
-        _jsonObject.insert("left_chat_member", QJsonValue(leftChatMember.toObject()));
-
-    if(!newChatTitle.isEmpty())
-        _jsonObject.insert("new_chat_title", QJsonValue(newChatTitle));
-
-    //if(newChatPhoto != nullptr)
-    //   _jsonObject.insert("new_chat_photo", QJsonValue(newChatPhoto.toObject()));
-
-    if(deleteChatPhoto == true)
-        _jsonObject.insert("delete_chat_photo", QJsonValue(deleteChatPhoto));
-
-    if(groupChatCreated == true)
-        _jsonObject.insert("group_chat_created", QJsonValue(groupChatCreated));
-
-    if(supergroupChatCreated == true)
-        _jsonObject.insert("supergroup_chat_created", QJsonValue(supergroupChatCreated));
-
-    if(channelChatCreated == true)
-        _jsonObject.insert("channel_chat_created", QJsonValue(channelChatCreated));
-
-    if(migrateToChatId != 0)
-        _jsonObject.insert("migrate_to_chat_id", QJsonValue(migrateToChatId));
-
-    if(migrateFromChatId != 0)
-        _jsonObject.insert("migrate_from_chat_id", QJsonValue(migrateFromChatId));
-
-    if(!pinnedMessage.isEmpty())
-        _jsonObject.insert("pinned_message", QJsonValue(pinnedMessage.toObject()));
-
-    if(!connectedWebsite.isEmpty())
-        _jsonObject.insert("connected_website", QJsonValue(connectedWebsite));
-
-}
-
-Message::Message(QJsonObject jsonObject)
-{
-    if(jsonObject.contains("message_id"))
-        _jsonObject.insert("message_id", jsonObject.value("message_id"));
-
-    if(jsonObject.contains("from"))
-        _jsonObject.insert("from", jsonObject.value("from"));
-
-    if(jsonObject.contains("date"))
-        _jsonObject.insert("date", jsonObject.value("date"));
-
-    if(jsonObject.contains("chat"))
-        _jsonObject.insert("chat", jsonObject.value("chat"));
-
-    if(jsonObject.contains("forward_from"))
-        _jsonObject.insert("forward_from", jsonObject.value("forward_from"));
-
-    if(jsonObject.contains("forward_from_chat"))
-        _jsonObject.insert("forward_from_chat", jsonObject.value("forward_from_chat"));
-
-    if(jsonObject.contains("forward_from_message_id"))
-        _jsonObject.insert("forward_from_message_id", jsonObject.value("forward_from_message_id"));
-
-    if(jsonObject.contains("forward_signature"))
-        _jsonObject.insert("forward_signature", jsonObject.value("forward_signature"));
-
-    if(jsonObject.contains("forward_sender_name"))
-        _jsonObject.insert("forward_sender_name", jsonObject.value("forward_sender_name"));
-
-    if(jsonObject.contains("forward_date"))
-        _jsonObject.insert("forward_date", jsonObject.value("forward_date"));
-
-    if(jsonObject.contains("reply_to_message"))
-        _jsonObject.insert("reply_to_message", jsonObject.value("reply_to_message"));
-
-    if(jsonObject.contains("via_bot"))
-        _jsonObject.insert("via_bot", jsonObject.value("via_bot"));
-
-    if(jsonObject.contains("edit_date"))
-        _jsonObject.insert("edit_date", jsonObject.value("edit_date"));
-
-    if(jsonObject.contains("media_group_id"))
-        _jsonObject.insert("media_group_id", jsonObject.value("media_group_id"));
-
-    if(jsonObject.contains("entities"))
-        _jsonObject.insert("entities", jsonObject.value("entities"));
-
-    if(jsonObject.contains("animation"))
-        _jsonObject.insert("animation", jsonObject.value("animation"));
-
-    if(jsonObject.contains("audio"))
-        _jsonObject.insert("audio", jsonObject.value("audio"));
-
-    if(jsonObject.contains("document"))
-        _jsonObject.insert("document", jsonObject.value("document"));
-
-    if(jsonObject.contains("photo"))
-        _jsonObject.insert("photo", jsonObject.value("photo"));
-
-    if(jsonObject.contains("sticker"))
-        _jsonObject.insert("sticker", jsonObject.value("sticker"));
-
-    if(jsonObject.contains("video"))
-        _jsonObject.insert("video", jsonObject.value("video"));
-
-    if(jsonObject.contains("video_note"))
-        _jsonObject.insert("video_note", jsonObject.value("video_note"));
-
-    if(jsonObject.contains("voice"))
-        _jsonObject.insert("voice", jsonObject.value("voice"));
-
-    if(jsonObject.contains("caption"))
-        _jsonObject.insert("caption", jsonObject.value("caption"));
-
-    if(jsonObject.contains("caption_entities"))
-        _jsonObject.insert("caption_entities", jsonObject.value("caption_entities"));
-
-    if(jsonObject.contains("contact"))
-        _jsonObject.insert("contact", jsonObject.value("contact"));
-
-    if(jsonObject.contains("dice"))
-        _jsonObject.insert("dice", jsonObject.value("dice"));
-
-    if(jsonObject.contains("game"))
-        _jsonObject.insert("game", jsonObject.value("game"));
-
-    if(jsonObject.contains("poll"))
-        _jsonObject.insert("poll", jsonObject.value("poll"));
-
-    if(jsonObject.contains("venue"))
-        _jsonObject.insert("venue", jsonObject.value("venue"));
-
-    if(jsonObject.contains("location"))
-        _jsonObject.insert("location", jsonObject.value("location"));
-
-    if(jsonObject.contains("new_chat_members"))
-        _jsonObject.insert("new_chat_members", jsonObject.value("new_chat_members"));
-
-    if(jsonObject.contains("left_chat_member"))
-        _jsonObject.insert("left_chat_member", jsonObject.value("left_chat_member"));
-
-    if(jsonObject.contains("new_chat_title"))
-        _jsonObject.insert("new_chat_title", jsonObject.value("new_chat_title"));
-
-    if(jsonObject.contains("new_chat_photo"))
-        _jsonObject.insert("new_chat_photo", jsonObject.value("new_chat_photo"));
-
-    if(jsonObject.contains("delete_chat_photo"))
-        _jsonObject.insert("delete_chat_photo", jsonObject.value("delete_chat_photo"));
-
-    if(jsonObject.contains("group_chat_created"))
-        _jsonObject.insert("group_chat_created", jsonObject.value("group_chat_created"));
-
-    if(jsonObject.contains("supergroup_chat_created"))
-        _jsonObject.insert("supergroup_chat_created", jsonObject.value("supergroup_chat_created"));
-
-    if(jsonObject.contains("channel_chat_created"))
-        _jsonObject.insert("channel_chat_created", jsonObject.value("channel_chat_created"));
-
-    if(jsonObject.contains("migrate_to_chat_id"))
-        _jsonObject.insert("migrate_to_chat_id", jsonObject.value("migrate_to_chat_id"));
-
-    if(jsonObject.contains("migrate_from_chat_id"))
-        _jsonObject.insert("migrate_from_chat_id", jsonObject.value("migrate_from_chat_id"));
-
-    if(jsonObject.contains("pinned_message"))
-        _jsonObject.insert("pinned_message", jsonObject.value("pinned_message"));
-
-    if(jsonObject.contains("invoice"))
-        _jsonObject.insert("invoice", jsonObject.value("invoice"));
-
-    if(jsonObject.contains("successful_payment"))
-        _jsonObject.insert("successful_payment", jsonObject.value("successful_payment"));
-
-    if(jsonObject.contains("connected_website"))
-        _jsonObject.insert("connected_website", jsonObject.value("connected_website"));
-
-    if(jsonObject.contains("passport_data"))
-        _jsonObject.insert("passport_data", jsonObject.value("passport_data"));
-
-    if(jsonObject.contains("reply_markup"))
-        _jsonObject.insert("reply_markup", jsonObject.value("reply_markup"));
-}
-
-// "get", "set" methods for "message_id" field //
-
-qint32 Message::messageId()
-{
-    return _jsonObject.value("message_id").toInt();
-}
-
-void Message::setMessageId(qint32 messageId)
-{
-    _jsonObject.insert("message_id", messageId);
-}
-
-// "get", "set" methods for "date" field //
-
-qint32 Message::date()
-{
-    return _jsonObject.value("date").toInt();
-}
-
-void Message::setDate(qint32 date)
-{
-    _jsonObject.insert("date", date);
-}
-
-// "get", "set" methods for "chat" field //
-
-Chat Message::chat()
-{
-    return Chat(_jsonObject.value("chat").toObject());
-}
-
-void Message::setChat(Chat chat)
-{
-    _jsonObject.insert("chat", chat.toObject());
-}
-
-// "get", "set", "has" methods for "from" field //
-
-User Message::from()
-{
-    return User(_jsonObject.value("from").toObject());
-}
-
-void Message::setFrom(User from)
-{
-    _jsonObject.insert("from", from.toObject());
-}
-
-bool Message::hasFrom()
-{
-    return _jsonObject.contains("from");
-}
-
-// "get", "set", "has" methods for "forward_from_chat" field //
-
-Chat Message::forwardFromChat()
-{
-    return Chat(_jsonObject.value("forward_from_chat").toObject());
-}
-
-void Message::setForwardFromChat(Chat forwardFromChat)
-{
-    _jsonObject.insert("forward_from_chat", forwardFromChat.toObject());
-}
-
-bool Message::hasForwardFromChat()
-{
-    return _jsonObject.contains("forward_from_chat");
-}
-
-// "get", "set", "has" methods for "forward_from" field //
-
-User Message::forwardFrom()
-{
-    return User(_jsonObject.value("forward_from").toObject());
-}
-
-void Message::setForwardFrom(User forwardFrom)
-{
-    _jsonObject.insert("forward_from", forwardFrom.toObject());
-}
-
-bool Message::hasForwardFrom()
-{
-    return _jsonObject.contains("forward_from");
-}
-
-// "get", "set", "has" methods for "forward_from_message_id" field //
-
-qint32 Message::forwardFromMessageId()
-{
-    return _jsonObject.value("forward_from_message_id").toInt();
-}
-
-void Message::setForwardFromMessageId(qint32 forwardFromMessageId)
-{
-    _jsonObject.insert("forward_from_message_id", forwardFromMessageId);
-}
-
-bool Message::hasForwardFromMessageId()
-{
-    return _jsonObject.contains("forward_from_message_id");
-}
-
-// "get", "set", "has" methods for "forward_signature" field //
-
-QString Message::forwardSignature()
-{
-    return _jsonObject.value("forward_signature").toString();
-}
-
-void Message::setForwardSignature(QString forwardSignature)
-{
-    _jsonObject.insert("forward_signature", forwardSignature);
-}
-
-bool Message::hasForwardSignature()
-{
-    return _jsonObject.contains("forward_signature");
-}
-
-// "get", "set", "has" methods for "forward_sender_name" field //
-
-QString Message::forwardSenderName()
-{
-    return _jsonObject.value("forward_sender_name").toString();
-}
-
-void Message::setForwardSenderName(QString forwardSenderName)
-{
-    _jsonObject.insert("forward_sender_name", forwardSenderName);
-}
-
-bool Message::hasForwardSenderName()
-{
-    return _jsonObject.contains("forward_sender_name");
-}
-
-// "get", "set", "has" methods for "forward_date" field //
-
-qint32 Message::forwardDate()
-{
-    return _jsonObject.value("forward_date").toInt();
-}
-
-void Message::setForwardDate(qint32 forwardDate)
-{
-    _jsonObject.insert("forward_date", forwardDate);
-}
-
-bool Message::hasForwardDate()
-{
-    return _jsonObject.contains("forward_date");
-}
-
-// "get", "set", "has" methods for "reply_to_message" field //
-
-Message Message::replyToMessage()
-{
-    return Message(_jsonObject.value("reply_to_message").toObject());
-}
-
-void Message::setReplyToMessage(Message replyToMessage)
-{
-    _jsonObject.insert("reply_to_message", replyToMessage.toObject());
-}
-
-bool Message::hasReplyToMessage()
-{
-    return _jsonObject.contains("reply_to_message");
-}
-
-// "get", "set", "has" methods for "via_bot" field //
-
-User Message::viaBot()
-{
-    return User(_jsonObject.value("via_bot").toObject());
-}
-
-void Message::setViaBot(User viaBot)
-{
-    _jsonObject.insert("via_bot", viaBot.toObject());
-}
-
-bool Message::hasViaBot()
-{
-    return _jsonObject.contains("via_bot");
-}
-
-// "get", "set", "has" methods for "edit_date" field //
-
-qint32 Message::editDate()
-{
-    return _jsonObject.value("edit_date").toInt();
-}
-
-void Message::setEditDate(qint32 editDate)
-{
-    _jsonObject.insert("edit_date", editDate);
-}
-
-bool Message::hasEditDate()
-{
-    return _jsonObject.contains("edit_date");
-}
-
-// "get", "set", "has" methods for "media_group_id" field //
-
-QString Message::mediaGroupId()
-{
-    return _jsonObject.value("media_group_id").toString();
-}
-
-void Message::setMediaGroupId(QString mediaGroupId)
-{
-    _jsonObject.insert("media_group_id", mediaGroupId);
-}
-
-bool Message::hasMediaGroupId()
-{
-    return _jsonObject.contains("media_group_id");
-}
-
-// "get", "set", "has" methods for "author_signature" field //
-
-QString Message::authorSignature()
-{
-    return _jsonObject.value("author_signature").toString();
-}
-
-void Message::setAuthorSignature(QString authorSignature)
-{
-    _jsonObject.insert("author_signature", authorSignature);
-}
-
-bool Message::hasAuthorSignature()
-{
-    return _jsonObject.contains("author_signature");
-}
-
-// "get", "set", "has" methods for "text" field //
-
-QString Message::text()
-{
-    return _jsonObject.value("text").toString();
-}
-
-void Message::setText(QString text)
-{
-    _jsonObject.insert("text", text);
-}
-
-bool Message::hasText()
-{
-    return _jsonObject.contains("text");
-}
-
-// "get", "set", "has" methods for "caption" field //
-
-QString Message::caption()
-{
-    return _jsonObject.value("caption").toString();
-}
-
-void Message::setCaption(QString caption)
-{
-    _jsonObject.insert("caption", caption);
-}
-
-bool Message::hasCaption()
-{
-    return _jsonObject.contains("caption");
-}
-
-// "get", "set", "has" methods for "new_chat_members" field //
-
-QVector<User> Message::newChatMembers()
-{
-    return Type::QJsonArrayToQVector(_jsonObject.value("new_chat_members").toArray(), User());
-}
-
-void Message::setNewChatMembers(QVector<User> newChatMembers)
-{
-    _jsonObject.insert("new_chat_members", Type::QVectorToQJsonArray(newChatMembers));
-}
-
-bool Message::hasNewChatMembers()
-{
-    return _jsonObject.contains("new_chat_members");
-}
-
-// "get", "set", "has" methods for "left_chat_member" field //
-
-User Message::leftChatMember()
-{
-    return User(_jsonObject.value("left_chat_member").toObject());
-}
-
-void Message::setLeftChatMember(User leftChatMember)
-{
-    _jsonObject.insert("left_chat_member", leftChatMember.toObject());
-}
-
-bool Message::hasLeftChatMember()
-{
-    return _jsonObject.contains("left_chat_member");
-}
-
-// "get", "set", "has" methods for "new_chat_title" field //
-
-QString Message::newChatTitle()
-{
-    return _jsonObject.value("new_chat_title").toString();
-}
-
-void Message::setNewChatTitle(QString newChatTitle)
-{
-    _jsonObject.insert("new_chat_title", newChatTitle);
-}
-
-bool Message::hasNewChatTitle()
-{
-    return _jsonObject.contains("new_chat_title");
-}
-
-// "get", "set", "has" methods for "delete_chat_photo" field //
-
-bool Message::chatPhotoDeleted()
-{
-    return _jsonObject.value("delete_chat_photo").toBool();
-}
-
-void Message::setChatPhotoDeleted(bool deleteChatPhoto)
-{
-    _jsonObject.insert("delete_chat_photo", deleteChatPhoto);
-}
-
-bool Message::hasChatPhotoDeleted()
-{
-    return _jsonObject.contains("delete_chat_photo");
-}
-
-// "get", "set", "has" methods for "group_chat_created" field //
-
-bool Message::groupChatCreated()
-{
-    return _jsonObject.value("group_chat_created").toBool();
-}
-
-void Message::setGroupChatCreated(bool groupChatCreated)
-{
-    _jsonObject.insert("group_chat_created", groupChatCreated);
-}
-
-bool Message::hasGroupChatCreated()
-{
-    return _jsonObject.contains("group_chat_created");
-}
-
-// "get", "set", "has" methods for "supergroup_chat_created" field //
-
-bool Message::supergroupChatCreated()
-{
-    return _jsonObject.value("supergroup_chat_created").toBool();
-}
-
-void Message::setSupergroupChatCreated(bool supergroupChatCreated)
-{
-    _jsonObject.insert("supergroup_chat_created", supergroupChatCreated);
-}
-
-bool Message::hasSupergroupChatCreated()
-{
-    return _jsonObject.contains("supergroup_chat_created");
-}
-
-// "get", "set", "has" methods for "channel_chat_created" field //
-
-bool Message::channelChatCreated()
-{
-    return _jsonObject.value("channel_chat_created").toBool();
-}
-
-void Message::setChannelChatCreated(bool channelChatCreated)
-{
-    _jsonObject.insert("channel_chat_created", channelChatCreated);
-}
-
-bool Message::hasChannelChatCreated()
-{
-    return _jsonObject.contains("channel_chat_created");
-}
-
-// "get", "set", "has" methods for "migrate_to_chat_id" field //
-
-qint64 Message::migrateToChatId()
-{
-    return _jsonObject.value("migrate_to_chat_id").toInt();
-}
-
-void Message::setMigrateToChatId(qint64 migrateToChatId)
-{
-    _jsonObject.insert("migrate_to_chat_id", migrateToChatId);
-}
-
-bool Message::hasMigrateToChatId()
-{
-    return _jsonObject.contains("migrate_to_chat_id");
-}
-
-// "get", "set", "has" methods for "migrate_from_chat_id" field //
-
-qint64 Message::migrateFromChatId()
-{
-    return _jsonObject.value("migrate_from_chat_id").toInt();
-}
-
-void Message::setMigrateFromChatId(qint64 migrateFromChatId)
-{
-    _jsonObject.insert("migrate_from_chat_id", migrateFromChatId);
-}
-
-bool Message::hasMigrateFromChatId()
-{
-    return _jsonObject.contains("migrate_from_chat_id");
-}
-
-// "get", "set", "has" methods for "pinned_message" field //
-
-Message Message::pinnedMessage()
-{
-    return Message(_jsonObject.value("pinned_message").toObject());
-}
-
-void Message::setPinnedMessage(Message pinnedMessage)
-{
-    _jsonObject.insert("pinned_message", pinnedMessage.toObject());
-}
-
-bool Message::hasPinnedMessage()
-{
-    return _jsonObject.contains("pinned_message");
-}
-
-// "get", "set", "has" methods for "connected_website" field //
-
-QString Message::connectedWebsite()
-{
-    return _jsonObject.value("connected_website").toString();
-}
-
-void Message::setConnectedWebsite(QString connectedWebsite)
-{
-    _jsonObject.insert("connected_website", connectedWebsite);
-}
-
-bool Message::hasConnectedWebsite()
-{
-    return _jsonObject.contains("connected_website");
+#include "Internal/ConversionFunctions.h"
+
+#include "qjsonobject.h"
+#include "qjsonarray.h"
+
+Telegram::Message::Message() :
+	message_id(0),
+	date(0),
+	chat(new Chat()),
+	from(std::nullopt),
+	sender_chat(std::nullopt),
+	forward_from(std::nullopt),
+	forward_from_chat(std::nullopt),
+	forward_from_message_id(std::nullopt),
+	forward_signature(std::nullopt),
+	forward_sender_name(std::nullopt),
+	forward_date(std::nullopt),
+	reply_to_message(std::nullopt),
+	via_bot(std::nullopt),
+	edit_date(std::nullopt),
+	media_group_id(std::nullopt),
+	author_signature(std::nullopt),
+	text(std::nullopt),
+	entities(std::nullopt),
+	animation(std::nullopt),
+	audio(std::nullopt),
+	document(std::nullopt),
+	photo(std::nullopt),
+	//sticker(std::nullopt),
+	video(std::nullopt),
+	video_note(std::nullopt),
+	voice(std::nullopt),
+	caption(std::nullopt),
+	caption_entities(std::nullopt),
+	contact(std::nullopt),
+	dice(std::nullopt),
+	//game(std::nullopt),
+	poll(std::nullopt),
+	venue(std::nullopt),
+	location(std::nullopt),
+	new_chat_members(std::nullopt),
+	left_chat_member(std::nullopt),
+	new_chat_title(std::nullopt),
+	new_chat_photo(std::nullopt),
+	delete_chat_photo(std::nullopt),
+	group_chat_created(std::nullopt),
+	supergroup_chat_created(std::nullopt),
+	channel_chat_created(std::nullopt),
+	message_auto_delete_timer_changed(std::nullopt),
+	migrate_to_chat_id(std::nullopt),
+	migrate_from_chat_id(std::nullopt),
+	pinned_message(std::nullopt),
+	//invoice(std::nullopt),
+	//successful_payment(std::nullopt),
+	connected_website(std::nullopt),
+	//passport_data(std::nullopt),
+	proximity_alert_triggered(std::nullopt),
+	voice_chat_scheduled(std::nullopt),
+	voice_chat_started(std::nullopt),
+	voice_chat_ended(std::nullopt),
+	voice_chat_participants_invited(std::nullopt),
+	reply_markup(std::nullopt)
+{}
+
+Telegram::Message::Message(const qint32& message_id,
+						   const qint32& date,
+						   const std::shared_ptr<Chat>& chat,
+						   const std::optional<User>& from,
+						   const std::optional<std::shared_ptr<Chat>>& sender_chat,
+						   const std::optional<User>& forward_from,
+						   const std::optional<std::shared_ptr<Chat>>& forward_from_chat,
+						   const std::optional<qint32>& forward_from_message_id,
+						   const std::optional<QString>& forward_signature,
+						   const std::optional<QString>& forward_sender_name,
+						   const std::optional<qint32>& forward_date,
+						   const std::optional<std::shared_ptr<Message>>& reply_to_message,
+						   const std::optional<User>& via_bot,
+						   const std::optional<qint32>& edit_date,
+						   const std::optional<QString>& media_group_id,
+						   const std::optional<QString>& author_signature,
+						   const std::optional<QString>& text,
+						   const std::optional<QVector<MessageEntity>>& entities,
+						   const std::optional<Animation>& animation,
+						   const std::optional<Audio>& audio,
+						   const std::optional<Document>& document,
+						   const std::optional<QVector<PhotoSize>>& photo,
+						   //const std::optional<Sticker>& sticker,
+						   const std::optional<Video>& video,
+						   const std::optional<VideoNote>& video_note,
+						   const std::optional<Voice>& voice,
+						   const std::optional<QString>& caption,
+						   const std::optional<QVector<MessageEntity>>& caption_entities,
+						   const std::optional<Contact>& contact,
+						   const std::optional<Dice>& dice,
+						   //const std::optional<Game>& game,
+						   const std::optional<Poll>& poll,
+						   const std::optional<Venue>& venue,
+						   const std::optional<Location>& location,
+						   const std::optional<QVector<User>>& new_chat_members,
+						   const std::optional<User>& left_chat_member,
+						   const std::optional<QString>& new_chat_title,
+						   const std::optional<QVector<PhotoSize>>& new_chat_photo,
+						   const std::optional<bool>& delete_chat_photo,
+						   const std::optional<bool>& group_chat_created,
+						   const std::optional<bool>& supergroup_chat_created,
+						   const std::optional<bool>& channel_chat_created,
+						   const std::optional<MessageAutoDeleteTimerChanged>& message_auto_delete_timer_changed,
+						   const std::optional<qint32>& migrate_to_chat_id,
+						   const std::optional<qint32>& migrate_from_chat_id,
+						   const std::optional<std::shared_ptr<Message>>& pinned_message,
+						   //const std::optional<Invoice>& invoice,
+						   //const std::optional<SuccessfulPayment>& successful_payment,
+						   const std::optional<QString>& connected_website,
+						   //const std::optional<PassportData>& passport_data,
+						   const std::optional<ProximityAlertTriggered>& proximity_alert_triggered,
+						   const std::optional<VoiceChatScheduled>& voice_chat_scheduled,
+						   const std::optional<VoiceChatStarted>& voice_chat_started,
+						   const std::optional<VoiceChatEnded>& voice_chat_ended,
+						   const std::optional<VoiceChatParticipantsInvited>& voice_chat_participants_invited,
+						   const std::optional<InlineKeyboardMarkup>& reply_markup) :
+	message_id(message_id),
+	date(date),
+	chat(chat),
+	from(from),
+	sender_chat(sender_chat),
+	forward_from(forward_from),
+	forward_from_chat(forward_from_chat),
+	forward_from_message_id(forward_from_message_id),
+	forward_signature(forward_signature),
+	forward_sender_name(forward_sender_name),
+	forward_date(forward_date),
+	reply_to_message(reply_to_message),
+	via_bot(via_bot),
+	edit_date(edit_date),
+	media_group_id(media_group_id),
+	author_signature(author_signature),
+	text(text),
+	entities(entities),
+	animation(animation),
+	audio(audio),
+	document(document),
+	photo(photo),
+	//sticker(sticker),
+	video(video),
+	video_note(video_note),
+	voice(voice),
+	caption(caption),
+	caption_entities(caption_entities),
+	contact(contact),
+	dice(dice),
+	//game(game),
+	poll(poll),
+	venue(venue),
+	location(location),
+	new_chat_members(new_chat_members),
+	left_chat_member(left_chat_member),
+	new_chat_title(new_chat_title),
+	new_chat_photo(new_chat_photo),
+	delete_chat_photo(delete_chat_photo),
+	group_chat_created(group_chat_created),
+	supergroup_chat_created(supergroup_chat_created),
+	channel_chat_created(channel_chat_created),
+	message_auto_delete_timer_changed(message_auto_delete_timer_changed),
+	migrate_to_chat_id(migrate_to_chat_id),
+	migrate_from_chat_id(migrate_from_chat_id),
+	pinned_message(pinned_message),
+	//invoice(invoice),
+	//successful_payment(successful_payment),
+	connected_website(connected_website),
+	//passport_data(passport_data),
+	proximity_alert_triggered(proximity_alert_triggered),
+	voice_chat_scheduled(voice_chat_scheduled),
+	voice_chat_started(voice_chat_started),
+	voice_chat_ended(voice_chat_ended),
+	voice_chat_participants_invited(voice_chat_participants_invited),
+	reply_markup(reply_markup)
+{}
+
+Telegram::Message::Message(const QJsonObject& jsonObject)
+{
+	jsonObject.contains("message_id")						 ? message_id = jsonObject["message_id"].toInt()										: message_id = 0;
+	jsonObject.contains("date")								 ? date = jsonObject["date"].toInt()													: date = 0;
+	jsonObject.contains("chat")								 ? chat = std::make_shared<Chat>(jsonObject["chat"].toObject())							: chat = std::make_shared<Chat>();
+	jsonObject.contains("from")								 ? from = User(jsonObject["from"].toObject())											: from = std::nullopt;
+
+	jsonObject.contains("sender_chat")						 ? sender_chat = std::make_shared<Chat>(jsonObject["sender_chat"].toObject())			: sender_chat = std::nullopt;
+
+	jsonObject.contains("forward_from")						 ? forward_from = User(jsonObject["forward_from"].toObject())							: forward_from = std::nullopt;
+
+	jsonObject.contains("forward_from_chat")				 ? forward_from_chat = std::make_shared<Chat>(jsonObject["forward_from_chat"].toObject()) : forward_from_chat = std::nullopt;
+	
+
+	jsonObject.contains("forward_from_message_id")			 ? forward_from_message_id = jsonObject["forward_from_message_id"].toInt()				: forward_from_message_id = std::nullopt;
+	jsonObject.contains("forward_signature")				 ? forward_signature = jsonObject["forward_signature"].toString()						: forward_signature = std::nullopt;
+	jsonObject.contains("forward_sender_name")				 ? forward_sender_name = jsonObject["forward_sender_name"].toString()					: forward_sender_name = std::nullopt;
+	jsonObject.contains("forward_date")						 ? forward_date = jsonObject["forward_date"].toInt()									: forward_date = std::nullopt;
+	
+	jsonObject.contains("reply_to_message")					 ? reply_to_message = std::make_shared<Message>(jsonObject["reply_to_message"].toObject()) : reply_to_message = std::nullopt;
+
+	jsonObject.contains("via_bot")							 ? via_bot = User(jsonObject["via_bot"].toObject())										: via_bot = std::nullopt;
+	jsonObject.contains("edit_date")						 ? edit_date = jsonObject["edit_date"].toInt()											: edit_date = std::nullopt;
+	jsonObject.contains("media_group_id")					 ? media_group_id = jsonObject["media_group_id"].toString()								: media_group_id = std::nullopt;
+	jsonObject.contains("author_signature")					 ? author_signature = jsonObject["author_signature"].toString()							: author_signature = std::nullopt;
+	jsonObject.contains("text")								 ? text = jsonObject["text"].toString()													: text = std::nullopt;										 
+	jsonObject.contains("entities")							 ? entities = QJsonArrayToQVector<MessageEntity>(jsonObject["entities"].toArray())		: entities = std::nullopt;
+	jsonObject.contains("animation")						 ? animation = Animation(jsonObject["animation"].toObject())							: animation = std::nullopt;
+	jsonObject.contains("audio")							 ? audio = Audio(jsonObject["audio"].toObject())										: audio = std::nullopt;
+	jsonObject.contains("document")							 ? document = Document(jsonObject["document"].toObject())								: document = std::nullopt;												 
+	jsonObject.contains("photo")							 ? photo = QJsonArrayToQVector<PhotoSize>(jsonObject["photo"].toArray())				: photo = std::nullopt;
+	//jsonObject.contains("sticker")							 ? sticker = Sticker(["sticker"].toObject())											: sticker = std::nullopt;
+	jsonObject.contains("video")							 ? video = Video(jsonObject["video"].toObject())										: video = std::nullopt;
+	jsonObject.contains("video_note")						 ? video_note = VideoNote(jsonObject["video_note"].toObject())							: video_note = std::nullopt;
+	jsonObject.contains("voice")							 ? voice = Voice(jsonObject["voice"].toObject())										: voice = std::nullopt;
+	jsonObject.contains("caption")							 ? caption = jsonObject["caption"].toString()											: caption = std::nullopt;											 
+	jsonObject.contains("contact")							 ? contact = Contact(jsonObject["contact"].toObject())									: contact = std::nullopt;
+	jsonObject.contains("dice")								 ? dice = Dice(jsonObject["dice"].toObject())											: dice = std::nullopt;
+	//jsonObject.contains("game")								 ? game = Game(jsonObject["game"].toObject())											: game = std::nullopt;
+	jsonObject.contains("poll")								 ? poll = Poll(jsonObject["poll"].toObject())											: poll = std::nullopt;
+	jsonObject.contains("venue")							 ? venue = Venue(jsonObject["venue"].toObject())										: venue = std::nullopt;
+	jsonObject.contains("location")							 ? location = Location(jsonObject["location"].toObject())								: location = std::nullopt;
+	jsonObject.contains("left_chat_member")					 ? left_chat_member = User(jsonObject["left_chat_member"].toObject())					: left_chat_member = std::nullopt;
+	jsonObject.contains("new_chat_title")					 ? new_chat_title = jsonObject["new_chat_title"].toString()								: new_chat_title = std::nullopt;												 
+	jsonObject.contains("delete_chat_photo")				 ? delete_chat_photo = jsonObject["delete_chat_photo"].toBool()							: delete_chat_photo = std::nullopt;
+	jsonObject.contains("group_chat_created")				 ? group_chat_created = jsonObject["group_chat_created"].toBool()						: group_chat_created = std::nullopt;
+	jsonObject.contains("supergroup_chat_created")			 ? supergroup_chat_created = jsonObject["supergroup_chat_created"].toBool()				: supergroup_chat_created = std::nullopt;
+	jsonObject.contains("channel_chat_created")				 ? channel_chat_created = jsonObject["channel_chat_created"].toBool()					: channel_chat_created = std::nullopt;
+	jsonObject.contains("migrate_to_chat_id")				 ? migrate_to_chat_id = jsonObject["migrate_to_chat_id"].toInt()						: migrate_to_chat_id = std::nullopt;
+	jsonObject.contains("migrate_from_chat_id")				 ? migrate_from_chat_id = jsonObject["migrate_from_chat_id"].toInt()					: migrate_from_chat_id = std::nullopt;
+	
+	jsonObject.contains("pinned_message")					 ? pinned_message = std::make_shared<Message>(jsonObject["pinned_message"].toObject())  : pinned_message = std::nullopt;
+
+	//jsonObject.contains("invoice")							 ? invoice = Invoice(jsonObject["invoice"].toObject())									: invoice = std::nullopt;
+	//jsonObject.contains("successful_payment")				 ? successful_payment = SuccessfulPayment(jsonObject["successful_payment"].toObject())  : successful_payment = std::nullopt;
+	jsonObject.contains("connected_website")				 ? connected_website = jsonObject["connected_website"].toString()						: connected_website = std::nullopt;
+	//jsonObject.contains("passport_data")					 ? passport_data = PassportData(jsonObject["passport_data"].toObject())					: passport_data = std::nullopt;
+	jsonObject.contains("voice_chat_started")				 ? voice_chat_started = VoiceChatStarted(/*jsonObject["voice_chat_started"].toObject()*/)   : voice_chat_started = std::nullopt;
+	jsonObject.contains("voice_chat_ended")					 ? voice_chat_ended = VoiceChatEnded(jsonObject["voice_chat_ended"].toObject())		    : voice_chat_ended = std::nullopt;
+	jsonObject.contains("reply_markup")						 ? reply_markup = InlineKeyboardMarkup(jsonObject["reply_markup"].toObject())			: reply_markup = std::nullopt;
+	jsonObject.contains("new_chat_photo")					 ? new_chat_photo = QJsonArrayToQVector<PhotoSize>(jsonObject["new_chat_photo"].toArray())										 : new_chat_photo = std::nullopt;
+	jsonObject.contains("new_chat_members")					 ? new_chat_members = QJsonArrayToQVector<User>(jsonObject["new_chat_members"].toArray())										 : new_chat_members = std::nullopt;
+	jsonObject.contains("caption_entities")					 ? caption_entities = QJsonArrayToQVector<MessageEntity>(jsonObject["caption_entities"].toArray())								 : caption_entities = std::nullopt;
+	jsonObject.contains("message_auto_delete_timer_changed") ? message_auto_delete_timer_changed = MessageAutoDeleteTimerChanged(jsonObject["message_auto_delete_timer_changed"].toObject()) : message_auto_delete_timer_changed = std::nullopt;
+	jsonObject.contains("voice_chat_scheduled")				 ? voice_chat_scheduled = VoiceChatScheduled(jsonObject["voice_chat_scheduled"].toObject())										 : voice_chat_scheduled = std::nullopt;
+	jsonObject.contains("proximity_alert_triggered")		 ? proximity_alert_triggered = ProximityAlertTriggered(jsonObject["proximity_alert_triggered"].toObject())						 : proximity_alert_triggered = std::nullopt;
+	jsonObject.contains("voice_chat_participants_invited")	 ? voice_chat_participants_invited = VoiceChatParticipantsInvited(jsonObject["voice_chat_participants_invited"].toObject())		 : voice_chat_participants_invited = std::nullopt;
+}
+
+QJsonObject Telegram::Message::toObject() const
+{
+	if (isEmpty())
+		return QJsonObject();
+
+	QJsonObject messageJsonObject{ {"message_id", message_id}, {"date", date}, {"chat", chat->toObject()} };
+
+	if (from.has_value())								messageJsonObject.insert("from", from->toObject());
+	if (sender_chat.has_value())						messageJsonObject.insert("sender_chat", sender_chat.value()->toObject());
+	if (forward_from.has_value())						messageJsonObject.insert("forward_from", forward_from->toObject());
+	if (forward_from_chat.has_value())					messageJsonObject.insert("forward_from_chat", forward_from_chat.value()->toObject());
+	if (forward_from_message_id.has_value())			messageJsonObject.insert("forward_from_message_id", *forward_from_message_id);
+	if (forward_signature.has_value())					messageJsonObject.insert("forward_signature", *forward_signature);
+	if (forward_sender_name.has_value())				messageJsonObject.insert("forward_sender_name", *forward_sender_name);
+	if (forward_date.has_value())						messageJsonObject.insert("forward_date", *forward_date);
+	if (reply_to_message.has_value())					messageJsonObject.insert("reply_to_message", reply_to_message.value()->toObject());
+	if (via_bot.has_value())							messageJsonObject.insert("via_bot", via_bot->toObject());
+	if (edit_date.has_value())							messageJsonObject.insert("edit_date", *edit_date);
+	if (media_group_id.has_value())						messageJsonObject.insert("media_group_id", *media_group_id);
+	if (author_signature.has_value())					messageJsonObject.insert("author_signature", *author_signature);
+	if (text.has_value())								messageJsonObject.insert("text", *text);
+	if (entities.has_value())							messageJsonObject.insert("entities", QVectorToQJsonArray(*entities));
+	if (animation.has_value())							messageJsonObject.insert("animation", animation->toObject());
+	if (audio.has_value())								messageJsonObject.insert("audio", audio->toObject());
+	if (document.has_value())							messageJsonObject.insert("document", document->toObject());
+	if (photo.has_value())								messageJsonObject.insert("photo", QVectorToQJsonArray(*photo));
+	//if (sticker.has_value())							messageJsonObject.insert("sticker", *sticker);
+	if (video.has_value())								messageJsonObject.insert("video", video->toObject());
+	if (video_note.has_value())							messageJsonObject.insert("video_note", video_note->toObject());
+	if (voice.has_value())								messageJsonObject.insert("voice", voice->toObject());
+	if (caption.has_value())							messageJsonObject.insert("caption", *caption);
+	if (caption_entities.has_value())					messageJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (contact.has_value())							messageJsonObject.insert("contact", contact->toObject());
+	if (dice.has_value())								messageJsonObject.insert("dice", dice->toObject());
+	//if (game.has_value())								messageJsonObject.insert("game", *game);
+	if (poll.has_value())								messageJsonObject.insert("poll", poll->toObject());
+	if (venue.has_value())								messageJsonObject.insert("venue", venue->toObject());
+	if (location.has_value())							messageJsonObject.insert("location", location->toObject());
+	if (new_chat_members.has_value())					messageJsonObject.insert("new_chat_members", QVectorToQJsonArray(*new_chat_members));
+	if (left_chat_member.has_value())					messageJsonObject.insert("left_chat_member", left_chat_member->toObject());
+	if (new_chat_title.has_value())						messageJsonObject.insert("new_chat_title", *new_chat_title);
+	if (new_chat_photo.has_value())						messageJsonObject.insert("new_chat_photo", QVectorToQJsonArray(*new_chat_photo));
+	if (delete_chat_photo.has_value())					messageJsonObject.insert("delete_chat_photo", *delete_chat_photo);
+	if (group_chat_created.has_value())					messageJsonObject.insert("group_chat_created", *group_chat_created);
+	if (supergroup_chat_created.has_value())			messageJsonObject.insert("supergroup_chat_created", *supergroup_chat_created);
+	if (channel_chat_created.has_value())				messageJsonObject.insert("channel_chat_created", *channel_chat_created);
+	if (message_auto_delete_timer_changed.has_value())	messageJsonObject.insert("message_auto_delete_timer_changed", message_auto_delete_timer_changed->toObject());
+	if (migrate_to_chat_id.has_value())					messageJsonObject.insert("migrate_to_chat_id", *migrate_to_chat_id);
+	if (migrate_from_chat_id.has_value())				messageJsonObject.insert("migrate_from_chat_id", *migrate_from_chat_id);
+	if (pinned_message.has_value())						messageJsonObject.insert("pinned_message", pinned_message.value()->toObject());
+	//if (invoice.has_value())							messageJsonObject.insert("invoice", *invoice);
+	//if (successful_payment.has_value())					messageJsonObject.insert("successful_payment", *successful_payment);
+	if (connected_website.has_value())					messageJsonObject.insert("connected_website", *connected_website);
+	//if (passport_data.has_value())						messageJsonObject.insert("passport_data", *passport_data);
+	if (proximity_alert_triggered.has_value())			messageJsonObject.insert("proximity_alert_triggered", proximity_alert_triggered->toObject());
+	if (voice_chat_scheduled.has_value())				messageJsonObject.insert("voice_chat_scheduled", voice_chat_scheduled->toObject());
+	if (voice_chat_started.has_value())					messageJsonObject.insert("voice_chat_started", voice_chat_started->toObject());
+	if (voice_chat_ended.has_value())					messageJsonObject.insert("voice_chat_ended", voice_chat_ended->toObject());
+	if (voice_chat_participants_invited.has_value())	messageJsonObject.insert("voice_chat_participants_invited", voice_chat_participants_invited->toObject());
+	if (reply_markup.has_value())						messageJsonObject.insert("reply_markup", reply_markup->toObject());
+
+	return messageJsonObject;
+}
+
+bool Telegram::Message::isEmpty() const
+{
+	return message_id == 0
+		   and date == 0
+		   and chat->isEmpty()
+		   and from == std::nullopt
+		   and sender_chat == std::nullopt
+		   and forward_from == std::nullopt
+		   and forward_from_chat == std::nullopt
+		   and forward_from_message_id == std::nullopt
+		   and forward_signature == std::nullopt
+		   and forward_sender_name == std::nullopt
+		   and forward_date == std::nullopt
+		   and reply_to_message == std::nullopt
+		   and via_bot == std::nullopt
+		   and edit_date == std::nullopt
+		   and media_group_id == std::nullopt
+		   and author_signature == std::nullopt
+		   and text == std::nullopt
+		   and entities == std::nullopt
+		   and animation == std::nullopt
+		   and audio == std::nullopt
+		   and document == std::nullopt
+		   and photo == std::nullopt
+		   //and sticker == std::nullopt
+		   and video == std::nullopt
+		   and video_note == std::nullopt
+		   and voice == std::nullopt
+		   and caption == std::nullopt
+		   and contact == std::nullopt
+		   and dice == std::nullopt
+		   //and game == std::nullopt
+		   and poll == std::nullopt
+		   and venue == std::nullopt
+		   and location == std::nullopt
+		   and left_chat_member == std::nullopt
+		   and new_chat_title == std::nullopt
+		   and delete_chat_photo == std::nullopt
+		   and group_chat_created == std::nullopt
+		   and supergroup_chat_created == std::nullopt
+		   and channel_chat_created == std::nullopt
+		   and migrate_to_chat_id == std::nullopt
+		   and migrate_from_chat_id == std::nullopt
+		   and pinned_message == std::nullopt
+		   //and invoice == std::nullopt
+		   //and successful_payment == std::nullopt
+		   and connected_website == std::nullopt
+		   //and passport_data == std::nullopt
+		   and voice_chat_started == std::nullopt
+		   and voice_chat_ended == std::nullopt
+		   and reply_markup == std::nullopt
+		   and new_chat_photo == std::nullopt
+		   and new_chat_members == std::nullopt
+		   and caption_entities == std::nullopt
+		   and message_auto_delete_timer_changed == std::nullopt
+		   and voice_chat_scheduled == std::nullopt
+		   and proximity_alert_triggered == std::nullopt
+		   and voice_chat_participants_invited == std::nullopt;
 }
-

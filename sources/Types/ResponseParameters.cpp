@@ -1,32 +1,33 @@
 #include "Types/ResponseParameters.h"
 
-ResponseParameters::ResponseParameters() {}
+#include "qjsonobject.h"
 
-ResponseParameters::ResponseParameters(QJsonObject jsonObject)
+Telegram::ResponseParameters::ResponseParameters(const std::optional<qint64>& migrate_to_chat_id,
+												 const std::optional<qint32>& retry_after) :
+	migrate_to_chat_id(migrate_to_chat_id),
+	retry_after(retry_after)
+{}
+
+Telegram::ResponseParameters::ResponseParameters(const QJsonObject& jsonObject)
 {
-    if(jsonObject.contains("migrate_to_chat_id"))
-        _jsonObject.insert("migrate_to_chat_id", jsonObject.value("migrate_to_chat_id"));
-
-    if(jsonObject.contains("retry_after"))
-        _jsonObject.insert("retry_after", jsonObject.value("retry_after"));
+	jsonObject.contains("migrate_to_chat_id") ? migrate_to_chat_id = jsonObject["migrate_to_chat_id"].toInt() : migrate_to_chat_id = std::nullopt;
+	jsonObject.contains("retry_after")		  ? retry_after = jsonObject["retry_after"].toInt()				  : retry_after = std::nullopt;
 }
 
-qint64 ResponseParameters::migrateToChatId()
+QJsonObject Telegram::ResponseParameters::toObject() const
 {
-    return _jsonObject.value("migrate_to_chat_id").toInt();
+	if (isEmpty())
+		return QJsonObject();
+
+	QJsonObject responseParametersJsonObject;
+
+	if (migrate_to_chat_id.has_value())		responseParametersJsonObject.insert("migrate_to_chat_id", *migrate_to_chat_id);
+	if (retry_after.has_value())			responseParametersJsonObject.insert("retry_after", *retry_after);
+
+	return responseParametersJsonObject;
 }
 
-void ResponseParameters::setMigrateToChatId(qint64 migrateToChatId)
+bool Telegram::ResponseParameters::isEmpty() const
 {
-    _jsonObject.insert("migrate_to_chat_id", migrateToChatId);
-}
-
-qint32 ResponseParameters::retryAfter()
-{
-    return _jsonObject.value("retry_after").toInt();
-}
-
-void ResponseParameters::setRetryAfter(qint32 retryAfter)
-{
-    _jsonObject.insert("retry_after", retryAfter);
+	return migrate_to_chat_id == std::nullopt and retry_after == std::nullopt;
 }

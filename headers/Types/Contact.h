@@ -1,51 +1,62 @@
-#ifndef CONTACT_H
-#define CONTACT_H
+#ifndef TELEGRAM_TYPES_CONTACT_H
+#define TELEGRAM_TYPES_CONTACT_H
 
-#include "Types/Type.h"
+#include "qstring.h"
+class QJsonObject;
 
-/*!
-    \brief This class represents a phone Contact
+#include <optional>
 
-    Fields of Contact object
-    -----------------------------------
-
-    | Field                 | Type              | Desription  |
-    | :---:                 | :----:            | :---- |
-    | **phoneNumber**       | `QString`          | Contact's phone number |
-    | **firstName**         | `QString`         | Contact's first name |
-    | **lastName**          | `QString`         | **Optional**. Contact's last name |
-    | **userId**            | `QInt32`          | **Optional**. Contact's user identifier in Telegram |
-    | **vcard**             | `QString`         | **Optional**. Additional data about the contact in the form of a [vCard](https://en.wikipedia.org/wiki/VCard) |
-
-    In order to set **optional** fields use "set" methods ([setLastName](@ref setLastName), [setUserId](@ref setUserId), etc.)
-*/
-
-class Contact : public Type
+namespace Telegram
 {
-public:
-    Contact();
+    /**
+     *
+     * @brief This struct represents a phone contact
+     *
+     */
 
-    Contact(QString phoneNumber,
-            QString firstName);
+    struct Contact
+    {
+        /** @brief Default constructor. Constructs an empty Contact object
+         *
+         * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
+        Contact();
 
-    Contact(QJsonObject jsonObject);
+        /** @brief Constructs Contact object from parameters */
+        Contact(const QString& phone_number,
+                const QString& first_name,
+                const std::optional<QString>& last_name = std::nullopt,
+                const std::optional<qint64>& user_id = std::nullopt,
+                const std::optional<QString>& vcard = std::nullopt);
 
-    QString phoneNumber();
-    void    setPhoneNumber(QString phoneNumber);
+        /** @brief JSON constructor. Constructs Contact object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has all key-value pairs related to Contact class fields. For example it should contain pairs such as "phone_number" = "...",
+         * "first_name" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+        Contact(const QJsonObject& jsonObject);
 
-    QString firstName();
-    void    setFirstName(QString firstName);
+        /* @brief Returns Contact in form of JSON object. Returns empty QJsonObject if Contact is empty */
+        QJsonObject toObject() const;
 
-    QString lastName();
-    void    setLastName(QString lastName);
-    bool    hasLastName();
+        /* @brief Returns true if Contact is empty */
+        bool isEmpty() const;
 
-    qint32  userId();
-    void    setUserId(qint32 userId);
-    bool    hasUserId();
+//** Fields **//
 
-    QString vcard();
-    void    setVcard(QString vcard);
-    bool    hasVcard();
-};
-#endif // CONTACT_H
+        /** @brief Contact's phone number */
+        QString phone_number;
+        
+        /** @brief Contact's first name */
+        QString first_name;
+        
+        /** @brief Optional. Contact's last name */
+        std::optional<QString> last_name;
+        
+        /** @brief Optional. Contact's user identifier in Telegram */
+        std::optional<qint64> user_id;
+        
+        /** @brief Optional. Additional data about the contact in the form of a vCard */
+        std::optional<QString> vcard;
+    };
+}
+
+#endif // TELEGRAM_TYPES_CONTACT_H

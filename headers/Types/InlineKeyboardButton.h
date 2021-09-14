@@ -1,70 +1,89 @@
-#ifndef INLINEKEYBOARDBUTTON_H
-#define INLINEKEYBOARDBUTTON_H
+#ifndef TELEGRAM_TYPES_INLINEKEYBOARDBUTTON_H
+#define TELEGRAM_TYPES_INLINEKEYBOARDBUTTON_H
 
-#include "Types/Type.h"
-#include "Types/LoginUrl.h"
+class QJsonObject;
+#include "qstring.h"
 
-/*!
-    \brief This object represents one button of an inline keyboard
+#include <optional>
 
-    Fields of InlineKeyboardButton object
-    -----------------------------------
+#include "LoginURL.h"
+//#include "CallbackGame.h"
 
-    | Field                             | Type           | Desription  |
-    | :---:                             | :----:         | :---- |
-    | **text**                          | `QString`      | Label text on the button |
-    | **url**                           | `QString`      | **Optional**. HTTP or tg:// url to be opened when button is pressed |
-    | **loginUrl**                      | `LoginUrl`     | **Optional**. An HTTP URL used to automatically authorize the user. Can be used as a replacement for the [Telegram Login Widget](https://core.telegram.org/widgets/login) |
-    | **callbackData**                  | `QString`      | **Optional**. Data to be sent in a [сallback query](@ref CallbackQuery) to the bot when button is pressed, <U><B>1-64</B></U> bytes |
-    | **switchInlineQuery**             | `QString`      | **Optional**. If set, pressing the button will prompt the user to select one of their chats, open that chat and insert the bot's username and the specified inline query in the input field. Can be empty, in which case just the bot's username will be inserted |
-    | **switchInlineQueryCurrentChat**  | `QString`      | **Optional**. If set, pressing the button will insert the bot's username and the specified inline query in the current chat's input field. Can be empty, in which case only the bot's username will be inserted |
-    | **callbackGame**                  | `CallbackGame` | **Optional**. Description of the game that will be launched when the user presses the button. **NOTE:** This type of button must always be the first button in the first row |
-    | **isPay**                         | `Bool`         | **Optional**. Specify True, to send a Pay button. |
-
-    > You **must** use exactly one of the optional fields
-
-    In order to set **optional** fields use "set" methods ([setTitle](@ref setTitle), [setUsername](@ref setUsername), etc.)
-*/
-
-class InlineKeyboardButton : public Type
+namespace Telegram
 {
-public:
-    InlineKeyboardButton();
+    /**
+     *
+     * @brief This struct represents one button of an inline keyboard
+     *
+     * > You **must** use exactly one of the optional fields
+     * 
+     */
 
-    InlineKeyboardButton(QString text);
+    struct InlineKeyboardButton
+    {
+        /** @brief Default constructor. Constructs an empty InlineKeyboardButton object
+         *
+         * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
+        InlineKeyboardButton();
 
-    InlineKeyboardButton(QJsonObject jsonObject);
+        /** @brief Constructs InlineKeyboardButton object from parameters */
+        InlineKeyboardButton(const QString& text,
+                             const std::optional<QString>& url = std::nullopt,
+                             const std::optional<LoginURL>& login_url = std::nullopt,
+                             const std::optional<QString>& callback_data = std::nullopt,
+                             const std::optional<QString>& switch_inline_query = std::nullopt,
+                             const std::optional<QString>& switch_inline_query_current_chat = std::nullopt,
+                             //const std::optional<CallbackGame>& callback_game = std::nullopt,
+                             const std::optional<bool>& pay = std::nullopt);
 
-    QString         text();
-    void            setText(QString text);
+        /** @brief JSON constructor. Constructs InlineKeyboardButton object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has all key-value pairs related to InlineKeyboardButton class fields. For example it should contain pairs such as "text" = "...",
+         * "url" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+        InlineKeyboardButton(const QJsonObject& jsonObject);
 
-    QString         url();
-    void            setUrl(QString url);
-    bool            hasUrl();
+        /* @brief Returns InlineKeyboardButton in form of JSON object. Returns empty QJsonObject if InlineKeyboardButton is empty */
+        QJsonObject toObject() const;
 
-    LoginUrl        loginUrl();
-    void            setLoginUrl(LoginUrl loginUrl);
-    bool            hasLoginUrl();
+        /* @brief Returns true if InlineKeyboardButton is empty */
+        bool isEmpty() const;
 
-    QString         callbackData();
-    void            setCallbackData(QString callbackData);
-    bool            hasCallbackData();
+//** Fields **//
 
-    QString         switchInlineQuery();
-    void            setSwitchInlineQuery(QString switchInlineQuery);
-    bool            hasSwitchInlineQuery();
+        /** @brief Label text on the button */
+        QString text;
+        
+        /** @brief Optional. HTTP or tg:// url to be opened when button is pressed */
+        std::optional<QString> url;
+        
+        /** @brief Optional. An HTTP URL used to automatically authorize the user 
+         * 
+         * Can be used as a replacement for the Telegram Login Widget */
+        std::optional<LoginURL> login_url;
+        
+        /** @brief Optional. Data to be sent in a callback query to the bot when button is pressed, 1 - 64 bytes */
+        std::optional<QString> callback_data;
+        
+        /** @brief Optional. If set, pressing the button will prompt the user to select one of their chats, open that chat and insert the bot's username and the specified inline query in the input field. Can be empty, in which case just the bot's username will be inserted
+         *
+         * Note: This offers an easy way for users to start using your bot in inline mode when they are currently in a private chat with it. Especially useful when combined with switch_pm… actions – in this case the user will be automatically returned to the chat they switched from, skipping the chat selection screen */
+        std::optional<QString> switch_inline_query;
+        
+        /** @brief Optional. If set, pressing the button will insert the bot's username and the specified inline query in the current chat's input field. Can be empty, in which case only the bot's username will be inserted
+         *
+         *  This offers a quick way for the user to open your bot in inline mode in the same chat – good for selecting something from multiple options */
+         std::optional<QString> switch_inline_query_current_chat;
+        
+        /** @brief Optional. Description of the game that will be launched when the user presses the button
+         *
+         * NOTE: This type of button must always be the first button in the first row */
+        //std::optional<CallbackGame> callback_game;
+        
+        /** @brief Optional. Specify True, to send a Pay button
+         *
+         * NOTE: This type of button must always be the first button in the first row */
+        std::optional<bool> pay;
+    };
+}
 
-    QString         switchInlineQueryCurrentChat();
-    void            setSwitchInlineQueryCurrentChat(QString switchInlineQueryCurrentChat);
-    bool            hasSwitchInlineQueryCurrentChat();
-
-    //CallbackGame    callbackGame();
-    //void            setCallbackGame(CallbackGame callbackGame);
-    //bool            hasCallbackGame();
-
-    bool            isPay();
-    void            setPay(bool pay);
-    bool            hasPay();
-};
-
-#endif // INLINEKEYBOARDBUTTON_H
+#endif // TELEGRAM_TYPES_INLINEKEYBOARDBUTTON_H

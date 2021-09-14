@@ -1,45 +1,82 @@
-#ifndef INPUTMEDIAAUDIO_H
-#define INPUTMEDIAAUDIO_H
+#ifndef TELEGRAM_TYPES_INPUTMEDIAAUDIO_H
+#define TELEGRAM_TYPES_INPUTMEDIAAUDIO_H
 
-#include "Types/Type.h"
+#include "MessageEntity.h"
 
-class InputMediaAudio : public Type
+#include <variant>
+
+#include "qvector.h"
+
+namespace Telegram
 {
-public:
-    InputMediaAudio();
+    /**
+     *
+     * @brief Represents an audio file to be treated as music to be sent
+     *
+     */
 
-    InputMediaAudio(QString media);
+    struct InputMediaAudio
+    {
+        /** @brief Default constructor. Constructs an empty InputMediaAudio object
+         *
+         * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
+        InputMediaAudio();
 
-    InputMediaAudio(QJsonObject jsonObject);
+        /** @brief Constructs InputMediaAudio object from parameters */
+        InputMediaAudio(const std::variant<QFile*, QString>& media,
+                        const std::optional<std::variant<QFile*, QString>>& thumb = std::nullopt,
+                        const std::optional<QString>& caption = std::nullopt,
+                        const std::optional<QString>& parse_mode = std::nullopt,
+                        const std::optional<QVector<MessageEntity>>& caption_entities = std::nullopt,
+                        const std::optional<qint32>& duration = std::nullopt,
+                        const std::optional<QString>& performer = std::nullopt,
+                        const std::optional<QString>& title = std::nullopt);
 
-    QString media();
-    void    setMedia(QString media);
+        /** @brief JSON constructor. Constructs InputMediaAudio object from QJsonObject
+         *
+         * QJsonObject which is passed to constuctor has to has all key-value pairs related to InputMediaAudio class fields. For example it should contain pairs such as "type" = "...",
+         * "media" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
+        InputMediaAudio(const QJsonObject& jsonObject);
 
-    //InputFile thumb();
-    QString   thumb();
-    //void      setThumb(InputFile thumb);
-    void      setThumb(QString thumb);
-    bool      hasThumb();
+        /* @brief Returns InputMediaAudio in form of JSON object. Returns empty QJsonObject if InputMediaAudio is empty */
+        QJsonObject toObject() const;
 
-    QString caption(); // добавить проверки на хуйню
-    void    setCaption(QString caption);
-    bool    hasCaption();
+        /* @brief Returns true if InputMediaAudio is empty */
+        bool isEmpty() const;
 
-    QString parseMode();
-    void    setParseMode(QString parseMode);
-    bool    hasParseMode();
+//** Fields **//
 
-    qint32  duration();
-    void    setDuration(qint32 duration);
-    bool    hasDuration();
+        /** @brief Type of the result, must be audio */
+        const QString type = "audio";
 
-    QString performer();
-    void    setPerformer(QString performer);
-    bool    hasPerformer();
+        /** @brief File to send
+         *
+         * Pass a file_id to send a file that exists on the Telegram servers, pass an HTTP URL for Telegram to get a file from the Internet, or pass QFile* to upload a new one */
+        std::variant<QFile*, QString> media;
 
-    QString title();
-    void    setTitle(QString title);
-    bool    hasTitle();
-};
+        /** @brief Optional. Thumbnail of the file sent
+         *
+         * Сan be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Thumbnails can't be reused with file_id and can be only uploaded as a new file via QFile* */
+        std::optional<std::variant<QFile*, QString>> thumb;
 
-#endif // INPUTMEDIAAUDIO_H
+        /** @brief Optional. Caption of the animation to be sent, 0-1024 characters after entities parsing */
+        std::optional<QString> caption;
+
+        /** @brief Optional. Mode for parsing entities in the animation caption. See formatting options for more details. */
+        std::optional<QString> parse_mode;
+
+        /** @brief Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode */
+        std::optional<QVector<MessageEntity>> caption_entities;
+
+        /** @brief Optional. Animation duration */
+        std::optional<qint32> duration;
+
+        /** @brief Optional. Performer of the audio */
+        std::optional<QString> performer;
+
+        /** @brief Optional. Title of the audio */
+        std::optional<QString> title;
+    };
+}
+
+#endif // TELEGRAM_TYPES_INPUTMEDIAAUDIO_H
