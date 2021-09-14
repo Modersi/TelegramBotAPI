@@ -31,7 +31,7 @@ class QFile;
 #include <variant>
 
 /* Your bot token provided by Telegram BotFather (@BotFather) */
-#define BOT_TOKEN "1871273454:AAFpFGujteQPDuMoivE7VFpmMmZU9LUT9H0"
+#define BOT_TOKEN "EXAMPLE"
 
 /* Your payment token provided by Telegram BotFather (@BotFather) */
 #define PAYMENT_TOKEN "EXAMPLE"
