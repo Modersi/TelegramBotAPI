@@ -1,0 +1,5 @@
+add_subdirectory(BotStartup)
+add_subdirectory(IncomingMessagesHandling)
+add_subdirectory(AdditionalKeyboards)
+add_subdirectory(InlineMode)
+add_subdirectory(SendingMedia)
