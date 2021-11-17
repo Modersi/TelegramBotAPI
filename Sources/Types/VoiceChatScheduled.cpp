@@ -3,7 +3,7 @@
 #include "qjsonobject.h"
 
 Telegram::VoiceChatScheduled::VoiceChatScheduled() :
-	start_date(0)
+	start_date()
 {}
 
 Telegram::VoiceChatScheduled::VoiceChatScheduled(const qint32& start_date) :

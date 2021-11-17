@@ -3,8 +3,8 @@
 #include "qjsonobject.h"
 
 Telegram::Error::Error() :
-	description(""),
-	error_code(0)
+	description(),
+	error_code()
 {}
 
 Telegram::Error::Error(const QString& description, const qint32& error_code) :

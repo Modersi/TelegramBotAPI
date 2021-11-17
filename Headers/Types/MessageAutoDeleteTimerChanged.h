@@ -22,7 +22,7 @@ namespace Telegram
 
         /** @brief JSON constructor. Constructs MessageAutoDeleteTimerChanged object from QJsonObject
          *
-         * QJsonObject which is passed to constuctor has to has key-value pair "message_auto_delete_time" = "..." to contruct correct object, otherwise empty object will be created */
+         * QJsonObject which is passed to constuctor has to has key-value pair "message_auto_delete_time" = "..." to construct correct object, otherwise empty object will be created */
         MessageAutoDeleteTimerChanged(const QJsonObject& jsonObject);
 
         /* @brief Returns MessageAutoDeleteTimerChanged in form of JSON object. Returns empty QJsonObject if MessageAutoDeleteTimerChanged is empty */

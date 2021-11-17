@@ -3,7 +3,7 @@
 #include "qjsonobject.h"
 
 Telegram::MessageAutoDeleteTimerChanged::MessageAutoDeleteTimerChanged() :
-	message_auto_delete_time(0)
+	message_auto_delete_time()
 {}
 
 Telegram::MessageAutoDeleteTimerChanged::MessageAutoDeleteTimerChanged(const qint32& message_auto_delete_time) :

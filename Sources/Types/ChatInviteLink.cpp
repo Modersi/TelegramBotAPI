@@ -3,12 +3,12 @@
 #include "qjsonobject.h"
 
 Telegram::ChatInviteLink::ChatInviteLink() :
-	invite_link(""),
-	creator(User()),
-	is_primary(false),
-	is_revoked(false),
-	expire_date(std::nullopt),
-	member_limit(std::nullopt)
+	invite_link(),
+	creator(),
+	is_primary(),
+	is_revoked(),
+	expire_date(),
+	member_limit()
 {}
 
 Telegram::ChatInviteLink::ChatInviteLink(const QString& invite_link,

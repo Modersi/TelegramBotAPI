@@ -3,7 +3,7 @@
 #include "qjsonobject.h"
 
 Telegram::VoiceChatEnded::VoiceChatEnded() :
-	duration(0)
+	duration()
 {}
 
 Telegram::VoiceChatEnded::VoiceChatEnded(const qint32& duration) :

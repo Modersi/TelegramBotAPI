@@ -1,8 +1,9 @@
 #ifndef TELEGRAM_TYPES_VOICECHATPARTICIPANTSINVITED_H
 #define TELEGRAM_TYPES_VOICECHATPARTICIPANTSINVITED_H
 
-#include "User.h"
 #include "qvector.h"
+
+#include "User.h"
 
 namespace Telegram
 {

@@ -3,9 +3,9 @@
 #include "qjsonobject.h"
 
 Telegram::ProximityAlertTriggered::ProximityAlertTriggered() :
-	traveler(User()),
-	watcher(User()),
-	distance(0)
+	traveler(),
+	watcher(),
+	distance()
 {}
 
 Telegram::ProximityAlertTriggered::ProximityAlertTriggered(const User& traveler,

@@ -6,6 +6,10 @@
 template<typename T>
 concept ConvertiableToQJsonObject = requires(T a) { a.toObject(); };
 
+/* Concept that requires T to be a pointer to an object with .toObject() method  */
+template<typename T>
+concept PointerConvertiableToQJsonObject = requires(T a) { a->toObject(); };
+
 
 //** QVector To QJsonArray conversion **//
 
@@ -20,6 +24,22 @@ QJsonArray QVectorToQJsonArray(const QVector<T>& vector)
     QJsonArray resultQJsonArray;
     for (auto itemFromVector : vector)
         resultQJsonArray.push_back(itemFromVector.toObject());
+    return resultQJsonArray;
+}
+
+/** @brief Function that converts QVector of type T into QJsonArray
+ *
+ *  Overload for case when T is a pointer to an object with .toObject() method (e.g Message, Chat)
+ *
+ * @param QVector<T>    Target vector */
+template<PointerConvertiableToQJsonObject T>
+QJsonArray QVectorToQJsonArray(const QVector<T>& vector)
+{
+    qDebug() << "QVectorToQJsonArray with PointerConvertiableToQJsonObject";
+
+    QJsonArray resultQJsonArray;
+    for (auto itemFromVector : vector)
+        resultQJsonArray.push_back(itemFromVector->toObject());
     return resultQJsonArray;
 }
 
@@ -51,6 +71,27 @@ QJsonArray DoubleQVectorToDoubleQJsonArray(const QVector<QVector<T>>& doubleVect
         QJsonArray tempArray;
         for (auto value : innerVector)
             tempArray.push_back(value.toObject());
+        resultJsonArray.push_back(tempArray);
+    }
+    return resultJsonArray;
+};
+
+/** @brief Function that converts double QVector of type T into double QJsonArray
+ *
+ *  Overload for case when T is a pointer to an object with .toObject() method (e.g Message, Chat)
+ *
+ * @param QVector<QVector<T>>    Target vector */
+template<PointerConvertiableToQJsonObject T>
+QJsonArray DoubleQVectorToDoubleQJsonArray(const QVector<QVector<T>>& doubleVector)
+{
+    qDebug() << "DoubleQVectorToQJsonArray with PointerConvertiableToQJsonObject";
+
+    QJsonArray resultJsonArray;
+    for (auto innerVector : doubleVector)
+    {
+        QJsonArray tempArray;
+        for (auto value : innerVector)
+            tempArray.push_back(value->toObject());
         resultJsonArray.push_back(tempArray);
     }
     return resultJsonArray;

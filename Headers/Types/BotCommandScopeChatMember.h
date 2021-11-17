@@ -1,10 +1,9 @@
 #ifndef TELEGRAM_TYPES_BOTCOMMANDSCOPECHATMEMBER_H
 #define TELEGRAM_TYPES_BOTCOMMANDSCOPECHATMEMBER_H
 
-#include <variant>
+#include "Types/BotCommandScope.h"
 
-#include "qstring.h"
-class QJsonObject;
+#include <variant>
 
 namespace Telegram
 {
@@ -12,33 +11,9 @@ namespace Telegram
      *
      * @brief This struct represents the scope of bot commands, covering a specific member of a group or supergroup chat
      *
-     * The following algorithm is used to determine the list of commands for a particular user viewing the bot menu. The first list of commands which is set is returned:
-     *
-     * Commands in the chat with the bot:
-     * • botCommandScopeChat + language_code
-     * • botCommandScopeChat
-     * • botCommandScopeAllPrivateChats + language_code
-     * • botCommandScopeAllPrivateChats
-     * • botCommandScopeDefault + language_code
-     * • botCommandScopeDefault
-     *
-     * Commands in group and supergroup chats:
-     * • botCommandScopeChatMember + language_code
-     * • botCommandScopeChatMember
-     * • botCommandScopeChatAdministrators + language_code (admins only)
-     * • botCommandScopeChatAdministrators (admins only)
-     * • botCommandScopeChat + language_code
-     * • botCommandScopeChat
-     * • botCommandScopeAllChatAdministrators + language_code (admins only)
-     * • botCommandScopeAllChatAdministrators (admins only)
-     * • botCommandScopeAllGroupChats + language_code
-     * • botCommandScopeAllGroupChats
-     * • botCommandScopeDefault + language_code
-     * • botCommandScopeDefault
-     *
      */
 
-    struct BotCommandScopeChatMember
+    struct BotCommandScopeChatMember : public BotCommandScope
     {
         /** @brief Constructs BotCommandScopeChatMember object from parameters */
         BotCommandScopeChatMember(const std::variant<qint32, QString>& chat_id, const qint32& user_id);
@@ -49,10 +24,10 @@ namespace Telegram
         BotCommandScopeChatMember(const QJsonObject& jsonObject);
 
         /* @brief Returns true if BotCommandScopeChatMember is empty */
-        bool isEmpty() const;
+        virtual bool isEmpty() const override;
 
         /* @brief Returns BotCommandScopeChatMember in form of JSON object */
-        QJsonObject toObject() const;
+        virtual QJsonObject toObject() const override;
 
 //** Fields **//
 

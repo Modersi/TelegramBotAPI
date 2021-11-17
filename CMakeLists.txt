@@ -24,6 +24,7 @@ set_target_properties(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/Headers)
 target_sources(${PROJECT_NAME}
 					PUBLIC
+						##### Main header
 							Headers/TelegramBotAPI.h
 
 						##### Networking
@@ -33,8 +34,10 @@ target_sources(${PROJECT_NAME}
 							Headers/RequestManager.h
 
 						##### Bot
-							Headers/Bot.h 
 							Sources/Bot.cpp 
+							Headers/Bot.h 
+							Sources/BotSettings.cpp
+							Headers/BotSettings.h
 
 						##### Types
 							Sources/Types/Animation.cpp
@@ -43,11 +46,9 @@ target_sources(${PROJECT_NAME}
 							Headers/Types/Audio.h
 							Sources/Types/BotCommand.cpp
 							Headers/Types/BotCommand.h
-							Sources/Types/BotCommandScopeAllChatAdministrators.cpp
+							Headers/Types/BotCommandScope.h
 							Headers/Types/BotCommandScopeAllChatAdministrators.h
-							Sources/Types/BotCommandScopeAllGroupChats.cpp
 							Headers/Types/BotCommandScopeAllGroupChats.h
-							Sources/Types/BotCommandScopeAllPrivateChats.cpp
 							Headers/Types/BotCommandScopeAllPrivateChats.h
 							Sources/Types/BotCommandScopeChat.cpp
 							Headers/Types/BotCommandScopeChat.h
@@ -55,7 +56,6 @@ target_sources(${PROJECT_NAME}
 							Headers/Types/BotCommandScopeChatAdministrators.h
 							Sources/Types/BotCommandScopeChatMember.cpp
 							Headers/Types/BotCommandScopeChatMember.h
-							Sources/Types/BotCommandScopeDefault.cpp
 							Headers/Types/BotCommandScopeDefault.h
 							Sources/Types/CallbackQuery.cpp
 							Headers/Types/CallbackQuery.h
@@ -65,14 +65,27 @@ target_sources(${PROJECT_NAME}
 							Headers/Types/ChatInviteLink.h
 							Sources/Types/ChatLocation.cpp
 							Headers/Types/ChatLocation.h
-							Sources/Types/ChatMember.cpp
 							Headers/Types/ChatMember.h
+							Sources/Types/ChatMemberAdministrator.cpp 
+							Headers/Types/ChatMemberAdministrator.h
+							Sources/Types/ChatMemberBanned.cpp        
+							Headers/Types/ChatMemberBanned.h       
+							Sources/Types/ChatMemberLeft.cpp          
+							Headers/Types/ChatMemberLeft.h         
+							Sources/Types/ChatMemberMember.cpp        
+							Headers/Types/ChatMemberMember.h       
+							Sources/Types/ChatMemberOwner.cpp         
+							Headers/Types/ChatMemberOwner.h        
+							Sources/Types/ChatMemberRestricted.cpp 	  
+							Headers/Types/ChatMemberRestricted.h 
 							Sources/Types/ChatMemberUpdated.cpp
 							Headers/Types/ChatMemberUpdated.h
 							Sources/Types/ChatPermissions.cpp
 							Headers/Types/ChatPermissions.h
 							Sources/Types/ChatPhoto.cpp
 							Headers/Types/ChatPhoto.h
+							Sources/Types/ChosenInlineResult.cpp
+							Headers/Types/ChosenInlineResult.h
 							Sources/Types/Contact.cpp
 							Headers/Types/Contact.h
 							Sources/Types/Dice.cpp
@@ -89,7 +102,55 @@ target_sources(${PROJECT_NAME}
 							Headers/Types/InlineKeyboardButton.h
 							Sources/Types/InlineKeyboardMarkup.cpp
 							Headers/Types/InlineKeyboardMarkup.h
-							Sources/Types/InputMedia.cpp
+							Sources/Types/InlineQuery.cpp
+							Headers/Types/InlineQuery.h
+							Headers/Types/InlineQueryResult.h
+							Sources/Types/InlineQueryResultArticle.cpp
+							Headers/Types/InlineQueryResultArticle.h
+							Sources/Types/InlineQueryResultAudio.cpp
+							Headers/Types/InlineQueryResultAudio.h
+							Sources/Types/InlineQueryResultCachedAudio.cpp
+							Headers/Types/InlineQueryResultCachedAudio.h
+							Sources/Types/InlineQueryResultCachedDocument.cpp
+							Headers/Types/InlineQueryResultCachedDocument.h
+							Sources/Types/InlineQueryResultCachedGif.cpp
+							Headers/Types/InlineQueryResultCachedGif.h
+							Sources/Types/InlineQueryResultCachedMpeg4Gif.cpp
+							Headers/Types/InlineQueryResultCachedMpeg4Gif.h
+							Sources/Types/InlineQueryResultCachedPhoto.cpp
+							Headers/Types/InlineQueryResultCachedPhoto.h
+							Sources/Types/InlineQueryResultCachedSticker.cpp
+							Headers/Types/InlineQueryResultCachedSticker.h
+							Sources/Types/InlineQueryResultCachedVideo.cpp
+							Headers/Types/InlineQueryResultCachedVideo.h
+							Sources/Types/InlineQueryResultCachedVoice.cpp
+							Headers/Types/InlineQueryResultCachedVoice.h
+							Sources/Types/InlineQueryResultContact.cpp
+							Headers/Types/InlineQueryResultContact.h
+							Sources/Types/InlineQueryResultDocument.cpp
+							Headers/Types/InlineQueryResultDocument.h
+							Sources/Types/InlineQueryResultGame.cpp
+							Headers/Types/InlineQueryResultGame.h
+							Sources/Types/InlineQueryResultGif.cpp
+							Headers/Types/InlineQueryResultGif.h
+							Sources/Types/InlineQueryResultLocation.cpp
+							Headers/Types/InlineQueryResultLocation.h
+							Sources/Types/InlineQueryResultMpeg4Gif.cpp
+							Headers/Types/InlineQueryResultMpeg4Gif.h
+							Sources/Types/InlineQueryResultPhoto.cpp
+							Headers/Types/InlineQueryResultPhoto.h
+							Sources/Types/InlineQueryResultVenue.cpp
+							Headers/Types/InlineQueryResultVenue.h
+							Sources/Types/InlineQueryResultVideo.cpp
+							Headers/Types/InlineQueryResultVideo.h
+							Sources/Types/InlineQueryResultVoice.cpp
+							Headers/Types/InlineQueryResultVoice.h
+							Sources/Types/InputContactMessageContent.cpp
+							Headers/Types/InputContactMessageContent.h
+							Sources/Types/InputInvoiceMessageContent.cpp
+							Headers/Types/InputInvoiceMessageContent.h
+							Sources/Types/InputLocationMessageContent.cpp
+							Headers/Types/InputLocationMessageContent.h
 							Headers/Types/InputMedia.h
 							Sources/Types/InputMediaAnimation.cpp
 							Headers/Types/InputMediaAnimation.h
@@ -100,7 +161,12 @@ target_sources(${PROJECT_NAME}
 							Sources/Types/InputMediaPhoto.cpp
 							Headers/Types/InputMediaPhoto.h
 							Sources/Types/InputMediaVideo.cpp
-							Headers/Types/InputMediaVideo.h
+							Headers/Types/InputMediaVideo.h    
+							Headers/Types/InputMessageContent.h
+							Sources/Types/InputTextMessageContent.cpp  
+							Headers/Types/InputTextMessageContent.h
+							Sources/Types/InputVenueMessageContent.cpp 
+							Headers/Types/InputVenueMessageContent.h
 							Sources/Types/KeyboardButton.cpp
 							Headers/Types/KeyboardButton.h
 							Sources/Types/KeyboardButtonPollType.cpp
@@ -109,6 +175,8 @@ target_sources(${PROJECT_NAME}
 							Headers/Types/Location.h
 							Sources/Types/LoginURL.cpp
 							Headers/Types/LoginURL.h
+							Sources/Types/MaskPosition.cpp
+							Headers/Types/MaskPosition.h
 							Sources/Types/Message.cpp
 							Headers/Types/Message.h
 							Sources/Types/MessageAutoDeleteTimerChanged.cpp
@@ -133,6 +201,10 @@ target_sources(${PROJECT_NAME}
 							Headers/Types/ReplyKeyboardRemove.h
 							Sources/Types/ResponseParameters.cpp
 							Headers/Types/ResponseParameters.h
+							Sources/Types/Sticker.cpp
+							Headers/Types/Sticker.h
+							Sources/Types/StickerSet.cpp
+							Headers/Types/StickerSet.h
 							Sources/Types/Update.cpp
 							Headers/Types/Update.h
 							Sources/Types/User.cpp
@@ -155,22 +227,8 @@ target_sources(${PROJECT_NAME}
 							Headers/Types/VoiceChatScheduled.h
 							Sources/Types/VoiceChatStarted.cpp
 							Headers/Types/VoiceChatStarted.h
-
-							
-							
-							
-							
-							
-							
-							
-							
-							
-							
-							
-							
-							
-							
-							
+							Sources/Types/WebhookInfo.cpp
+							Headers/Types/WebhookInfo.h
 
 						##### Internal
 							Headers/Internal/ConversionFunctions.h)

@@ -1,14 +1,21 @@
 ﻿#ifndef TELEGRAM_BOT_H
 #define TELEGRAM_BOT_H
 
+#include <variant>
+
+class QFile;
+#include "qstring.h"
+
 #include "WebhookManager.h"
 #include "RequestManager.h"
+#include "BotSettings.h"
 #include "Types/Error.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/ReplyKeyboardMarkup.h"
 #include "Types/ReplyKeyboardRemove.h"
 #include "Types/ForceReply.h"
 #include "Types/MessageId.h"
+#include "Types/InputMedia.h"
 #include "Types/InputMediaAudio.h"
 #include "Types/InputMediaDocument.h"
 #include "Types/InputMediaPhoto.h"
@@ -24,17 +31,11 @@
 #include "Types/BotCommandScopeChatAdministrators.h"
 #include "Types/BotCommandScopeChatMember.h"
 #include "Types/BotCommandScopeDefault.h"
-
-class QFile;
-#include "qstring.h"
-
-#include <variant>
-
-/* Your bot token provided by Telegram BotFather (@BotFather) */
-#define BOT_TOKEN "EXAMPLE"
-
-/* Your payment token provided by Telegram BotFather (@BotFather) */
-#define PAYMENT_TOKEN "EXAMPLE"
+#include "Types/StickerSet.h"
+#include "Types/InlineQuery.h"
+#include "Types/ChosenInlineResult.h"
+#include "Types/InlineQueryResult.h"
+#include "Types/WebhookInfo.h"
 
 namespace Telegram 
 {
@@ -43,34 +44,86 @@ namespace Telegram
         Q_OBJECT
 
     public:
-        Bot();
+        /** @brief Creates a Telegram Bot */
+        Bot(const BotSettings& bot_settings = BotSettings());
 
     signals:
+        /** @brief Emited when bot reseive new incoming message of any kind — text, photo, sticker, etc. */
         void messageReceived(qint32 update_id, Message message);
+
+        /** @brief Emited when bot reseive version of a message that is known to the bot and was edited */
         void messageWasUpdated(qint32 update_id, Message message);
 
+        /** @brief Emited when bot reseive new incoming channel post of any kind — text, photo, sticker, etc. */
         void channelPostReceived(qint32 update_id, Message message);
+
+        /** @brief Emited when bot reseive new version of a channel post that is known to the bot and was edited */
         void channelPostWasUpdated(qint32 update_id, Message message);
 
-        //void inlineQueryReceived(qint32 update_id, InlineQuery message);
+        /** @brief Emited when bot reseive new incoming inline query */
+        void inlineQueryReceived(qint32 update_id, InlineQuery inline_query);
 
-        //void chosenInlineResult(qint32 update_id, ChosenInlineResult message);
+        /** @brief Emited when bot reseive the result of an inline query that was chosen by a user and sent to their chat partner */
+        void chosenInlineResult(qint32 update_id, ChosenInlineResult chosen_inline_result);
 
-        void callbackQueryReceived(qint32 update_id, CallbackQuery message);
+        /** @brief Emited when bot reseive new incoming callback query */
+        void callbackQueryReceived(qint32 update_id, CallbackQuery callback_query);
 
-        //void shippingQueryReceived(qint32 update_id, ShippingQuery message);
+        /** @brief Emited when bot reseive new poll state. Bots receive only updates about stopped polls and polls, which are sent by the bot  */
+        void pollReceived(qint32 update_id, Poll poll);
 
-        //void preCheckoutQueryReceived(qint32 update_id, PreCheckoutQuery message);
+        /** @brief Emited when a user changed their answer in a non-anonymous poll. Bots receive new votes only in polls that were sent by the bot itself */
+        void pollAnswerReceived(qint32 update_id, PollAnswer poll_answer);
 
-        void pollReceived(qint32 update_id, Poll message);
-        void pollAnswerReceived(qint32 update_id, PollAnswer message);
+        /** @brief Emited when the bot's chat member status was updated in a chat. For private chats, this update is received only when the bot is blocked or unblocked by the user */
+        void myChatMemberStatusUpdated(qint32 update_id, ChatMemberUpdated chat_member_update);
 
-        void myChatMemberStatusUpdated(qint32 update_id, ChatMemberUpdated message);
-        void chatMemberStatusUpdated(qint32 update_id, ChatMemberUpdated message);
+        /** @brief Emited when chat member's status was updated in a chat. The bot must be an administrator in the chat and must explicitly specify “chat_member” in the list of allowed_updates of SetWebhook() method to receive these updates */
+        void chatMemberStatusUpdated(qint32 update_id, ChatMemberUpdated chat_member_update);
 
+        /** @brief Emited when any error occured */
         void errorOccured(Error error);
 
+        //In Progress void shippingQueryReceived(qint32 update_id, ShippingQuery shipping_query);
+        //In Progress void preCheckoutQueryReceived(qint32 update_id, PreCheckoutQuery pre_checkout_query);
+
     public:
+
+//**  Getting updates **//
+
+        /** @brief Use this method to receive incoming updates using long polling. In case of success a vector of Update objects is returned
+         * 
+         * > Note: This method will not work if an outgoing webhook is set up
+         * > Note: In order to avoid getting duplicate updates, recalculate offset after each server response
+         * 
+         * @param qint32	                    Optional. Identifier of the first update to be returned. Must be greater by one than the highest among the identifiers of previously received updates. By default, updates starting with the earliest unconfirmed update are returned. An update is considered confirmed as soon as getUpdates is called with an offset higher than its update_id. The negative offset can be specified to retrieve updates starting from -offset update from the end of the updates queue. All previous updates will forgotten
+         * @param qint32	                    Optional. Limits the number of updates to be retrieved. Values between 1-100 are accepted. Defaults to 100
+         * @param qint32	                    Optional. Timeout in seconds for long polling. Defaults to 0, i.e. usual short polling. Should be positive, short polling should be used for testing purposes only
+         * @param QVector of QString	        Optional. A list of the update types you want your bot to receive. For example, specify [“message”, “edited_channel_post”, “callback_query”] to only receive updates of these types. See Update for a complete list of available update types. Specify an empty list to receive all update types except chat_member (default). If not specified, the previous setting will be used */
+        QVector<Telegram::Update> getUpdates(const std::optional<qint32>& offset = std::nullopt, const std::optional<qint32>& limit = std::nullopt, const std::optional<qint32>& timeout = std::nullopt, const std::optional<QVector<QString>>& allowed_updates = std::nullopt);
+
+        /** @brief Use this method to specify a url and receive incoming updates via an outgoing webhook. Returns True on success
+         * 
+         *  Whenever there is an update for the bot, Telegram will send an HTTPS POST request to the specified url, containing a JSON-serialized Update. You can obtain this updates using Telegram::Bot class signals. In case of an unsuccessful request, we will give up after a reasonable amount of attempts 
+         * 
+         * @param QString 	            HTTPS url to send updates to. Use an empty string to remove webhook integration
+         * @param QFile*	            Optional. Upload your public key certificate so that the root certificate in use can be checked. Has to be opened
+         * @param QString	            Optional. The fixed IP address which will be used to send webhook requests instead of the IP address resolved through DNS
+         * @param qint32	            Optional. Maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery, 1-100. Defaults to 40. Use lower values to limit the load on your bot's server, and higher values to increase your bot's throughput
+         * @param QVector of QString	Optional. A list of the update types you want your bot to receive. For example, specify [“message”, “edited_channel_post”, “callback_query”] to only receive updates of these types. See Telegram::Update fields for a complete list of available update types. Specify an empty list to receive all update types except chat_member (default). If not specified, the previous setting will be used
+         * @param bool	                Optional. Pass True to drop all pending updates */
+        bool setWebhook(const QString& url, const std::optional<QFile*>& certificate = std::nullopt, const std::optional<QString>& ip_address = std::nullopt, const std::optional<qint32>& max_connections = std::nullopt, const std::optional<QVector<QString>>& allowed_updates = std::nullopt, const std::optional<bool>& drop_pending_updates = std::nullopt);
+
+        /** @brief Use this method to remove webhook integration if you decide to switch back to getUpdates. Returns True on success
+         *
+         * @param bool	 Optional. Pass True to drop all pending updates */
+        bool deleteWebhook(const std::optional<bool>& drop_pending_updates = std::nullopt);
+
+        /** @brief Use this method to get current webhook status. Requires no parameters. On success, returns a WebhookInfo object. If the bot is using getUpdates, will return an object with the url field empty */
+        WebhookInfo getWebhookInfo();
+
+//**  Main methods  **//
+
         /** @brief A simple method for testing your bot's auth token. Requires no parameters. Returns basic information about the bot in form of a User object */
         User getMe();
 
@@ -148,7 +201,7 @@ namespace Telegram
          * @param qint32	                                                                        Optional. Duration of the audio in seconds
          * @param QString	                                                                        Optional. Performer
          * @param QString	                                                                        Optional. Track name
-         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile* to upload new one
+         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile*(should be opened) to upload new one
          * @param bool	                                                                            Optional. Sends the message silently. Users will receive a notification with no sound.
          * @param qint32	                                                                        Optional. If the message is a reply, ID of the original message
          * @param bool	                                                                            Optional. Pass True, if the message should be sent even if the specified replied-to message is not found
@@ -161,7 +214,7 @@ namespace Telegram
          *
          * @param qint32 or QString	                                                                Unique identifier for the target chat or username of the target channel (in the format @channelusername)
          * @param QFile* or QString	                                                                File to send. Pass a file_id as String to send a file that exists on the Telegram servers (recommended), pass an HTTP URL as a String for Telegram to get a file from the Internet, or upload a new photo using QFile(should be opened)
-         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile* to upload new one
+         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile*(should be opened) to upload new one
          * @param QString	                                                                        Optional. Document caption (may also be used when resending documents by file_id), 0-1024 characters after entities parsing
          * @param QString	                                                                        Optional. Mode for parsing entities in the document caption. See formatting options for more details.
          * @param QVector of MessageEntity	                                                        Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
@@ -181,7 +234,7 @@ namespace Telegram
          * @param qint32	                                                                        Optional. Duration of sent video in seconds
          * @param qint32	                                                                        Optional. Video width
          * @param qint32	                                                                        Optional. Video height
-         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile* to upload new one
+         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile*(should be opened) to upload new one
          * @param QString	                                                                        Optional. Video caption (may also be used when resending videos by file_id), 0-1024 characters after entities parsing
          * @param QString	                                                                        Optional. Mode for parsing entities in the video caption. See formatting options for more details.
          * @param QVector of MessageEntity	                                                        Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
@@ -201,7 +254,7 @@ namespace Telegram
          * @param qint32	                                                                        Optional. Duration of sent animation in seconds
          * @param qint32	                                                                        Optional. Animation width
          * @param qint32	                                                                        Optional. Animation height
-         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile* to upload new one
+         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile*(should be opened) to upload new one
          * @param QString	                                                                        Optional. Animation caption (may also be used when resending animation by file_id), 0-1024 characters after entities parsing
          * @param QString	                                                                        Optional. Mode for parsing entities in the animation caption. See formatting options for more details
          * @param QVector of MessageEntity	                                                        Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
@@ -231,10 +284,10 @@ namespace Telegram
         /** @brief Use this method to send video messages. As of v.4.0, Telegram clients support rounded square mp4 videos of up to 1 minute long. On success, the sent Message is returned.
          *
          * @param qint32 or QString	                                                                Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-         * @param QFile* or QString	                                                                Video note to send. Pass a file_id as String to send a video note that exists on the Telegram servers (recommended) or upload a new photo using QFile(should be opened). Sending video notes by a URL is currently unsupported
+         * @param QFile* or QString	                                                                Video note to send. Pass a file_id as String to send a video note that exists on the Telegram servers (recommended) or upload a new photo using QFile*(should be opened). Sending video notes by a URL is currently unsupported
          * @param qint32	                                                                        Optional. Duration of sent video in seconds
          * @param qint32	                                                                        Optional. Video width and height, i.e. diameter of the video message
-         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile* to upload new one
+         * @param QFile* or QString	                                                                Optional. Thumbnail of the file sent; can be ignored if thumbnail generation for the file is supported server-side. The thumbnail should be in JPEG format and less than 200 kB in size. A thumbnail's width and height should not exceed 320. Ignored if the file is not uploaded using QFile*. Thumbnails can't be reused and can be only uploaded as a new file, so you can pass QFile*(should be opened) to upload new one
          * @param bool	                                                                            Optional. Sends the message silently. Users will receive a notification with no sound
          * @param qint32	                                                                        Optional. If the message is a reply, ID of the original message
          * @param bool	                                                                            Optional. Pass True, if the message should be sent even if the specified replied-to message is not found
@@ -370,16 +423,16 @@ namespace Telegram
         /** @brief Enum that represents all available types of chat action that is written near bot's nickname */
         enum class ChatActionType
         {
-            TYPING, //  ex. For text messages[sendMessage()]
-            UPLOAD_PHOTO, // ex. For photos[sendPhoto()]
-            RECORD_VIDEO, // ex. For videos[sendVideo()]
-            UPLOAD_VIDEO, // ex. For videos[sendVideo()]
-            RECORD_VOICE, // ex. For voice notes[sendVoice()]
-            UPLOAD_VOICE, // ex. For voice notes[sendVoice()]
-            UPLOAD_DOCUMENT, // ex. For general files[sendDocument()]
-            FIND_LOCATION, // ex. For location data[sendLocation()]
-            RECORD_VIDEO_NOTE, // ex. For video note[sendVideoNote]
-            UPLOAD_VIDEO_NOTE  // ex. For video note[sendVideoNote]
+            TYPING,             // ex. For text messages[sendMessage()]
+            UPLOAD_PHOTO,       // ex. For photos[sendPhoto()]
+            RECORD_VIDEO,       // ex. For videos
+            UPLOAD_VIDEO,       // ex. For videos[sendVideo()]
+            RECORD_VOICE,       // ex. For voice notes
+            UPLOAD_VOICE,       // ex. For voice notes[sendVoice()]
+            UPLOAD_DOCUMENT,    // ex. For general files[sendDocument()]
+            FIND_LOCATION,      // ex. For location data[sendLocation()]
+            RECORD_VIDEO_NOTE,  // ex. For video note
+            UPLOAD_VIDEO_NOTE   // ex. For video note[sendVideoNote()]
         };
 
         /** @brief Use this method when you need to tell the user that something is happening on the bot's side. The status is set for 5 seconds or less (when a message arrives from your bot, Telegram clients clear its typing status). Returns True on success.
@@ -389,15 +442,15 @@ namespace Telegram
          * 
          *  We only recommend using this method when a response from the bot will take a noticeable amount of time to arrive.
          * 
-         * @param qint32 or QString Unique identifier for the target chat or username of the target channel (in the format @channelusername)
-         * @param QString	        Type of action to broadcast */
+         * @param qint32 or QString         Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+         * @param ChatActionType	        Type of action to broadcast */
         bool sendChatAction(const std::variant<qint32, QString>& chat_id, const ChatActionType& action);
 
         /** @brief Use this method to get a list of profile pictures for a user. Returns an empty UserProfilePhotos object if error eccured.
          *
-         * @param qint32 Unique identifier of the target user
-         * @param qint32 Optional. Sequential number of the first photo to be returned. By default, all photos are returned.
-         * @param qint32 Optional. Limits the number of photos to be retrieved. Values between 1-100 are accepted. Defaults to 100 */
+         * @param qint32    Unique identifier of the target user
+         * @param qint32    Optional. Sequential number of the first photo to be returned. By default, all photos are returned.
+         * @param qint32    Optional. Limits the number of photos to be retrieved. Values between 1-100 are accepted. Defaults to 100 */
         UserProfilePhotos getUserProfilePhotos(const qint32& user_id, const std::optional<qint32>& offset = std::nullopt, const std::optional<qint32>& limit = std::nullopt);
 
         /** @brief Use this method to get basic info about a file and prepare it for downloading. Returns an empty File object if error eccured.
@@ -414,10 +467,10 @@ namespace Telegram
         /** @brief Use this method to ban a user in a group, a supergroup or a channel. In the case of supergroups and channels, the user will not be able to return to the chat on their own using invite links, etc., unless unbanned first.
          *         The bot must be an administrator in the chat for this to work and must have the appropriate admin rights. Returns True on success.
          *
-         * @param qint32 or QString	Unique identifier for the target group or username of the target supergroup or channel (in the format @channelusername)
-         * @param qint32	        Unique identifier of the target user
-         * @param qint32	        Optional. Date when the user will be unbanned, unix time. If user is banned for more than 366 days or less than 30 seconds from the current time they are considered to be banned forever. Applied for supergroups and channels only
-         * @param bool	            Optional. Pass True to delete all messages from the chat for the user that is being removed. If False, the user will be able to see messages in the group that were sent before the user was removed. Always True for supergroups and channels */
+         * @param qint32 or QString	    Unique identifier for the target group or username of the target supergroup or channel (in the format @channelusername)
+         * @param qint32	            Unique identifier of the target user
+         * @param qint32	            Optional. Date when the user will be unbanned, unix time. If user is banned for more than 366 days or less than 30 seconds from the current time they are considered to be banned forever. Applied for supergroups and channels only
+         * @param bool	                Optional. Pass True to delete all messages from the chat for the user that is being removed. If False, the user will be able to see messages in the group that were sent before the user was removed. Always True for supergroups and channels */
         bool banChatMember(const std::variant<qint32, QString>& chat_id, const qint32& user_id, const std::optional<qint32>& until_date = std::nullopt, const std::optional<bool>& revoke_messages = std::nullopt);
         
         /** @brief Use this method to unban a previously banned user in a supergroup or channel. Returns True on success.
@@ -571,22 +624,23 @@ namespace Telegram
          * @param qint32 or QString	    Unique identifier for the target chat or username of the target channel (in the format @channelusername) */
         Chat getChat(const std::variant<qint32, QString>& chat_id);
 
-        /* @brief Use this method to get a list of administrators in a chat. On success, returns an Array of ChatMember objects that contains information about all chat administrators except other bots. 
-         *        If the chat is a group or a supergroup and no administrators were appointed, only the creator will be returned. Returns empty QVector in case of error
+        /* @brief Use this method to get a list of administrators in a chat. On success, returns a vector of pointers to ChatMember objects(can be converted to derived classes with dynamic_cast()) that contains information about all chat administrators except other bots. Returns nullptr in case of error
+         *        
+         * If the chat is a group or a supergroup and no administrators were appointed, only the creator will be returned
          *
          * @param qint32 or QString	    Unique identifier for the target chat or username of the target channel (in the format @channelusername) */
-        QVector<ChatMember> getChatAdministrators(const std::variant<qint32, QString>& chat_id);
+        QVector<std::shared_ptr<ChatMember>> getChatAdministrators(const std::variant<qint32, QString>& chat_id);
 
         /* @brief Use this method to get the number of members in a chat. Returns -1 in case of error.
          *
          * @param qint32 or QString	    Unique identifier for the target chat or username of the target channel (in the format @channelusername) */
         int getChatMemberCount(const std::variant<qint32, QString>& chat_id);
 
-        /* @brief Use this method to get information about a member of a chat. Returns a ChatMember object on success, in case of error returns empty ChatMember object
+        /* @brief Use this method to get information about a member of a chat. Returns a pointer ChatMember(can be converted to derived classes with dynamic_cast()) object on success, in case of error returns nullptr
          *
          * @param qint32 or QString	    Unique identifier for the target chat or username of the target channel (in the format @channelusername) 
          * @param qint32                Unique identifier of the target user */
-        ChatMember getChatMember(const std::variant<qint32, QString>& chat_id, const qint32& user_id);
+        std::shared_ptr<ChatMember> getChatMember(const std::variant<qint32, QString>& chat_id, const qint32& user_id);
 
         /* @brief Use this method to set a new group sticker set for a supergroup. Returns True on success
          *
@@ -617,58 +671,217 @@ namespace Telegram
 
         /* @brief Use this method to change the list of the bot's commands. See https://core.telegram.org/bots#commands for more details about bot commands. Returns True on success.
          *
-         * @param QVector of BotCommand	                                                                                           A JSON-serialized list of bot commands to be set as the list of the bot's commands. At most 100 commands can be specified.
-         * @param BotCommandScopeAllChatAdministrators or BotCommandScopeAllGroupChats or BotCommandScopeAllPrivateChats or
-         *        BotCommandScopeChat or BotCommandScopeChatAdministrators or BotCommandScopeChatMember or BotCommandScopeDefault  Optional. Object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
-         * @param QString	                                                                                                       Optional. A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands */
-        bool setMyCommands(const QVector<BotCommand>& commands, const std::optional<std::variant<BotCommandScopeAllChatAdministrators, BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats, BotCommandScopeChat, BotCommandScopeChatAdministrators, BotCommandScopeChatMember, BotCommandScopeDefault>>& scope = std::nullopt, const std::optional<QString>& language_code = std::nullopt);
+         * @param QVector of BotCommand     A JSON-serialized list of bot commands to be set as the list of the bot's commands. At most 100 commands can be specified.
+         * @param BotCommandScope           Optional. Object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
+         * @param QString	                Optional. A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands */
+        bool setMyCommands(const QVector<BotCommand>& commands, const std::optional<std::shared_ptr<BotCommandScope>>& scope = std::nullopt, const std::optional<QString>& language_code = std::nullopt);
         
         /* @brief Use this method to delete the list of the bot's commands for the given scope and user language. After deletion, higher level commands will be shown to affected users. Returns True on success
          *
-         * @param BotCommandScopeAllChatAdministrators or BotCommandScopeAllGroupChats or BotCommandScopeAllPrivateChats or
-         *        BotCommandScopeChat or BotCommandScopeChatAdministrators or BotCommandScopeChatMember or BotCommandScopeDefault	Optional. Object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
-         * @param QString	                                                                                                        Optional. A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands */
-        bool deleteMyCommands(const std::optional<std::variant<BotCommandScopeAllChatAdministrators, BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats, BotCommandScopeChat, BotCommandScopeChatAdministrators, BotCommandScopeChatMember, BotCommandScopeDefault>>& scope = std::nullopt, const std::optional<QString>& language_code = std::nullopt);
+         * @param BotCommandScope	Optional. Object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
+         * @param QString	        Optional. A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands */
+        bool deleteMyCommands(const std::optional<std::shared_ptr<BotCommandScope>>& scope = std::nullopt, const std::optional<QString>& language_code = std::nullopt);
         
         /* @brief Use this method to get the current list of the bot's commands for the given scope and user language. Returns Array of BotCommand on success. If commands aren't set, an empty list is returned
          *
-         * @param BotCommandScopeAllChatAdministrators or BotCommandScopeAllGroupChats or BotCommandScopeAllPrivateChats or
-         *        BotCommandScopeChat or BotCommandScopeChatAdministrators or BotCommandScopeChatMember or BotCommandScopeDefault	Optional. Object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
-         * @param QString	                                                                                                        Optional. A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands */
-        QVector<BotCommand> getMyCommands(const std::optional<std::variant<BotCommandScopeAllChatAdministrators, BotCommandScopeAllGroupChats, BotCommandScopeAllPrivateChats, BotCommandScopeChat, BotCommandScopeChatAdministrators, BotCommandScopeChatMember, BotCommandScopeDefault>>& scope = std::nullopt, const std::optional<QString>& language_code = std::nullopt);
+         * @param BotCommandScope	Optional. Object, describing scope of users for which the commands are relevant. Defaults to BotCommandScopeDefault.
+         * @param QString	        Optional. A two-letter ISO 639-1 language code. If empty, commands will be applied to all users from the given scope, for whose language there are no dedicated commands */
+        QVector<BotCommand> getMyCommands(const std::optional<std::shared_ptr<BotCommandScope>>& scope = std::nullopt, const std::optional<QString>& language_code = std::nullopt);
 
-        /* @brief
+//**  Updating messages methods  **//
+
+        /* @brief Use this method to edit text and game messages. On success True is returned
+         *
+         * @param QString	                New text of the message, 1-4096 characters after entities parsing
+         * @param qint32 or QString	        Optional. Required if inline_message_id is not specified. Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+         * @param qint32	                Optional. Required if inline_message_id is not specified. Identifier of the message to edit
+         * @param QString	                Optional. Required if chat_id and message_id are not specified. Identifier of the inline message
+         * @param QString	                Optional. Mode for parsing entities in the message text
+         * @param QVector of MessageEntity	Optional. List of special entities that appear in message text, which can be specified instead of parse_mode
+         * @param bool	                    Optional. Disables link previews for links in this message
+         * @param InlineKeyboardMarkup	    Optional. Object for an inline keyboard */
+        bool editMessageText(const QString& text, const std::optional<std::variant<qint32, QString>>& chat_id = std::nullopt, const std::optional<qint32>& message_id = std::nullopt, const std::optional<QString>& inline_message_id = std::nullopt, const std::optional<QString>& parse_mode = std::nullopt, const std::optional<QVector<MessageEntity>>& entities = std::nullopt, const std::optional<bool>& disable_web_page_preview = std::nullopt, const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt);
+
+        /* @brief Use this method to edit captions of messages. On success True is returned
+         *
+         * @param qint32 or QString	        Optional. Required if inline_message_id is not specified. Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+         * @param qint32	                Optional. Required if inline_message_id is not specified. Identifier of the message to edit
+         * @param QString	                Optional. Required if chat_id and message_id are not specified. Identifier of the inline message
+         * @param QString	                Optional. New caption of the message, 0-1024 characters after entities parsing
+         * @param QString	                Optional. Mode for parsing entities in the message caption
+         * @param QVector of MessageEntity	Optional. List of special entities that appear in the caption, which can be specified instead of parse_mode
+         * @param InlineKeyboardMarkup	    Optional. Object for an inline keyboard */
+        bool editMessageCaption(const std::optional<std::variant<qint32, QString>>& chat_id = std::nullopt, const std::optional<qint32>& message_id = std::nullopt, const std::optional<QString>& inline_message_id = std::nullopt, const std::optional<QString>& caption = std::nullopt, const std::optional<QString>& parse_mode = std::nullopt, const std::optional<QVector<MessageEntity>>& caption_entities = std::nullopt, const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt);
+
+        /* @brief Use this method to edit animation, audio, document, photo, or video messages. On success True is returned
+         *
+         * If a message is part of a message album, then it can be edited only to an audio for audio albums, only to a document for document albums and to a photo or a video otherwise. 
+         * When an inline message is edited, a new file can't be uploaded; use a previously uploaded file via its file_id or specify a URL
          * 
-         * @param 
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
-         * @param
+         * @param InputMedia	        An object for a new media content of the message
+         * @param qint32 or QString	    Optional. Required if inline_message_id is not specified. Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+         * @param qint32	            Optional. Required if inline_message_id is not specified. Identifier of the message to edit
+         * @param QString	            Optional. Required if chat_id and message_id are not specified. Identifier of the inline message
+         * @param InlineKeyboardMarkup	Optional. Object for an inline keyboard */
+        bool editMessageMedia(const InputMedia& media, const std::optional<std::variant<qint32, QString>>& chat_id = std::nullopt, const std::optional<qint32>& message_id = std::nullopt, const std::optional<QString>& caption = std::nullopt, const std::optional<QString>& parse_mode = std::nullopt, const std::optional<QVector<MessageEntity>>& caption_entities = std::nullopt, const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt);
+
+        /* @brief Use this method to edit only the reply markup of messages. On success True is returned
+         *
+         * @param qint32 or QString	    Optional. Required if inline_message_id is not specified. Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+         * @param qint32	            Optional. Required if inline_message_id is not specified. Identifier of the message to edit
+         * @param QString	            Optional. Required if chat_id and message_id are not specified. Identifier of the inline message
+         * @param InlineKeyboardMarkup	Optional. Object for an inline keyboard */
+        bool editMessageReplyMarkup(const std::optional<std::variant<qint32, QString>>& chat_id = std::nullopt, const std::optional<qint32>& message_id = std::nullopt, const std::optional<QString>& caption = std::nullopt, const std::optional<QString>& inline_message_id = std::nullopt, const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt);
+
+        /* @brief Use this method to stop a poll which was sent by the bot. On success, the stopped Poll is returned
+         *
+         * @param qint32 or QString	    Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+         * @param qint32	            Identifier of the original message with the poll
+         * @param InlineKeyboardMarkup	Optional. An object for a new message inline keyboard */
+        Poll stopPoll(const std::variant<qint32, QString>& chat_id, const qint32& message_id, const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt);
+
+        /* @brief Use this method to delete a message, including service messages, with the limitations listed below. Returns True on success
+        * 
+        *   Limitations:
+        *   • A message can only be deleted if it was sent less than 48 hours ago
+        *   • A dice message in a private chat can only be deleted if it was sent more than 24 hours ago
+        *   • Bots can delete outgoing messages in private chats, groups, and supergroups
+        *   • Bots can delete incoming messages in private chats
+        *   • Bots granted can_post_messages permissions can delete outgoing messages in channels
+        *   • If the bot is an administrator of a group, it can delete any message there
+        *   • If the bot has can_delete_messages permission in a supergroup or a channel, it can delete any message there
+        * 
+        * @param qint32 or QString	Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+        * @param qint32	            Identifier of the message to delete */
+        bool deleteMessage(const std::variant<qint32, QString>& chat_id, const qint32& message_id);
+
+//**  Stickers related methods  **//
+
+        /** @brief Use this method to send static .WEBP or animated .TGS stickers. On success, the sent Message is returned
+         * 
+         * @param qint32 or QString	                                                                Unique identifier for the target chat or username of the target channel (in the format @channelusername)
+         * @param QFile* or QString	                                                                Sticker to send. Pass a file_id as QString to send a sticker that exists on the Telegram servers (recommended), pass an HTTP URL as a QString for Telegram to get an .WEBP file from the Internet, or upload a new photo using QFile(should be opened)
+         * @param bool	                                                                            Optional. Sends the message silently. Users will receive a notification with no sound
+         * @param qint32	                                                                        Optional. If the message is a reply, ID of the original message
+         * @param bool	                                                                            Optional. Pass True, if the message should be sent even if the specified replied-to message is not found
+         * @param InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply	Optional. Additional interface options. An object for an inline keyboard, custom reply keyboard, instructions to remove reply keyboard or to force a reply from the user */
+        Message sendSticker(const std::variant<qint32, QString>& chat_id, const std::variant<QFile*, QString>& sticker, const std::optional<bool>& disable_notification = std::nullopt, const std::optional<qint32>& reply_to_message_id = std::nullopt, const std::optional<bool>& allow_sending_without_reply = std::nullopt, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup = std::nullopt);
+
+        /** @brief Use this method to get a sticker set. On success, a StickerSet object is returned
+         *
+         * @param QString Name of the sticker set */
+        StickerSet getStickerSet(const QString& name);
+
+        /** @brief Use this method to upload a .PNG file with a sticker for later use in createNewStickerSet and addStickerToSet methods (can be used multiple times). Returns the uploaded *File* on success
+         *
+         * @param qint32  User identifier of sticker file owner
+         * @param QFile*  PNG image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px */
+        File uploadStickerFile(const qint32& user_id, const QFile* png_sticker);
+
+        /** @brief Use this method to create a new sticker set owned by a user. The bot will be able to edit the sticker set thus created. You must use exactly one of the fields png_sticker or tgs_sticker. Returns True on success
+         *
+         * @param qint32	            User identifier of created sticker set owner
+         * @param QString	            Short name of sticker set, to be used in t.me/addstickers/ URLs (e.g., animals). Can contain only english letters, digits and underscores. Must begin with a letter, can't contain consecutive underscores and must end in “_by_<bot username>”. <bot_username> is case insensitive. 1-64 characters.
+         * @param QString	            Sticker set title, 1-64 characters
+         * @param QString	            One or more emoji corresponding to the sticker
+         * @param QFile* or QString	    Optional. PNG image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px. Pass a file_id as QString to send a sticker that exists on the Telegram servers (recommended), pass an HTTP URL as a QString for Telegram to get file from the Internet, or upload a new photo using QFile(should be opened)
+         * @param QFile*	            Optional. TGS animation with the sticker. See https://core.telegram.org/animated_stickers#technical-requirements for technical requirements
+         * @param bool	                Optional. Pass True, if a set of mask stickers should be created
+         * @param MaskPosition	        Optional. An object for position where the mask should be placed on faces */
+        bool createNewStickerSet(const qint32& user_id, const QString& name, const QString& title, const QString& emojis, const std::optional<std::variant<QFile*, QString>>& png_sticker = std::nullopt, const std::optional<QFile*>& tgs_sticker = std::nullopt, const std::optional<bool>& contains_masks = std::nullopt, const std::optional<MaskPosition>& mask_position = std::nullopt);
+
+        /** @brief Use this method to add a new sticker to a set created by the bot. Returns True on success
+         *
+         * @param qint32	            Yes	User identifier of sticker set owner
+         * @param QString	            Yes	Sticker set name
+         * @param QString	            Yes	One or more emoji corresponding to the sticker
+         * @param QFile* or QString	    Optional. PNG image with the sticker, must be up to 512 kilobytes in size, dimensions must not exceed 512px, and either width or height must be exactly 512px. Pass a file_id as QString to send a sticker that exists on the Telegram servers (recommended), pass an HTTP URL as a QString for Telegram to get file from the Internet, or upload a new photo using QFile(should be opened)
+         * @param QFile*	            Optional. TGS animation with the sticker. See https://core.telegram.org/animated_stickers#technical-requirements for technical requirements
+         * @param MaskPosition	        Optional. An object for position where the mask should be placed on faces */
+        bool addStickerToSet(const qint32& user_id, const QString& name, const QString& emojis, const std::optional<std::variant<QFile*, QString>>& png_sticker = std::nullopt, const std::optional<QFile*>& tgs_sticker = std::nullopt, const std::optional<MaskPosition>& mask_position = std::nullopt);
+
+        /** @brief Use this method to move a sticker in a set created by the bot to a specific position. Returns True on success
+         *
+         * @param QString	File identifier of the sticker
+         * @param qint32	New sticker position in the set, zero - based */
+        bool setStickerPositionInSet(const QString& sticker, const qint32& position);
+
+        /** @brief Use this method to delete a sticker from a set created by the bot. Returns True on success
+         *
+         * @param QString	File identifier of the sticker */
+        bool deleteStickerFromSet(const QString& sticker);
+
+        /** @brief Use this method to set the thumbnail of a sticker set. Animated thumbnails can be set for animated sticker sets only. Returns True on success
+         *
+         * @param String	            Yes	Sticker set name
+         * @param Integer	            Yes	User identifier of the sticker set owner
+         * @param InputFile or String	Optional. A PNG image with the thumbnail, must be up to 128 kilobytes in size and have width and height exactly 100px, or a TGS animation with the thumbnail up to 32 kilobytes in size; see https://core.telegram.org/animated_stickers#technical-requirements for animated sticker technical requirements. Pass a file_id as QString to send a sticker that exists on the Telegram servers (recommended), pass an HTTP URL as a QString for Telegram to get file from the Internet, or upload a new photo using QFile(should be opened). Animated sticker set thumbnail can't be uploaded via HTTP URL */
+        bool setStickerSetThumb(const QString& name, const qint32& user_id,const std::optional<std::variant<QFile*, QString>>& thumb = std::nullopt);
+
+//**  Inline mode related methods  **//
+
+        /** @brief Use this method to send answers to an inline query. On success, True is returned.
+         * 
+         * No more than 50 results per query are allowed
+         * 
+         * @param QString	                        Unique identifier for the answered query
+         * @param QVector of InlineQueryResult	    An array of results for the inline query
+         * @param qint32	                        Optional. The maximum amount of time in seconds that the result of the inline query may be cached on the server. Defaults to 300
+         * @param Boolean	                        Optional. Pass True, if results may be cached on the server side only for the user that sent the query. By default, results may be returned to any user who sends the same query
+         * @param QString	                        Optional. Pass the offset that a client should send in the next query with the same text to receive more results. Pass an empty string if there are no more results or if you don't support pagination. Offset length can't exceed 64 bytes
+         * @param QString	                        Optional. If passed, clients will display a button with specified text that switches the user to a private chat with the bot and sends the bot a start message with the parameter switch_pm_parameter
+         * @param QString	                        Optional. Deep-linking parameter for the /start message sent to the bot when user presses the switch button. 1-64 characters, only A-Z, a-z, 0-9, _ and - are allowed
+         *  
          */
+        bool answerInlineQuery(const QString& inline_query_id, const QVector<std::shared_ptr<InlineQueryResult>> results, const std::optional<qint32>& cache_time = std::nullopt, const std::optional<bool>& is_personal = std::nullopt, const std::optional<QString>& next_offset = std::nullopt, const std::optional<QString>& switch_pm_text = std::nullopt,	const std::optional<QString>& switch_pm_parameter = std::nullopt);
 
     private:
-        RequestManager requestManager;
-        WebhookManager webhookManager;
+        RequestManager request_manager;
+        WebhookManager webhook_manager;
+        BotSettings bot_settings;
     };
 
 }
 
 #endif // TELEGRAM_BOT_H
+
+
+   
+
+   
+
+   
+
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+
+   
+

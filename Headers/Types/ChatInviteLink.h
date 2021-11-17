@@ -32,17 +32,17 @@ namespace Telegram
          * "creator" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
         ChatInviteLink(const QJsonObject& jsonObject);
 
-        /* @brief Returns Chat in form of JSON object. Returns empty QJsonObject if ChatInviteLink is empty */
+        /* @brief Returns ChatInviteLink in form of JSON object. Returns empty QJsonObject if ChatInviteLink is empty */
         QJsonObject toObject() const;
 
-        /* @brief Returns true if Chat is empty */
+        /* @brief Returns true if ChatInviteLink is empty */
         bool isEmpty() const;
 
 //** Fields **//
 
         /** @brief The invite link 
          * 
-         * If the link was created by another chat administrator, then the second part of the link will be replaced with “…” */
+         * If the link was created by another chat administrator, then the second part of the link will be replaced with "..." */
         QString invite_link;
         
         /** @brief Creator of the link */

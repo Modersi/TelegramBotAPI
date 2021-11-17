@@ -3,8 +3,8 @@
 #include "qjsonobject.h"
 
 Telegram::ChatLocation::ChatLocation() :
-	location(Location()),
-	address("")
+	location(),
+	address()
 {}
 
 Telegram::ChatLocation::ChatLocation(const Location& location,
@@ -21,7 +21,7 @@ Telegram::ChatLocation::ChatLocation(const QJsonObject& jsonObject)
 
 QJsonObject Telegram::ChatLocation::toObject() const
 {
-	if (isEmpty())
+	if (isEmpty()) 
 		return QJsonObject();
 
 	return QJsonObject{ {"location", location.toObject()}, {"address", address} };

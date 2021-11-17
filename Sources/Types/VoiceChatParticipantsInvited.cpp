@@ -5,7 +5,7 @@
 #include "qjsonarray.h"
 
 Telegram::VoiceChatParticipantsInvited::VoiceChatParticipantsInvited() :
-	users(QVector<User>())
+	users()
 {}
 
 Telegram::VoiceChatParticipantsInvited::VoiceChatParticipantsInvited(const QVector<User>& users) :

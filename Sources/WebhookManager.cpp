@@ -1,8 +1,6 @@
 #include "WebhookManager.h"
 
-#include "qhostaddress.h"
 #include "qsslsocket.h"
-#include "qsslconfiguration.h"
 #include "qsslkey.h"
 #include "qsslcertificate.h"
 #include "qfile.h"
@@ -20,12 +18,11 @@ void Send200OkResponse(QSslSocket* socket)
 	socket->write("");
 }
 
-Telegram::WebhookManager::WebhookManager() :
+Telegram::WebhookManager::WebhookManager(const BotSettings& bot_settings) :
 	QTcpServer(nullptr),
-	SSLConfiguration()
+	bot_settings(bot_settings)
 {
-	ConfigureSSL(SSL_CERTIFICATE_PATH, CA_SSL_CERTIFICATE_PATH, PRIVATE_KEY_PATH);
-	listen(QHostAddress(HOST_ADRESS), PORT);
+	listen(bot_settings.host_addres, bot_settings.port);
 
 #ifdef DEBUG_MODE
 	qDebug() << endl << "-| Server information |-";
@@ -47,7 +44,7 @@ void Telegram::WebhookManager::incomingConnection(qintptr socketDescriptor)
 		QObject::connect(socket, &QSslSocket::disconnected,
 						 this, &WebhookManager::SocketDisconnected);
 
-		socket->setSslConfiguration(SSLConfiguration);
+		socket->setSslConfiguration(bot_settings.ssl_configuration);
 		socket->startServerEncryption();
 		addPendingConnection(socket);
 	}
@@ -106,31 +103,6 @@ void Telegram::WebhookManager::SocketDisconnected()
 	qDebug() << endl << "-| Socket disconnected |-";
 	qDebug() << "Peer Adress: " << socket->peerAddress().toString();
 	qDebug() << "Port: " << socket->localPort();
-#endif
-}
-
-void Telegram::WebhookManager::ConfigureSSL(const QString& certificatePath, const QString& caCertificatePath, const QString& privateKeyPath)
-{
-	/* Creating and opening all files related to SSL */
-	auto CreateAndOpenQFile = [](const QString& pathToFile) { QFile* file = new QFile(pathToFile); file->open(QIODevice::ReadOnly); return file; };
-	std::shared_ptr<QFile> certificateFile(CreateAndOpenQFile(certificatePath));
-	std::shared_ptr<QFile> caCertificateFile(CreateAndOpenQFile(caCertificatePath));
-	std::shared_ptr<QFile> privateKeyFile(CreateAndOpenQFile(privateKeyPath));
-	
-	/* Setting up server SSL configuration */
-	SSLConfiguration.setLocalCertificate(QSslCertificate(certificateFile.get()));
-	SSLConfiguration.addCaCertificate(QSslCertificate(caCertificateFile.get()));
-	SSLConfiguration.setPrivateKey(QSslKey(privateKeyFile.get(), QSsl::KeyAlgorithm::Rsa));
-	SSLConfiguration.setPeerVerifyMode(QSslSocket::VerifyNone);
-
-#ifdef DEBUG_MODE
-	qDebug() << endl << "-| SSL configuration information |-";
-	qDebug() << "SSL certificate file is open: " << certificateFile->isOpen();
-	qDebug() << "SSL certificate is null: " << SSLConfiguration.localCertificate().isNull();
-	qDebug() << "CA SSL certificate file is open: " << caCertificateFile->isOpen();
-	qDebug() << "CA SSL certificate is null: " << SSLConfiguration.caCertificates()[0].isNull();
-	qDebug() << "SSL private key file is open: " << privateKeyFile->isOpen();
-	qDebug() << "SSL private key is null: " << SSLConfiguration.privateKey().isNull();
 #endif
 }
 

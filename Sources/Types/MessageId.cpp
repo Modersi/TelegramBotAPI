@@ -3,7 +3,7 @@
 #include "qjsonobject.h"
 
 Telegram::MessageId::MessageId() :
-	message_id(0)
+	message_id()
 {}
 
 Telegram::MessageId::MessageId(const qint32& message_id) :

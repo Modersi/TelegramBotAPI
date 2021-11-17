@@ -24,8 +24,8 @@ namespace Telegram
         ChatMemberUpdated(const Chat& chat,
                           const User& from,
                           const qint32& date,
-                          const ChatMember& old_chat_member,
-                          const ChatMember& new_chat_member,
+                          const std::shared_ptr<ChatMember>& old_chat_member,
+                          const std::shared_ptr<ChatMember>& new_chat_member,
                           const std::optional<ChatInviteLink>& invite_link = std::nullopt);
 
         /** @brief JSON constructor. Constructs ChatMemberUpdated object from QJsonObject
@@ -52,10 +52,10 @@ namespace Telegram
         qint32 date;
         
         /** @brief Previous information about the chat member */
-        ChatMember old_chat_member;
+        std::shared_ptr<ChatMember> old_chat_member;
         
         /** @brief New information about the chat member */
-        ChatMember new_chat_member;
+        std::shared_ptr<ChatMember> new_chat_member;
         
         /** @brief Optional. Chat invite link, which was used by the user to join the chat; for joining by invite link events only */
         std::optional<ChatInviteLink> invite_link;

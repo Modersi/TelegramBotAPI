@@ -1,19 +1,19 @@
 #ifndef TELEGRAM_TYPES_UPDATE_H
 #define TELEGRAM_TYPES_UPDATE_H
 
+#include <optional>
+
+class QJsonObject;
+
 #include "Message.h"
-//#include "InlineQuery.h"
-//#include "ChosenInlineResult.h"
+#include "InlineQuery.h"
+#include "ChosenInlineResult.h"
 #include "CallbackQuery.h"
 //#include "ShippingQuery.h"
 //#include "PreCheckoutQuery.h"
 #include "Poll.h"
 #include "PollAnswer.h"
 #include "ChatMemberUpdated.h"
-
-class QJsonObject;
-
-#include <optional>
 
 namespace Telegram
 {
@@ -38,8 +38,8 @@ namespace Telegram
 			   const std::optional<Message>& edited_message = std::nullopt,
 			   const std::optional<Message>& channel_post = std::nullopt,
 			   const std::optional<Message>& edited_channel_post = std::nullopt,
-			   //const std::optional<InlineQuery>& inline_query = std::nullopt,
-			   //const std::optional<ChosenInlineResult>& chosen_inline_result = std::nullopt,
+			   const std::optional<InlineQuery>& inline_query = std::nullopt,
+			   const std::optional<ChosenInlineResult>& chosen_inline_result = std::nullopt,
 			   const std::optional<CallbackQuery>& callback_query = std::nullopt,
 			   //const std::optional<ShippingQuery>& shipping_query = std::nullopt,
 			   //const std::optional<PreCheckoutQuery>& pre_checkout_query = std::nullopt,
@@ -81,10 +81,10 @@ namespace Telegram
 		std::optional<Message> edited_channel_post;
 		
 		/** @brief Optional. New incoming inline query */
-		//std::optional<InlineQuery> inline_query;
+		std::optional<InlineQuery> inline_query;
 		
 		/** @brief Optional. The result of an inline query that was chosen by a user and sent to their chat partner. Please see our documentation on the feedback collecting for details on how to enable these updates for your bot */
-		//std::optional<ChosenInlineResult> chosen_inline_result;
+		std::optional<ChosenInlineResult> chosen_inline_result;
 		
 		/** @brief Optional. New incoming callback query */
 		std::optional<CallbackQuery> callback_query;
