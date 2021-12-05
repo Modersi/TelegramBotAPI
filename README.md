@@ -46,7 +46,7 @@ Telegram::BotSettings settings_from_custom_file(QDir("Specific/File/Directory"),
 | port | Optional | Local port for webhook server to be listening for incoming connections. Defaults to 443
 | payment_token | Optional | Your payment token
 
-- By setting its fields. Look BotSettings.h for all fields and their meanings
+- By setting its fields. Look [BotSettings.h](Sources/Headers/BotSettings.h) for all fields and their meanings
 ```c#
 // Will contrusct BotSettings "from code". Use this way if you need to set particular settings to your SSL configuration
 Telegram::BotSettings settings_from_code;
