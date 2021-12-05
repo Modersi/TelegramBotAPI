@@ -16,7 +16,7 @@ You can create any bot you want! It can be a simple [weather bot](https://telegr
 # Getting started
 This library was made following the [official Telegram Bot API manual](https://core.telegram.org/bots/api), so you can use it as documentation for all bot methods and all data structures that the library provides. Also, every header file contains a detailed self-description, so you don't always need to look in the official documentation. 
 
-You can find well-documented examples of the bot's abilities in the [/Examples](/Examples) directory. Further, we will talk about the most important classes in QTelegramBotAPI that are used to startup and use your bot.
+You can find well-documented examples of the bot's abilities in the [Examples](/Examples) directory. Further, we will talk about the most important classes in QTelegramBotAPI that are used to startup and use your bot.
 
 ## _[Telegram::BotSettings](Sources/Headers/BotSettings.h)_
 **Telegram::BotSettings** is a class that represents your bot settings and contains all required data to launch your bot. Used to construct Telegram::Bot, set up encryption, API key, host address, port, and more.
