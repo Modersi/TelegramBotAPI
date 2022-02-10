@@ -81,7 +81,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core PRIVATE Qt5::Network)
 find_package(OpenSSL REQUIRED)			
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL)
 ```
-After compiling your programm you should deploy neccessary .dll's to the directory with your program .exe file
+After compiling your program you should deploy the necessary .dll's to the directory with your program .exe file
 - Qt5Core.dll - Example location: Qt/5.15/msvc2019_64/bin
 - Qt5Network.dll - Example location: Qt/5.15/msvc2019_64/bin
 - libssl-1_1-x64.dll - Example location: Qt/Tools/OpenSSL/Win_x64/bin
