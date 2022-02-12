@@ -73,21 +73,19 @@ QObject::connect(&telegram_bot, &Telegram::Bot::messageReceived, [&](qint32 upda
 
 
 # Dependecies
-QTelegramBotAPI is written using Qt 5.15 and OpenSSL, so if you want to add the QTelegramBotAPI library to your project firstly you should link these libraries to your project.
+QTelegramBotAPI is written using Qt 6.3.0 and OpenSSL 1.1.1j, so if you want to add the QTelegramBotAPI library to your project firstly you should link these libraries to your project.
 ```cmake
-find_package(Qt5 REQUIRED Core Network)				
+find_package(Qt6 REQUIRED Core Network)				
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core PRIVATE Qt5::Network)
 
 find_package(OpenSSL REQUIRED)			
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL)
 ```
-After compiling your program you should deploy the necessary .dll's to the directory with your program .exe file
-- Qt5Core.dll - Example location: Qt/5.15/msvc2019_64/bin
-- Qt5Network.dll - Example location: Qt/5.15/msvc2019_64/bin
-- libssl-1_1-x64.dll - Example location: Qt/Tools/OpenSSL/Win_x64/bin
-- libcrypto-1_1-x64.dll - Example location: Qt/Tools/OpenSSL/Win_x64/bin
-
-
+After compiling your program you should deploy all necessary .dll's to the directory with your program .exe file. You can simplify this process by using [windeployqt](https://doc.qt.io/qt-6/windows-deployment.html) tool
+```
+cd qt_directory/6.3.0/bin/
+wyndeployqt path/to/your/file.exe
+```
 
 # Linking to your project
 You can easily link QTelegramBotAPI to your project with CMake by including header files located in [include](CompiledBinaries/Windows/x64/Static/include/) folder and linking with TelegramBotAPI.lib or TelegramBotAPI.dll
