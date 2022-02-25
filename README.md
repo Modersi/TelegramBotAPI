@@ -76,7 +76,7 @@ QObject::connect(&telegram_bot, &Telegram::Bot::messageReceived, [&](qint32 upda
 QTelegramBotAPI is written using Qt 6.3.0 and OpenSSL 1.1.1j, so if you want to add the QTelegramBotAPI library to your project firstly you should link these libraries to your project.
 ```cmake
 find_package(Qt6 REQUIRED Core Network)				
-target_link_libraries(${PROJECT_NAME} PRIVATE Qt5::Core PRIVATE Qt5::Network)
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core PRIVATE Qt6::Network)
 
 find_package(OpenSSL REQUIRED)			
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL)
