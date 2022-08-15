@@ -33,7 +33,7 @@ Telegram::BotSettings settings_from_custom_file(QDir("Specific/File/Directory"),
 | Key | Required | Value |
 | - | - | - | 
 | bot_token   | Yes | Your bot token |
-| webhook_url | Optional | Your HTTPS URL for the Telegram to send updates to. Required if you use webhooks, specify your IP adress if you use a self-signed certificate or specify null if you want to get updates via getUpdates()  |
+| webhook_url | Optional | Your HTTPS URL for the Telegram to send updates to. Required if you use webhooks, specify your IP address if you use a self-signed certificate or specify null if you want to get updates via getUpdates()  |
 | certificate_path | Optional | Path to your SSL certificate file. Required if you use webhooks withan authority-signed certificate, specify null if you want to get updates via getUpdates() or if you use self-signed certificate
 | private_key_path | Optional | Path to your SSL private key file. Required if you use a webhooks, specify null if you want to get updates via getUpdates()
 | ca_certificates_paths | Optional | The JSON array of paths to your SSL CA certificates files. Required if you use webhooks with an authority-signed certificate, specify null if you want to get updates via getUpdates() 
