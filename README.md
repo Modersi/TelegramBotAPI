@@ -3,7 +3,7 @@
 
 
 # QTelegramBotAPI
-QTelegramBotAPI is a library for writing bots for the Telegram messenger.
+QTelegramBotAPI is a library for developing bots for the Telegram messenger.
 
 
 
@@ -24,10 +24,10 @@ You can find well-documented examples of the bot's abilities in the [Examples](/
 **BotSettings** can be constructed in 2 ways:
 - Using a file with bot settings. This file should contain JSON-formatted settings of your bot. By default, [BotSettings.json](BotSettings.json) file is located in the project root directory but you can specify another directory and file name in arguments.
 ```c#
-// Will construct BotSettings from file "BotSettings.json" located in the project root directory
-Telegram::BotSettings settings_from_file;
-// Will construct BotSettings with settings from file "SpecificFileName.json" from "Specific/Directory"
-Telegram::BotSettings settings_from_custom_file(QDir("Specific/File/Directory"), QStringLiteral("SpecificFileName.json"));
+// Will initialize bot with settings from the file "BotSettings.json" located in the project root directory
+auto settings_from_file = Telegram::BotSettings::makeFromFile();
+// Will initialize the bot with settings from file "SpecificFileName.json" in "Specific/Directory"
+auto settings_from_custom_file = Telegram::BotSettings::makeFromFile(QDir("Specific/File/Directory"), QStringLiteral("SpecificFileName.json"));
 ```
 ##### **BotSettings JSON object key-value pairs** :
 | Key | Required | Value |
@@ -48,11 +48,9 @@ Telegram::BotSettings settings_from_custom_file(QDir("Specific/File/Directory"),
 
 - By setting its fields. Look [BotSettings.h](Sources/Headers/BotSettings.h) for all fields and their meanings
 ```c#
-// Will construct BotSettings "from code". Use this way if you need to set particular settings to your SSL configuration
-Telegram::BotSettings settings_from_code;
-settings_from_code.bot_token = "BOT_TOKEN";
-settings_from_code.webhook_url = "WEBHOOK_URL";
-settings_from_code.ssl_configuration = configureSimpleSSL("Your SSL certificate file path", "Private key file path", { "CA certificate files paths" });
+// Initializes bot settings "from code". Use this way if you need to set particular settings for your SSL configuration
+auto settings_from_code = std::make_shared<Telegram::BotSettings>("BOT_TOKEN", "WEBHOOK_URL");
+settings_from_code->ssl_configuration = configureSimpleSSL("Your SSL certificate file path", "Private key file path", { "CA certificate file paths" });
 ```
 > **See [BotStartup](Examples/BotStartup/) example for the details**
 
@@ -60,7 +58,7 @@ settings_from_code.ssl_configuration = configureSimpleSSL("Your SSL certificate 
 ## _[Telegram::Bot](Sources/Headers/Bot.h)_
 **Telegram::Bot** is a class that represents your bot in Telegram. It contains all available methods such as `sendMessage()`, `sendPhoto()`, etc.. To create an instance of Telegram::Bot you have to pass Telegram::BotSettings object as an argument
 ```c#
-Telegram::BotSettings bot_settings;
+auto bot_settings = Telegram::BotSettings::makeFromFile();
 Telegram::Bot telegram_bot(bot_settings);
 ```
 Also, it contains all Qt signals related to updates handling. So you can easily connect the needed signal to your function or slot. For example, there is  `Telegram::Bot::messageReceived(qint32 update_id, Message message)` signal that is emitted every time when your bot receives a text message. You can find all available signals and their description in [Bot.h](Sources/Headers/Bot.h) file
