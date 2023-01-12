@@ -86,8 +86,8 @@ wyndeployqt path/to/your/file.exe
 ```
 
 # Linking to your project
-You can easily link QTelegramBotAPI to your project with CMake by including header files located in [include](CompiledBinaries/Windows/x64/Static/include/) folder and linking with TelegramBotAPI.lib or TelegramBotAPI.dll
+You can easily link QTelegramBotAPI to your project with CMake by including header files located in TelegramBotAPI/include and linking with TelegramBotAPI.lib
 ```cmake
-target_include_directories(${PROJECT_NAME} PRIVATE CompiledBinaries/Windows/x64/Static/include)
-target_link_libraries(${PROJECT_NAME} PRIVATE CompiledBinaries/Windows/x64/Static/TelegramBotAPI.lib)
+target_include_directories(${PROJECT_NAME} PRIVATE install/path/TelegramBotAPI/include)
+target_link_libraries(${PROJECT_NAME} PRIVATE install/path/TelegramBotAPI/TelegramBotAPI.lib)
 ```
