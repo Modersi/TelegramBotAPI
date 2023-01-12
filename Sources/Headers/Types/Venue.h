@@ -1,5 +1,11 @@
-#ifndef TELEGRAM_TYPES_VENUE_H
+Ôªø#ifndef TELEGRAM_TYPES_VENUE_H
 #define TELEGRAM_TYPES_VENUE_H
+
+#include <compare>
+#include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
 
 #include "Location.h"
 
@@ -31,13 +37,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to Venue class fields. For example it should contain pairs such as "location" = "...",
          * "title" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        Venue(const QJsonObject& jsonObject);
+        Venue(const QJsonObject& json_object);
+
 
         /* @brief Returns Venue in form of JSON object. Returns empty QJsonObject if Venue is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if Venue is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const Venue&) const = default;
+
 
 //** Fields **//
 
@@ -53,7 +64,7 @@ namespace Telegram
         /** @brief Optional. Foursquare identifier of the venue */
         std::optional<QString> foursquare_id;
         
-        /** @brief Optional. Foursquare type of the venue. (For example, ìarts_entertainment / defaultî, ìarts_entertainment / aquariumî or ìfood / icecreamî.) */
+        /** @brief Optional. Foursquare type of the venue. (For example, ‚Äúarts_entertainment / default‚Äù, ‚Äúarts_entertainment / aquarium‚Äù or ‚Äúfood / icecream‚Äù.) */
         std::optional<QString> foursquare_type;
         
         /** @brief Optional. Google Places identifier of the venue */

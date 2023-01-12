@@ -1,13 +1,17 @@
 #ifndef TELEGRAM_TYPES_BOTCOMMANDSCOPEALLPRIVATECHATS_H
 #define TELEGRAM_TYPES_BOTCOMMANDSCOPEALLPRIVATECHATS_H
 
+#include <compare>
+
+#include "qjsonobject.h"
+
 #include "Types/BotCommandScope.h"
 
 namespace Telegram
 {
     /**
      *
-     * @brief This struct represents the scope of bot commands, covering all private chats
+     * @brief This struct represents a scope of bot commands, covering all private chats
      *
      */
 
@@ -18,14 +22,20 @@ namespace Telegram
 
 
         /**  @brief Returns BotCommandScopeAllPrivateChats in form of JSON object */
-        inline virtual QJsonObject toObject() const override { return QJsonObject{ { "type", type } }; }
+        inline virtual QJsonObject toObject() const override { return { { "type", "all_private_chats" } }; }
 
         /** @brief Returns true if BotCommandScopeAllPrivateChats is empty */
         inline virtual bool isEmpty() const override { return false; };
 
+        /** @brief Returns type of the BotCommandScope */
+        inline virtual Type getType() const override { return type; };
+
+
+        std::partial_ordering operator <=> (const BotCommandScopeAllPrivateChats&) const = default;
+
 
         /** @brief Scope type */
-        const QString type = "all_private_chats";
+        const Type type = Type::ALL_PRIVATE_CHATS;
     };
 }
 

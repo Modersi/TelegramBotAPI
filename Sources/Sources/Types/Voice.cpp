@@ -1,7 +1,5 @@
 #include "Types/Voice.h"
 
-#include "qjsonobject.h"
-
 Telegram::Voice::Voice() :
 	file_id(),
 	file_unique_id(),
@@ -22,30 +20,26 @@ Telegram::Voice::Voice(const QString& file_id,
 	file_size(file_size)
 {}
 
-Telegram::Voice::Voice(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
-	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
-	jsonObject.contains("duration")		  ? duration = jsonObject["duration"].toInt()				 : duration = 0;
-	jsonObject.contains("mime_type")	  ? mime_type = jsonObject["mime_type"].toString()			 : mime_type = std::nullopt;
-	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
+Telegram::Voice::Voice(const QJsonObject& json_object) {
+	json_object.contains("file_id")			? file_id = json_object["file_id"].toString()				 : file_id = "";
+	json_object.contains("file_unique_id")	? file_unique_id = json_object["file_unique_id"].toString()  : file_unique_id = "";
+	json_object.contains("duration")		? duration = json_object["duration"].toInt()				 : duration = 0;
+	json_object.contains("mime_type")		? mime_type = json_object["mime_type"].toString()			 : mime_type = std::nullopt;
+	json_object.contains("file_size")		? file_size = json_object["file_size"].toInt()				 : file_size = std::nullopt;
 }
 
-QJsonObject Telegram::Voice::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::Voice::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject videoJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"duration", duration} };
+	QJsonObject voice_json_object{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"duration", duration} };
 
-	if (mime_type.has_value())	videoJsonObject.insert("mime_type", *mime_type);
-	if (file_size.has_value())	videoJsonObject.insert("file_size", *file_size);
+	if (mime_type.has_value())	voice_json_object.insert("mime_type", *mime_type);
+	if (file_size.has_value())	voice_json_object.insert("file_size", *file_size);
 
-	return videoJsonObject;
+	return voice_json_object;
 }
 
-bool Telegram::Voice::isEmpty() const
-{
+bool Telegram::Voice::isEmpty() const {
 	return file_id == ""
 		   and file_unique_id == ""
 		   and duration == 0

@@ -1,3 +1,9 @@
+#ifndef TELEGRAM_CONVERSIONFUNCTIONS_H
+#define TELEGRAM_CONVERSIONFUNCTIONS_H
+
+#include <concepts>
+#include <type_traits>
+
 #include "qvector.h"
 #include "qjsonarray.h"
 #include "qjsonobject.h"
@@ -220,3 +226,5 @@ QVector<QVector<T>> DoubleQJsonArrayToDoubleQVector(const QJsonArray& jsonArray)
     }
     return resultVector;
 };
+
+#endif // TELEGRAM_CONVERSIONFUNCTIONS_H

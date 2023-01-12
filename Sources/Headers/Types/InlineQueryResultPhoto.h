@@ -1,12 +1,15 @@
 #ifndef TELEGRAM_TYPES_INLINEQUERYRESULTPHOTO_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTPHOTO_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
+#include "qvector.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/MessageEntity.h"
@@ -40,16 +43,24 @@ namespace Telegram
                                const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt,
                                const std::optional<std::shared_ptr<InputMessageContent>>& input_message_content = std::nullopt);
 
+
         /* @brief Returns InlineQueryResultPhoto in form of JSON object. Returns empty QJsonObject if InlineQueryResultPhoto is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultPhoto is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultPhoto&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be photo */
-        const QString type = "photo";
+        const Type type = Type::PHOTO;
 
         /** @brief Unique identifier for this result, 1-64 Bytes */
         QString id;

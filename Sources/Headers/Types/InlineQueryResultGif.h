@@ -1,12 +1,15 @@
-#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTGIF_H
+Ôªø#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTGIF_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTGIF_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
+#include "qvector.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/MessageEntity.h"
@@ -43,16 +46,24 @@ namespace Telegram
                              const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt,	     
                              const std::optional<std::shared_ptr<InputMessageContent>>& input_message_content = std::nullopt);
 
+
          /* @brief Returns InlineQueryResultGif in form of JSON object. Returns empty QJsonObject if InlineQueryResultGif is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultGif is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultGif&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be gif */
-        const QString type = "gif";
+        const Type type = Type::GIF;
         
         /** @brief Unique identifier for this result, 1-64 bytes */
         QString id;
@@ -72,7 +83,7 @@ namespace Telegram
         /** @brief Optional. Duration of the GIF */
         std::optional<qint32> gif_duration;
         
-        /** @brief Optional. MIME type of the thumbnail, must be one of ìimage/jpegî, ìimage/gifî, or ìvideo/mp4î. Defaults to ìimage/jpegî */
+        /** @brief Optional. MIME type of the thumbnail, must be one of ‚Äúimage/jpeg‚Äù, ‚Äúimage/gif‚Äù, or ‚Äúvideo/mp4‚Äù. Defaults to ‚Äúimage/jpeg‚Äù */
         std::optional<QString> thumb_mime_type;
         
         /** @brief Optional. Title for the result */

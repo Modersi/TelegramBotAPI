@@ -1,33 +1,25 @@
 #include "Types/BotCommand.h"
 
-#include "qjsonobject.h"
-
 Telegram::BotCommand::BotCommand() : 
     command(),
-    description()
-{}
+    description() {}
 
 Telegram::BotCommand::BotCommand(const QString& command,
                                  const QString& description) :
     command(command),
-    description(description)
-{}
+    description(description) {}
 
-Telegram::BotCommand::BotCommand(const QJsonObject& jsonObject) 
-{
-    jsonObject.contains("command")     ? command = jsonObject["command"].toString()         : command = "";
-    jsonObject.contains("description") ? description = jsonObject["description"].toString() : description = "";
+Telegram::BotCommand::BotCommand(const QJsonObject& json_object) {
+    json_object.contains("command")     ? command = json_object["command"].toString()         : command = "";
+    json_object.contains("description") ? description = json_object["description"].toString() : description = "";
 }
 
-QJsonObject Telegram::BotCommand::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::BotCommand::toObject() const {
+    if (isEmpty()) return {};
 
-    return QJsonObject{ {"command", command}, {"description", description} };
+    return { {"command", command}, {"description", description} };
 }
 
-bool Telegram::BotCommand::isEmpty() const
-{
+bool Telegram::BotCommand::isEmpty() const {
     return command.isEmpty() and description.isEmpty();
 }

@@ -5,8 +5,8 @@
 #include "qjsonarray.h"
 #include "qjsonobject.h"
 #include "qjsonvalue.h"
+#include "qurlquery.h"
 
-#include "Internal/RequestManager.h"
 #include "Internal/ConversionFunctions.h"
 #include "Types/ChatMemberAdministrator.h"
 #include "Types/ChatMemberBanned.h"
@@ -16,41 +16,34 @@
 #include "Types/ChatMemberRestricted.h"
 #include "Types/User.h"
 
-Telegram::Bot::Bot(const BotSettings& bot_settings) :
-    request_manager(),
-    webhook_manager(nullptr),
+Telegram::Bot::Bot(const std::shared_ptr<BotSettings>& bot_settings) :
+    QObject(),
     bot_settings(bot_settings),
-    QObject()
+    telegram_listener()
 {
     /* If webhook URL and SSL configuration specified - create webhook server */
-    if (bot_settings.webhook_url.has_value() and bot_settings.ssl_configuration.has_value()) 
-    {
-        webhook_manager = std::make_unique<WebhookManager>(bot_settings);
+    if (bot_settings->webhook_url.has_value() and bot_settings->ssl_configuration.has_value()) {
 
-        setWebhook(*bot_settings.webhook_url, bot_settings.public_key.value_or(nullptr).get(), bot_settings.webhook_ip_addres, bot_settings.max_connections, bot_settings.allowed_updates, bot_settings.drop_pending_updates);
+        telegram_listener.emplace(this->bot_settings);
 
-        /* This function analyze incoming Update from Telegram and emit appropriate signal, depending on what kind of Update
-         * is received (e.g if new message received - new_message_received signal emitted, etc...) */
-        auto parseUpdate = [this](Update* update) 
-        {
-            if (update->message.has_value())				    emit messageReceived(update->update_id, update->message.value());
-            else if (update->edited_message.has_value())		emit messageWasUpdated(update->update_id, update->edited_message.value());
-            else if (update->channel_post.has_value())			emit channelPostReceived(update->update_id, update->channel_post.value());
-            else if (update->edited_channel_post.has_value())	emit channelPostWasUpdated(update->update_id, update->edited_channel_post.value());
-            else if (update->inline_query.has_value())			emit inlineQueryReceived(update->update_id, update->inline_query.value());
-            else if (update->chosen_inline_result.has_value())	emit chosenInlineResult(update->update_id, update->chosen_inline_result.value());
-            else if (update->callback_query.has_value())		emit callbackQueryReceived(update->update_id, update->callback_query.value());
-            //else if (update->shipping_query.has_value())		emit shippingQueryReceived(update->update_id, update->shipping_query.value());
-            //else if (update->pre_checkout_query.has_value())	emit preCheckoutQueryReceived(update->update_id, update->pre_checkout_query.value());
-            else if (update->poll.has_value())					emit pollReceived(update->update_id, update->poll.value());
-            else if (update->poll_answer.has_value())			emit pollAnswerReceived(update->update_id, update->poll_answer.value());
-            else if (update->my_chat_member.has_value())		emit myChatMemberStatusUpdated(update->update_id, update->my_chat_member.value());
-            else if (update->chat_member.has_value())			emit chatMemberStatusUpdated(update->update_id, update->chat_member.value());
-            delete update;
-        };
+        setWebhook(*bot_settings->webhook_url, bot_settings->public_key.value_or(nullptr).get(), bot_settings->webhook_ip_addres, bot_settings->max_connections, bot_settings->allowed_updates, bot_settings->drop_pending_updates);
 
-        /* If Webhook manager receives Update - analyze it and emit appropriate signal */
-        QObject::connect(webhook_manager.get(), &Telegram::WebhookManager::UpdateReceived, parseUpdate);
+        QObject::connect(&telegram_listener.value(), &Telegram::Internal::TelegramListener::updateReceived, [this](const Update& update) {
+            if      (update.message.has_value())			    emit messageReceived(update.update_id, *update.message);
+            else if (update.edited_message.has_value())		    emit messageWasUpdated(update.update_id, *update.edited_message);
+            else if (update.channel_post.has_value())			emit channelPostReceived(update.update_id, *update.channel_post);
+            else if (update.edited_channel_post.has_value())	emit channelPostWasUpdated(update.update_id, *update.edited_channel_post);
+            else if (update.inline_query.has_value())			emit inlineQueryReceived(update.update_id, *update.inline_query);
+            else if (update.chosen_inline_result.has_value())	emit chosenInlineResult(update.update_id, *update.chosen_inline_result);
+            else if (update.callback_query.has_value())		    emit callbackQueryReceived(update.update_id, *update.callback_query);
+            else if (update.poll.has_value())					emit pollReceived(update.update_id, *update.poll);
+            else if (update.poll_answer.has_value())			emit pollAnswerReceived(update.update_id, *update.poll_answer);
+            else if (update.my_chat_member.has_value())		    emit myChatMemberStatusUpdated(update.update_id, *update.my_chat_member);
+            else if (update.chat_member.has_value())			emit chatMemberStatusUpdated(update.update_id, *update.chat_member);
+        });
+
+        QObject::connect(&telegram_listener.value(), &Telegram::Internal::TelegramListener::errorOccured,
+                         this, &Telegram::Bot::networkErrorOccured);
     }
 }
 
@@ -65,7 +58,7 @@ QVector<Telegram::Update> Telegram::Bot::getUpdates(const std::optional<qint32>&
     if (allowed_updates.has_value())          requestBody.insert("allowed_updates", QVectorToQJsonArray(*allowed_updates));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getUpdates").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getUpdates").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool() == true)
@@ -77,20 +70,20 @@ QVector<Telegram::Update> Telegram::Bot::getUpdates(const std::optional<qint32>&
     }
 }
 
-bool Telegram::Bot::setWebhook(const QString& url, const QFile* certificate, const std::optional<QString>& ip_address, const std::optional<qint32>& max_connections, const std::optional<QVector<QString>>& allowed_updates, const std::optional<bool>& drop_pending_updates)
+bool Telegram::Bot::setWebhook(const QString& url, QFile* certificate, const std::optional<QString>& ip_address, const std::optional<qint32>& max_connections, const std::optional<QVector<QString>>& allowed_updates, const std::optional<bool>& drop_pending_updates)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters{ {"url", url} };
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (certificate != nullptr)           filesToUpload.push_back({ "certificate", const_cast<QFile*>(certificate) });
+    if (certificate != nullptr)           filesToUpload.push_back({ "certificate", certificate });
     if (ip_address.has_value())           requestParameters.push_back({ "ip_address", *ip_address });
     if (max_connections.has_value())      requestParameters.push_back({ "max_connections", *max_connections });
     if (allowed_updates.has_value())      requestParameters.push_back({ "allowed_updates", QVectorToQJsonArray(*allowed_updates) });
     if (drop_pending_updates.has_value()) requestParameters.push_back({ "drop_pending_updates", *drop_pending_updates });
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/setWebhook").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/setWebhook").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool())
@@ -106,9 +99,9 @@ bool Telegram::Bot::deleteWebhook(const std::optional<bool>& drop_pending_update
 {
     QUrlQuery requestUrlQuery;
 
-    if (drop_pending_updates.has_value()) requestUrlQuery.addQueryItem("drop_pending_updates", QString(*drop_pending_updates));
+    if (drop_pending_updates.has_value()) requestUrlQuery.addQueryItem("drop_pending_updates", QVariant(*drop_pending_updates).toString());
 
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendGetRequest(QUrlQuery(), QStringLiteral("https://api.telegram.org/bot%1/deleteWebhook").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendGetRequest(QStringLiteral("https://api.telegram.org/bot%1/deleteWebhook").arg(bot_settings->bot_token), requestUrlQuery));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool())
@@ -122,7 +115,7 @@ bool Telegram::Bot::deleteWebhook(const std::optional<bool>& drop_pending_update
 
 Telegram::WebhookInfo Telegram::Bot::getWebhookInfo()
 {
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendGetRequest(QUrlQuery(), QString("https://api.telegram.org/bot%1/getWebhookInfo").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendGetRequest(QString("https://api.telegram.org/bot%1/getWebhookInfo").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool())
@@ -136,7 +129,7 @@ Telegram::WebhookInfo Telegram::Bot::getWebhookInfo()
 
 Telegram::User Telegram::Bot::getMe()
 {
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendGetRequest(QUrlQuery(), QString("https://api.telegram.org/bot%1/getMe").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendGetRequest(QString("https://api.telegram.org/bot%1/getMe").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool())
@@ -150,7 +143,7 @@ Telegram::User Telegram::Bot::getMe()
 
 bool Telegram::Bot::logOut()
 {
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendGetRequest(QUrlQuery(), QString("https://api.telegram.org/bot%1/logOut").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendGetRequest(QString("https://api.telegram.org/bot%1/logOut").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool())
@@ -164,7 +157,7 @@ bool Telegram::Bot::logOut()
 
 bool Telegram::Bot::close()
 {
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendGetRequest(QUrlQuery(), QString("https://api.telegram.org/bot%1/close").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendGetRequest(QString("https://api.telegram.org/bot%1/close").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool())
@@ -176,15 +169,15 @@ bool Telegram::Bot::close()
     }
 }
 
-Telegram::Message Telegram::Bot::sendMessage(const std::variant<qint32, QString>& chat_id, const QString& text, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& entities, const std::optional<bool>& disable_web_page_preview, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>> reply_markup)
+Telegram::Message Telegram::Bot::sendMessage(const std::variant<qint64, QString>& chat_id, const QString& text, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& entities, const std::optional<bool>& disable_web_page_preview, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"text", text} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
-    if (parse_mode.has_value())                  requestBody.insert("parse_mode", *parse_mode);
+    if (parse_mode.has_value())                  requestBody.insert("parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower());
     if (entities.has_value())                    requestBody.insert("entities", QVectorToQJsonArray(*entities));
     if (disable_web_page_preview.has_value())    requestBody.insert("disable_web_page_preview", *disable_web_page_preview);
     if (disable_notification.has_value())        requestBody.insert("disable_notification", *disable_notification);
@@ -200,7 +193,7 @@ Telegram::Message Telegram::Bot::sendMessage(const std::variant<qint32, QString>
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendMessage").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendMessage").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool() == true)
@@ -212,21 +205,21 @@ Telegram::Message Telegram::Bot::sendMessage(const std::variant<qint32, QString>
     }
 }
 
-Telegram::Message Telegram::Bot::forwardMessage(const std::variant<qint32, QString>& chat_id, const std::variant<qint32, QString>& from_chat_id, const qint32& message_id, const std::optional<bool>& disable_notification)
+Telegram::Message Telegram::Bot::forwardMessage(const std::variant<qint64, QString>& chat_id, const std::variant<qint64, QString>& from_chat_id, const qint32& message_id, const std::optional<bool>& disable_notification)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"message_id", message_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
-    if (std::holds_alternative<qint32>(from_chat_id))       requestBody.insert("from_chat_id", std::get<qint32>(from_chat_id));
+    if (std::holds_alternative<qint64>(from_chat_id))       requestBody.insert("from_chat_id", std::get<qint64>(from_chat_id));
     else if (std::holds_alternative<QString>(from_chat_id)) requestBody.insert("from_chat_id", std::get<QString>(from_chat_id));
 
     if (disable_notification.has_value()) requestBody.insert("disable_notification", *disable_notification);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/forwardMessage").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/forwardMessage").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -238,19 +231,19 @@ Telegram::Message Telegram::Bot::forwardMessage(const std::variant<qint32, QStri
     }
 }
 
-Telegram::MessageId Telegram::Bot::copyMessage(const std::variant<qint32, QString>& chat_id, const std::variant<qint32, QString>& from_chat_id, const qint32& message_id, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::MessageId Telegram::Bot::copyMessage(const std::variant<qint64, QString>& chat_id, const std::variant<qint64, QString>& from_chat_id, const qint32& message_id, const std::optional<QString>& caption, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"message_id", message_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
-    if (std::holds_alternative<qint32>(from_chat_id))       requestBody.insert("from_chat_id", std::get<qint32>(from_chat_id));
+    if (std::holds_alternative<qint64>(from_chat_id))       requestBody.insert("from_chat_id", std::get<qint64>(from_chat_id));
     else if (std::holds_alternative<QString>(from_chat_id)) requestBody.insert("from_chat_id", std::get<QString>(from_chat_id));
 
     if (caption.has_value())                     requestBody.insert("caption", *caption);
-    if (parse_mode.has_value())                  requestBody.insert("parse_mode", *parse_mode);
+    if (parse_mode.has_value())                  requestBody.insert("parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower());
     if (caption_entities.has_value())            requestBody.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
     if (disable_notification.has_value())        requestBody.insert("disable_notification", *disable_notification);
     if (reply_to_message_id.has_value())         requestBody.insert("reply_to_message_id", *reply_to_message_id);
@@ -265,7 +258,7 @@ Telegram::MessageId Telegram::Bot::copyMessage(const std::variant<qint32, QStrin
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/copyMessage").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/copyMessage").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -277,20 +270,20 @@ Telegram::MessageId Telegram::Bot::copyMessage(const std::variant<qint32, QStrin
     }
 }
 
-Telegram::Message Telegram::Bot::sendPhoto(const std::variant<qint32, QString>& chat_id, const std::variant<QFile*, QString>& photo, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendPhoto(const std::variant<qint64, QString>& chat_id, const std::variant<QFile*, QString>& photo, const std::optional<QString>& caption, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     if (std::holds_alternative<QFile*>(photo))       filesToUpload.push_back({ "photo", std::get<QFile*>(photo) });
     else if (std::holds_alternative<QString>(photo)) requestParameters.push_back({ "photo", std::get<QString>(photo) });
 
     if (caption.has_value())                     requestParameters.push_back({ "caption", *caption });
-    if (parse_mode.has_value())                  requestParameters.push_back({ "parse_mode", *parse_mode});
+    if (parse_mode.has_value())                  requestParameters.push_back({ "parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower() });
     if (caption_entities.has_value())            requestParameters.push_back({ "caption_entities", QVectorToQJsonArray(*caption_entities) });
     if (disable_notification.has_value())        requestParameters.push_back({ "disable_notification", *disable_notification });
     if (reply_to_message_id.has_value())         requestParameters.push_back({ "reply_to_message_id", *reply_to_message_id });
@@ -305,7 +298,7 @@ Telegram::Message Telegram::Bot::sendPhoto(const std::variant<qint32, QString>& 
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendPhoto").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendPhoto").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -317,21 +310,21 @@ Telegram::Message Telegram::Bot::sendPhoto(const std::variant<qint32, QString>& 
     }
 }
 
-Telegram::Message Telegram::Bot::sendAudio(const std::variant<qint32, QString>& chat_id, const std::variant<QFile*, QString>& audio, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<qint32>& duration, const std::optional<QString>& performer, const std::optional<QString>& title, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendAudio(const std::variant<qint64, QString>& chat_id, const std::variant<QFile*, QString>& audio, const std::optional<QString>& caption, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<qint32>& duration, const std::optional<QString>& performer, const std::optional<QString>& title, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     if (std::holds_alternative<QFile*>(audio))       filesToUpload.push_back({ "audio", std::get<QFile*>(audio) });
     else if (std::holds_alternative<QString>(audio)) requestParameters.push_back({ "audio", std::get<QString>(audio) });
 
     if (caption.has_value())          requestParameters.push_back({ "caption", *caption });
-    if (parse_mode.has_value())       requestParameters.push_back({ "parse_mode", *parse_mode });
-    if (caption_entities.has_value()) requestParameters.push_back({  "caption_entities", QVectorToQJsonArray(*caption_entities) });
+    if (parse_mode.has_value())       requestParameters.push_back({ "parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower() });
+    if (caption_entities.has_value()) requestParameters.push_back({ "caption_entities", QVectorToQJsonArray(*caption_entities) });
     if (duration.has_value())         requestParameters.push_back({ "duration", *duration });
     if (performer.has_value())        requestParameters.push_back({ "performer", *performer });
     if (title.has_value())            requestParameters.push_back({ "title", *title });
@@ -355,7 +348,7 @@ Telegram::Message Telegram::Bot::sendAudio(const std::variant<qint32, QString>& 
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendAudio").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendAudio").arg(bot_settings->bot_token)));
     
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -367,13 +360,13 @@ Telegram::Message Telegram::Bot::sendAudio(const std::variant<qint32, QString>& 
     }
 }
 
-Telegram::Message Telegram::Bot::sendDocument(const std::variant<qint32, QString>& chat_id, const std::variant<QFile*, QString>& document, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& disable_content_type_detection, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendDocument(const std::variant<qint64, QString>& chat_id, const std::variant<QFile*, QString>& document, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<QString>& caption, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& disable_content_type_detection, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload; 
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     if (std::holds_alternative<QFile*>(document))       filesToUpload.push_back({ "document", std::get<QFile*>(document) });
@@ -386,7 +379,7 @@ Telegram::Message Telegram::Bot::sendDocument(const std::variant<qint32, QString
     }
 
     if (caption.has_value())                        requestParameters.push_back({ "caption", *caption });
-    if (parse_mode.has_value())                     requestParameters.push_back({ "parse_mode", *parse_mode });
+    if (parse_mode.has_value())                     requestParameters.push_back({ "parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower() });
     if (caption_entities.has_value())               requestParameters.push_back({ "caption_entities", QVectorToQJsonArray(*caption_entities) });
     if (disable_content_type_detection.has_value()) requestParameters.push_back({ "disable_content_type_detection", *disable_content_type_detection });
     if (disable_notification.has_value())           requestParameters.push_back({ "disable_notification", *disable_notification });
@@ -402,7 +395,7 @@ Telegram::Message Telegram::Bot::sendDocument(const std::variant<qint32, QString
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendDocument").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendDocument").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -414,13 +407,13 @@ Telegram::Message Telegram::Bot::sendDocument(const std::variant<qint32, QString
     }
 }
 
-Telegram::Message Telegram::Bot::sendVideo(const std::variant<qint32, QString>& chat_id, const std::variant<QFile*, QString>& video, const std::optional<qint32>& duration, const std::optional<qint32>& width, const std::optional<qint32>& height, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& supports_streaming, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendVideo(const std::variant<qint64, QString>& chat_id, const std::variant<QFile*, QString>& video, const std::optional<qint32>& duration, const std::optional<qint32>& width, const std::optional<qint32>& height, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<QString>& caption, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& supports_streaming, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     if (std::holds_alternative<QFile*>(video))       filesToUpload.push_back({ "video", std::get<QFile*>(video) });
@@ -437,7 +430,7 @@ Telegram::Message Telegram::Bot::sendVideo(const std::variant<qint32, QString>& 
     }
 
     if (caption.has_value())                        requestParameters.push_back({ "caption", *caption });
-    if (parse_mode.has_value())                     requestParameters.push_back({ "parse_mode", *parse_mode });
+    if (parse_mode.has_value())                     requestParameters.push_back({ "parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower() });
     if (caption_entities.has_value())               requestParameters.push_back({ "caption_entities", QVectorToQJsonArray(*caption_entities) });
     if (supports_streaming.has_value())             requestParameters.push_back({ "supports_streaming", *supports_streaming });
     if (disable_notification.has_value())           requestParameters.push_back({ "disable_notification", *disable_notification });
@@ -453,7 +446,7 @@ Telegram::Message Telegram::Bot::sendVideo(const std::variant<qint32, QString>& 
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendVideo").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendVideo").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -465,13 +458,13 @@ Telegram::Message Telegram::Bot::sendVideo(const std::variant<qint32, QString>& 
     }
 }
 
-Telegram::Message Telegram::Bot::sendAnimation(const std::variant<qint32, QString>& chat_id, const std::variant<QFile*, QString>& animation, const std::optional<qint32>& duration, const std::optional<qint32>& width, const std::optional<qint32>& height, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendAnimation(const std::variant<qint64, QString>& chat_id, const std::variant<QFile*, QString>& animation, const std::optional<qint32>& duration, const std::optional<qint32>& width, const std::optional<qint32>& height, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<QString>& caption, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({"chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({"chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({"chat_id", std::get<QString>(chat_id) });
 
     if (std::holds_alternative<QFile*>(animation))       filesToUpload.push_back({ "animation", std::get<QFile*>(animation) });
@@ -488,7 +481,7 @@ Telegram::Message Telegram::Bot::sendAnimation(const std::variant<qint32, QStrin
     }
 
     if (caption.has_value())                        requestParameters.push_back({ "caption", *caption });
-    if (parse_mode.has_value())                     requestParameters.push_back({ "parse_mode", *parse_mode });
+    if (parse_mode.has_value())                     requestParameters.push_back({ "parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower() });
     if (caption_entities.has_value())               requestParameters.push_back({ "caption_entities", QVectorToQJsonArray(*caption_entities) });
     if (disable_notification.has_value())           requestParameters.push_back({ "disable_notification", *disable_notification });
     if (reply_to_message_id.has_value())            requestParameters.push_back({ "reply_to_message_id", *reply_to_message_id });
@@ -503,7 +496,7 @@ Telegram::Message Telegram::Bot::sendAnimation(const std::variant<qint32, QStrin
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendAnimation").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendAnimation").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -515,20 +508,20 @@ Telegram::Message Telegram::Bot::sendAnimation(const std::variant<qint32, QStrin
     }
 }
 
-Telegram::Message Telegram::Bot::sendVoice(const std::variant<qint32, QString>& chat_id, const std::variant<QFile*, QString>& voice, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<qint32>& duration, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendVoice(const std::variant<qint64, QString>& chat_id, const std::variant<QFile*, QString>& voice, const std::optional<QString>& caption, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<qint32>& duration, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     if (std::holds_alternative<QFile*>(voice))       filesToUpload.push_back({ "voice", std::get<QFile*>(voice) });
     else if (std::holds_alternative<QString>(voice)) requestParameters.push_back({ "voice", std::get<QString>(voice) });
 
     if (caption.has_value())                     requestParameters.push_back({ "caption", *caption });
-    if (parse_mode.has_value())                  requestParameters.push_back({ "parse_mode", *parse_mode });
+    if (parse_mode.has_value())                  requestParameters.push_back({ "parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower() });
     if (caption_entities.has_value())            requestParameters.push_back({ "caption_entities", QVectorToQJsonArray(*caption_entities) });
     if (duration.has_value())                    requestParameters.push_back({ "duration", *duration });
     if (disable_notification.has_value())        requestParameters.push_back({ "disable_notification", *disable_notification });
@@ -544,7 +537,7 @@ Telegram::Message Telegram::Bot::sendVoice(const std::variant<qint32, QString>& 
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendVoice").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendVoice").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -556,13 +549,13 @@ Telegram::Message Telegram::Bot::sendVoice(const std::variant<qint32, QString>& 
     }
 }
 
-Telegram::Message Telegram::Bot::sendVideoNote(const std::variant<qint32, QString>& chat_id, const std::variant<QFile*, QString>& video_note, const std::optional<qint32>& duration, const std::optional<qint32>& length, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendVideoNote(const std::variant<qint64, QString>& chat_id, const std::variant<QFile*, QString>& video_note, const std::optional<qint32>& duration, const std::optional<qint32>& length, const std::optional<std::variant<QFile*, QString>>& thumb, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     if (std::holds_alternative<QFile*>(video_note))       filesToUpload.push_back({ "video_note", std::get<QFile*>(video_note) });
@@ -590,7 +583,7 @@ Telegram::Message Telegram::Bot::sendVideoNote(const std::variant<qint32, QStrin
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendVideoNote").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendVideoNote").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -602,13 +595,13 @@ Telegram::Message Telegram::Bot::sendVideoNote(const std::variant<qint32, QStrin
     }
 }
 
-QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint32, QString>& chat_id, const QVector<InputMediaAudio>& media, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply)
+QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint64, QString>& chat_id, const QVector<InputMediaAudio>& media, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     QJsonArray inputMedia;
@@ -632,7 +625,7 @@ QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint
     if (allow_sending_without_reply.has_value())    requestParameters.push_back({ "allow_sending_without_reply", *allow_sending_without_reply });
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendMediaGroup").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendMediaGroup").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -644,13 +637,13 @@ QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint
     }
 }
 
-QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint32, QString>& chat_id, const QVector<InputMediaDocument>& media, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply)
+QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint64, QString>& chat_id, const QVector<InputMediaDocument>& media, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     QJsonArray inputMedia;
@@ -674,7 +667,7 @@ QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint
     if (allow_sending_without_reply.has_value())    requestParameters.push_back({ "allow_sending_without_reply", *allow_sending_without_reply });
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendMediaGroup").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendMediaGroup").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -686,13 +679,13 @@ QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint
     }
 }
 
-QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint32, QString>& chat_id, const QPair<QVector<InputMediaPhoto>, QVector<InputMediaVideo>> media, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply)
+QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint64, QString>& chat_id, const QPair<QVector<InputMediaPhoto>, QVector<InputMediaVideo>> media, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     QJsonArray inputMedia;
@@ -733,7 +726,7 @@ QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint
     if (allow_sending_without_reply.has_value())    requestParameters.push_back({ "allow_sending_without_reply", *allow_sending_without_reply });
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendMediaGroup").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendMediaGroup").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -745,12 +738,12 @@ QVector<Telegram::Message> Telegram::Bot::sendMediaGroup(const std::variant<qint
     }
 }
 
-Telegram::Message Telegram::Bot::sendLocation(const std::variant<qint32, QString>& chat_id, const float& latitude, const float& longitude, const std::optional<float>& horizontal_accuracy, const std::optional<qint32>& live_period, const std::optional<qint32>& heading, const std::optional<qint32>& proximity_alert_radius, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendLocation(const std::variant<qint64, QString>& chat_id, const float& latitude, const float& longitude, const std::optional<float>& horizontal_accuracy, const std::optional<qint32>& live_period, const std::optional<qint32>& heading, const std::optional<qint32>& proximity_alert_radius, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"latitude", latitude}, {"longitude", longitude} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (horizontal_accuracy.has_value())         requestBody.insert("horizontal_accuracy", *horizontal_accuracy);
@@ -770,7 +763,7 @@ Telegram::Message Telegram::Bot::sendLocation(const std::variant<qint32, QString
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendLocation").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendLocation").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -782,14 +775,14 @@ Telegram::Message Telegram::Bot::sendLocation(const std::variant<qint32, QString
     }
 }
 
-Telegram::Message Telegram::Bot::editMessageLiveLocation(const float& latitude, const float& longitude, const std::optional<std::variant<qint32, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& inline_message_id, const std::optional<float>& horizontal_accuracy, const std::optional<qint32>& heading, const std::optional<qint32>& proximity_alert_radius, const std::optional<InlineKeyboardMarkup>& reply_markup)
+Telegram::Message Telegram::Bot::editMessageLiveLocation(const float& latitude, const float& longitude, const std::optional<std::variant<qint64, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& inline_message_id, const std::optional<float>& horizontal_accuracy, const std::optional<qint32>& heading, const std::optional<qint32>& proximity_alert_radius, const std::optional<InlineKeyboardMarkup>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"latitude", latitude}, {"longitude", longitude} };
 
     if (chat_id.has_value())
     {
-        if (std::holds_alternative<qint32>(*chat_id))  requestBody.insert("chat_id", std::get<qint32>(*chat_id));
+        if (std::holds_alternative<qint64>(*chat_id))  requestBody.insert("chat_id", std::get<qint64>(*chat_id));
         else if (std::holds_alternative<QString>(*chat_id)) requestBody.insert("chat_id", std::get<QString>(*chat_id));
     }
 
@@ -801,7 +794,7 @@ Telegram::Message Telegram::Bot::editMessageLiveLocation(const float& latitude, 
     if (reply_markup.has_value())           requestBody.insert("reply_markup", reply_markup->toObject());
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageLiveLocation").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageLiveLocation").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -813,12 +806,12 @@ Telegram::Message Telegram::Bot::editMessageLiveLocation(const float& latitude, 
     }
 }
 
-Telegram::Message Telegram::Bot::stopMessageLiveLocation(const std::optional<std::variant<qint32, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& inline_message_id, const std::optional<InlineKeyboardMarkup>& reply_markup)
+Telegram::Message Telegram::Bot::stopMessageLiveLocation(const std::optional<std::variant<qint64, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& inline_message_id, const std::optional<InlineKeyboardMarkup>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(*chat_id))       requestBody.insert("chat_id", std::get<qint32>(*chat_id));
+    if (std::holds_alternative<qint64>(*chat_id))       requestBody.insert("chat_id", std::get<qint64>(*chat_id));
     else if (std::holds_alternative<QString>(*chat_id)) requestBody.insert("chat_id", std::get<QString>(*chat_id));
     
     if (message_id.has_value())        requestBody.insert("message_id", *message_id);
@@ -826,7 +819,7 @@ Telegram::Message Telegram::Bot::stopMessageLiveLocation(const std::optional<std
     if (reply_markup.has_value())      requestBody.insert("reply_markup", reply_markup->toObject());
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/stopMessageLiveLocation").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/stopMessageLiveLocation").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -838,12 +831,12 @@ Telegram::Message Telegram::Bot::stopMessageLiveLocation(const std::optional<std
     }
 }
 
-Telegram::Message Telegram::Bot::sendVenue(const std::variant<qint32, QString>& chat_id, const float& latitude, const float& longitude, const QString& title, const QString& address, const std::optional<QString>& foursquare_id, const std::optional<QString>& foursquare_type, const std::optional<QString>& google_place_id, const std::optional<QString>& google_place_type, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendVenue(const std::variant<qint64, QString>& chat_id, const float& latitude, const float& longitude, const QString& title, const QString& address, const std::optional<QString>& foursquare_id, const std::optional<QString>& foursquare_type, const std::optional<QString>& google_place_id, const std::optional<QString>& google_place_type, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"latitude", latitude}, {"longitude", longitude}, {"title", title}, {"address", address} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (foursquare_id.has_value())               requestBody.insert("foursquare_id", *foursquare_id);
@@ -863,7 +856,7 @@ Telegram::Message Telegram::Bot::sendVenue(const std::variant<qint32, QString>& 
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendVenue").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendVenue").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -875,12 +868,12 @@ Telegram::Message Telegram::Bot::sendVenue(const std::variant<qint32, QString>& 
     }
 }
 
-Telegram::Message Telegram::Bot::sendContact(const std::variant<qint32, QString>& chat_id, const QString& phone_number, const QString& first_name, const std::optional<QString>& last_name, const std::optional<QString>& vcard, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendContact(const std::variant<qint64, QString>& chat_id, const QString& phone_number, const QString& first_name, const std::optional<QString>& last_name, const std::optional<QString>& vcard, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"phone_number", phone_number}, {"first_name", first_name} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (last_name.has_value())                   requestBody.insert("last_name", *last_name);
@@ -898,7 +891,7 @@ Telegram::Message Telegram::Bot::sendContact(const std::variant<qint32, QString>
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendContact").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendContact").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -910,12 +903,12 @@ Telegram::Message Telegram::Bot::sendContact(const std::variant<qint32, QString>
     }
 }
 
-Telegram::Message Telegram::Bot::sendPoll(const std::variant<qint32, QString>& chat_id, const QString& question, const QVector<QString>& options, const std::optional<bool>& is_anonymous, const std::optional<QString>& type, const std::optional<bool>& allows_multiple_answers, const std::optional<qint32>& correct_option_id, const std::optional<QString>& explanation, const std::optional<QString>& explanation_parse_mode, const std::optional<QVector<MessageEntity>>& explanation_entities, const std::optional<qint32>& open_period, const std::optional<qint32>& close_date, const std::optional<bool>& is_closed, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendPoll(const std::variant<qint64, QString>& chat_id, const QString& question, const QVector<QString>& options, const std::optional<bool>& is_anonymous, const std::optional<QString>& type, const std::optional<bool>& allows_multiple_answers, const std::optional<qint32>& correct_option_id, const std::optional<QString>& explanation, const std::optional<Message::FormattingType>& explanation_parse_mode, const std::optional<QVector<MessageEntity>>& explanation_entities, const std::optional<qint32>& open_period, const std::optional<qint32>& close_date, const std::optional<bool>& is_closed, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"question", question}, {"options", QVectorToQJsonArray(options)} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (is_anonymous.has_value())                requestBody.insert("is_anonymous", *is_anonymous);
@@ -923,7 +916,7 @@ Telegram::Message Telegram::Bot::sendPoll(const std::variant<qint32, QString>& c
     if (allows_multiple_answers.has_value())     requestBody.insert("allows_multiple_answers", *allows_multiple_answers);
     if (correct_option_id.has_value())           requestBody.insert("correct_option_id", *correct_option_id);
     if (explanation.has_value())                 requestBody.insert("explanation", *explanation);
-    if (explanation_parse_mode.has_value())      requestBody.insert("explanation_parse_mode", *explanation_parse_mode);
+    if (explanation_parse_mode.has_value())      requestBody.insert("explanation_parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*explanation_parse_mode)>>().valueToKey(static_cast<int>(*explanation_parse_mode))).toLower());
     if (explanation_entities.has_value())        requestBody.insert("explanation_entities", QVectorToQJsonArray(*explanation_entities));
     if (open_period.has_value())                 requestBody.insert("open_period", *open_period);
     if (close_date.has_value())                  requestBody.insert("close_date", *close_date);
@@ -941,7 +934,7 @@ Telegram::Message Telegram::Bot::sendPoll(const std::variant<qint32, QString>& c
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendPoll").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendPoll").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -953,12 +946,12 @@ Telegram::Message Telegram::Bot::sendPoll(const std::variant<qint32, QString>& c
     }
 }
 
-Telegram::Message Telegram::Bot::sendDice(const std::variant<qint32, QString>& chat_id, const std::optional<QString>& emoji, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendDice(const std::variant<qint64, QString>& chat_id, const std::optional<QString>& emoji, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (emoji.has_value())                       requestBody.insert("emoji", *emoji);
@@ -975,7 +968,7 @@ Telegram::Message Telegram::Bot::sendDice(const std::variant<qint32, QString>& c
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendDice").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendDice").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -987,7 +980,7 @@ Telegram::Message Telegram::Bot::sendDice(const std::variant<qint32, QString>& c
     }
 }
 
-bool Telegram::Bot::sendChatAction(const std::variant<qint32, QString>& chat_id, const ChatActionType& action)
+bool Telegram::Bot::sendChatAction(const std::variant<qint64, QString>& chat_id, const ChatActionType& action)
 {
     auto ChatActionTypeToString = [](const ChatActionType& action) -> QString
                                     {
@@ -1007,11 +1000,11 @@ bool Telegram::Bot::sendChatAction(const std::variant<qint32, QString>& chat_id,
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"action", ChatActionTypeToString(action)} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendChatAction").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/sendChatAction").arg(bot_settings->bot_token)));
 
     if (response.object().value("ok").toBool())
         return true;
@@ -1022,7 +1015,7 @@ bool Telegram::Bot::sendChatAction(const std::variant<qint32, QString>& chat_id,
     }
 }
 
-Telegram::UserProfilePhotos Telegram::Bot::getUserProfilePhotos(const qint32& user_id, const std::optional<qint32>& offset, const std::optional<qint32>& limit)
+Telegram::UserProfilePhotos Telegram::Bot::getUserProfilePhotos(const qint64& user_id, const std::optional<qint32>& offset, const std::optional<qint32>& limit)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"user_id", user_id} };
@@ -1031,7 +1024,7 @@ Telegram::UserProfilePhotos Telegram::Bot::getUserProfilePhotos(const qint32& us
     if (limit.has_value())  requestBody.insert("limit", *limit);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getUserProfilePhotos").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getUserProfilePhotos").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1049,7 +1042,7 @@ Telegram::File Telegram::Bot::getFile(const QString& file_id)
     QJsonObject requestBody{ {"file_id", file_id} };
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getFile").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getFile").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1061,19 +1054,19 @@ Telegram::File Telegram::Bot::getFile(const QString& file_id)
     }
 }
 
-bool Telegram::Bot::banChatMember(const std::variant<qint32, QString>& chat_id, const qint32& user_id, const std::optional<qint32>& until_date, const std::optional<bool>& revoke_messages)
+bool Telegram::Bot::banChatMember(const std::variant<qint64, QString>& chat_id, const qint64& user_id, const std::optional<qint32>& until_date, const std::optional<bool>& revoke_messages)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"user_id", user_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (until_date.has_value())      requestBody.insert("until_date", *until_date);
     if (revoke_messages.has_value()) requestBody.insert("revoke_messages", *revoke_messages);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/banChatMember").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/banChatMember").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1085,18 +1078,18 @@ bool Telegram::Bot::banChatMember(const std::variant<qint32, QString>& chat_id, 
     }
 }
 
-bool Telegram::Bot::unbanChatMember(const std::variant<qint32, QString>& chat_id, const qint32& user_id, const std::optional<bool>& only_if_banned)
+bool Telegram::Bot::unbanChatMember(const std::variant<qint64, QString>& chat_id, const qint64& user_id, const std::optional<bool>& only_if_banned)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"user_id", user_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (only_if_banned.has_value())      requestBody.insert("only_if_banned", *only_if_banned);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/unbanChatMember").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/unbanChatMember").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1108,18 +1101,18 @@ bool Telegram::Bot::unbanChatMember(const std::variant<qint32, QString>& chat_id
     }
 }
 
-bool Telegram::Bot::restrictChatMember(const std::variant<qint32, QString>& chat_id, const qint32& user_id, const ChatPermissions& permissions, const std::optional<qint32>& until_date)
+bool Telegram::Bot::restrictChatMember(const std::variant<qint64, QString>& chat_id, const qint64& user_id, const ChatPermissions& permissions, const std::optional<qint32>& until_date)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"user_id", user_id}, {"permissions", permissions.toObject()} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (until_date.has_value()) requestBody.insert("until_date", *until_date);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/restrictChatMember").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/restrictChatMember").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1131,12 +1124,12 @@ bool Telegram::Bot::restrictChatMember(const std::variant<qint32, QString>& chat
     }
 }
 
-bool Telegram::Bot::promoteChatMember(const std::variant<qint32, QString>& chat_id, const qint32& user_id, const std::optional<bool>& is_anonymous, const std::optional<bool>& can_manage_chat, const std::optional<bool>& can_post_messages, const std::optional<bool>& can_edit_messages, const std::optional<bool>& can_delete_messages, const std::optional<bool>& can_manage_voice_chats, const std::optional<bool>& can_restrict_members, const std::optional<bool>& can_promote_members, const std::optional<bool>& can_change_info, const std::optional<bool>& can_invite_users, const std::optional<bool>& can_pin_messages)
+bool Telegram::Bot::promoteChatMember(const std::variant<qint64, QString>& chat_id, const qint64& user_id, const std::optional<bool>& is_anonymous, const std::optional<bool>& can_manage_chat, const std::optional<bool>& can_post_messages, const std::optional<bool>& can_edit_messages, const std::optional<bool>& can_delete_messages, const std::optional<bool>& can_manage_voice_chats, const std::optional<bool>& can_restrict_members, const std::optional<bool>& can_promote_members, const std::optional<bool>& can_change_info, const std::optional<bool>& can_invite_users, const std::optional<bool>& can_pin_messages)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"user_id", user_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (is_anonymous.has_value())           requestBody.insert("is_anonymous", *is_anonymous);
@@ -1152,7 +1145,7 @@ bool Telegram::Bot::promoteChatMember(const std::variant<qint32, QString>& chat_
     if (can_pin_messages.has_value())       requestBody.insert("can_pin_messages", *can_pin_messages);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/promoteChatMember").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/promoteChatMember").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1164,16 +1157,16 @@ bool Telegram::Bot::promoteChatMember(const std::variant<qint32, QString>& chat_
     }
 }
 
-bool Telegram::Bot::setChatAdministratorCustomTitle(const std::variant<qint32, QString>& chat_id, const qint32& user_id, const QString& custom_title)
+bool Telegram::Bot::setChatAdministratorCustomTitle(const std::variant<qint64, QString>& chat_id, const qint64& user_id, const QString& custom_title)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"user_id", user_id}, {"custom_title", custom_title} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatAdministratorCustomTitle").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatAdministratorCustomTitle").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1185,16 +1178,16 @@ bool Telegram::Bot::setChatAdministratorCustomTitle(const std::variant<qint32, Q
     }
 }
 
-bool Telegram::Bot::setChatPermissions(const std::variant<qint32, QString>& chat_id, const ChatPermissions& permissions)
+bool Telegram::Bot::setChatPermissions(const std::variant<qint64, QString>& chat_id, const ChatPermissions& permissions)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"permissions", permissions.toObject()} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatPermissions").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatPermissions").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1206,16 +1199,16 @@ bool Telegram::Bot::setChatPermissions(const std::variant<qint32, QString>& chat
     }
 }
 
-QString Telegram::Bot::exportChatInviteLink(const std::variant<qint32, QString>& chat_id)
+QString Telegram::Bot::exportChatInviteLink(const std::variant<qint64, QString>& chat_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/exportChatInviteLink").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/exportChatInviteLink").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1227,12 +1220,12 @@ QString Telegram::Bot::exportChatInviteLink(const std::variant<qint32, QString>&
     }
 }
 
-Telegram::ChatInviteLink Telegram::Bot::createChatInviteLink(const std::variant<qint32, QString>& chat_id, const std::optional<QString>& name, const std::optional<qint32>& expire_date, const std::optional<qint32>& member_limit, const std::optional<bool> creates_join_request)
+Telegram::ChatInviteLink Telegram::Bot::createChatInviteLink(const std::variant<qint64, QString>& chat_id, const std::optional<QString>& name, const std::optional<qint32>& expire_date, const std::optional<qint32>& member_limit, const std::optional<bool> creates_join_request)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (name.has_value())  requestBody.insert("name", *name);
@@ -1241,7 +1234,7 @@ Telegram::ChatInviteLink Telegram::Bot::createChatInviteLink(const std::variant<
     if (creates_join_request.has_value()) requestBody.insert("creates_join_request", *creates_join_request);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/createChatInviteLink").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/createChatInviteLink").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1252,12 +1245,12 @@ Telegram::ChatInviteLink Telegram::Bot::createChatInviteLink(const std::variant<
         return ChatInviteLink();
     }
 }
-Telegram::ChatInviteLink Telegram::Bot::editChatInviteLink(const std::variant<qint32, QString>& chat_id, const QString& invite_link, const std::optional<QString>& name, const std::optional<qint32>& expire_date, const std::optional<qint32>& member_limit, const std::optional<bool> creates_join_request)
+Telegram::ChatInviteLink Telegram::Bot::editChatInviteLink(const std::variant<qint64, QString>& chat_id, const QString& invite_link, const std::optional<QString>& name, const std::optional<qint32>& expire_date, const std::optional<qint32>& member_limit, const std::optional<bool> creates_join_request)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"invite_link", invite_link} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (name.has_value())  requestBody.insert("name", *name);
@@ -1266,7 +1259,7 @@ Telegram::ChatInviteLink Telegram::Bot::editChatInviteLink(const std::variant<qi
     if (creates_join_request.has_value()) requestBody.insert("creates_join_request", *creates_join_request);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editChatInviteLink").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editChatInviteLink").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1278,16 +1271,16 @@ Telegram::ChatInviteLink Telegram::Bot::editChatInviteLink(const std::variant<qi
     }
 }
 
-Telegram::ChatInviteLink Telegram::Bot::revokeChatInviteLink(const std::variant<qint32, QString>& chat_id, const QString& invite_link)
+Telegram::ChatInviteLink Telegram::Bot::revokeChatInviteLink(const std::variant<qint64, QString>& chat_id, const QString& invite_link)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"invite_link", invite_link} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/revokeChatInviteLink").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/revokeChatInviteLink").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1299,16 +1292,16 @@ Telegram::ChatInviteLink Telegram::Bot::revokeChatInviteLink(const std::variant<
     }
 }
 
-bool Telegram::Bot::approveChatJoinRequest(const std::variant<qint32, QString>& chat_id, const qint32& user_id)
+bool Telegram::Bot::approveChatJoinRequest(const std::variant<qint64, QString>& chat_id, const qint32& user_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"user_id", user_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/revokeChatInviteLink").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/revokeChatInviteLink").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1320,16 +1313,16 @@ bool Telegram::Bot::approveChatJoinRequest(const std::variant<qint32, QString>& 
     }
 }
 
-bool Telegram::Bot::declineChatJoinRequest(const std::variant<qint32, QString>& chat_id, const qint32& user_id)
+bool Telegram::Bot::declineChatJoinRequest(const std::variant<qint64, QString>& chat_id, const qint32& user_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"user_id", user_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/revokeChatInviteLink").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/revokeChatInviteLink").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1341,16 +1334,16 @@ bool Telegram::Bot::declineChatJoinRequest(const std::variant<qint32, QString>& 
     }
 }
 
-bool Telegram::Bot::setChatPhoto(const std::variant<qint32, QString>& chat_id, const QFile* photo)
+bool Telegram::Bot::setChatPhoto(const std::variant<qint64, QString>& chat_id, const QFile* photo)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest({ {"photo", const_cast<QFile*>(photo)} }, requestParameters, QString("https://api.telegram.org/bot%1/setChatPhoto").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest({ {"photo", const_cast<QFile*>(photo)} }, requestParameters, QString("https://api.telegram.org/bot%1/setChatPhoto").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool())
@@ -1362,16 +1355,16 @@ bool Telegram::Bot::setChatPhoto(const std::variant<qint32, QString>& chat_id, c
     }
 }
 
-bool Telegram::Bot::deleteChatPhoto(const std::variant<qint32, QString>& chat_id)
+bool Telegram::Bot::deleteChatPhoto(const std::variant<qint64, QString>& chat_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/deleteChatPhoto").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/deleteChatPhoto").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1383,16 +1376,16 @@ bool Telegram::Bot::deleteChatPhoto(const std::variant<qint32, QString>& chat_id
     }
 }
 
-bool Telegram::Bot::setChatTitle(const std::variant<qint32, QString>& chat_id, const QString& title)
+bool Telegram::Bot::setChatTitle(const std::variant<qint64, QString>& chat_id, const QString& title)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"title", title} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatTitle").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatTitle").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1404,18 +1397,18 @@ bool Telegram::Bot::setChatTitle(const std::variant<qint32, QString>& chat_id, c
     }
 }
 
-bool Telegram::Bot::setChatDescription(const std::variant<qint32, QString>& chat_id, const std::optional<QString>& description)
+bool Telegram::Bot::setChatDescription(const std::variant<qint64, QString>& chat_id, const std::optional<QString>& description)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if(description.has_value()) requestBody.insert("description", *description);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatDescription").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatDescription").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1427,18 +1420,18 @@ bool Telegram::Bot::setChatDescription(const std::variant<qint32, QString>& chat
     }
 }
 
-bool Telegram::Bot::pinChatMessage(const std::variant<qint32, QString>& chat_id, const qint32& message_id, const std::optional<bool>& disable_notification)
+bool Telegram::Bot::pinChatMessage(const std::variant<qint64, QString>& chat_id, const qint32& message_id, const std::optional<bool>& disable_notification)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"message_id", message_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (disable_notification.has_value()) requestBody.insert("disable_notification", *disable_notification);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/pinChatMessage").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/pinChatMessage").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1450,18 +1443,18 @@ bool Telegram::Bot::pinChatMessage(const std::variant<qint32, QString>& chat_id,
     }
 }
 
-bool Telegram::Bot::unpinChatMessage(const std::variant<qint32, QString>& chat_id, const std::optional<qint32>& message_id)
+bool Telegram::Bot::unpinChatMessage(const std::variant<qint64, QString>& chat_id, const std::optional<qint32>& message_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (message_id.has_value()) requestBody.insert("message_id", *message_id);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/unpinChatMessage").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/unpinChatMessage").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1473,16 +1466,16 @@ bool Telegram::Bot::unpinChatMessage(const std::variant<qint32, QString>& chat_i
     }
 }
 
-bool Telegram::Bot::unpinAllChatMessages(const std::variant<qint32, QString>& chat_id)
+bool Telegram::Bot::unpinAllChatMessages(const std::variant<qint64, QString>& chat_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/unpinAllChatMessages").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/unpinAllChatMessages").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1494,16 +1487,16 @@ bool Telegram::Bot::unpinAllChatMessages(const std::variant<qint32, QString>& ch
     }
 }
 
-bool Telegram::Bot::leaveChat(const std::variant<qint32, QString>& chat_id)
+bool Telegram::Bot::leaveChat(const std::variant<qint64, QString>& chat_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/leaveChat").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/leaveChat").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1515,16 +1508,16 @@ bool Telegram::Bot::leaveChat(const std::variant<qint32, QString>& chat_id)
     }
 }
 
-Telegram::Chat Telegram::Bot::getChat(const std::variant<qint32, QString>& chat_id)
+Telegram::Chat Telegram::Bot::getChat(const std::variant<qint64, QString>& chat_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getChat").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getChat").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1536,16 +1529,16 @@ Telegram::Chat Telegram::Bot::getChat(const std::variant<qint32, QString>& chat_
     }
 }
 
-QVector<std::shared_ptr<Telegram::ChatMember>> Telegram::Bot::getChatAdministrators(const std::variant<qint32, QString>& chat_id)
+QVector<std::shared_ptr<Telegram::ChatMember>> Telegram::Bot::getChatAdministrators(const std::variant<qint64, QString>& chat_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getChatAdministrators").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getChatAdministrators").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1573,16 +1566,16 @@ QVector<std::shared_ptr<Telegram::ChatMember>> Telegram::Bot::getChatAdministrat
     }
 }
 
-int Telegram::Bot::getChatMemberCount(const std::variant<qint32, QString>& chat_id)
+int Telegram::Bot::getChatMemberCount(const std::variant<qint64, QString>& chat_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getChatMemberCount").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getChatMemberCount").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1594,16 +1587,16 @@ int Telegram::Bot::getChatMemberCount(const std::variant<qint32, QString>& chat_
     }
 }
 
-std::shared_ptr<Telegram::ChatMember> Telegram::Bot::getChatMember(const std::variant<qint32, QString>& chat_id, const qint32& user_id)
+std::shared_ptr<Telegram::ChatMember> Telegram::Bot::getChatMember(const std::variant<qint64, QString>& chat_id, const qint64& user_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"user_id", user_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getChatMember").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getChatMember").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1625,16 +1618,16 @@ std::shared_ptr<Telegram::ChatMember> Telegram::Bot::getChatMember(const std::va
     }
 }
 
-bool Telegram::Bot::setChatStickerSet(const std::variant<qint32, QString>& chat_id, const QString& sticker_set_name)
+bool Telegram::Bot::setChatStickerSet(const std::variant<qint64, QString>& chat_id, const QString& sticker_set_name)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"sticker_set_name", sticker_set_name} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatStickerSet").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setChatStickerSet").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1646,16 +1639,16 @@ bool Telegram::Bot::setChatStickerSet(const std::variant<qint32, QString>& chat_
     }
 }
 
-bool Telegram::Bot::deleteChatStickerSet(const std::variant<qint32, QString>& chat_id)
+bool Telegram::Bot::deleteChatStickerSet(const std::variant<qint64, QString>& chat_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/deleteChatStickerSet").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/deleteChatStickerSet").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1678,7 +1671,7 @@ bool Telegram::Bot::answerCallbackQuery(const QString& callback_query_id, const 
     if (cache_time.has_value()) requestBody.insert("cache_time", *cache_time);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/answerCallbackQuery").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/answerCallbackQuery").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1699,13 +1692,12 @@ bool Telegram::Bot::setMyCommands(const QVector<BotCommand>& commands, const std
     if (language_code.has_value())                       requestBody.insert("language_code", *language_code);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setMyCommands").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/setMyCommands").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false and emit errorOccured() signal */
     if (response.object().value("ok").toBool())
         return true;
-    else
-    {
+    else {
         emit errorOccured(Error(response.object()));
         return false;
     }
@@ -1721,7 +1713,7 @@ bool Telegram::Bot::deleteMyCommands(const std::optional<BotCommandScope*>& scop
     if (language_code.has_value())                  requestBody.insert("language_code", *language_code);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/deleteMyCommands").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/deleteMyCommands").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1742,7 +1734,7 @@ QVector<Telegram::BotCommand> Telegram::Bot::getMyCommands(const std::optional<B
     if (language_code.has_value()) requestBody.insert("language_code", *language_code);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getMyCommands").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getMyCommands").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1754,26 +1746,26 @@ QVector<Telegram::BotCommand> Telegram::Bot::getMyCommands(const std::optional<B
     }
 }
 
-bool Telegram::Bot::editMessageText(const QString& text, const std::optional<std::variant<qint32, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& inline_message_id, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& entities, const std::optional<bool>& disable_web_page_preview, const std::optional<InlineKeyboardMarkup>& reply_markup)
+bool Telegram::Bot::editMessageText(const QString& text, const std::optional<std::variant<qint64, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& inline_message_id, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& entities, const std::optional<bool>& disable_web_page_preview, const std::optional<InlineKeyboardMarkup>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"text", text} };
 
     if (chat_id.has_value())
     {
-        if (std::holds_alternative<qint32>(*chat_id))       requestBody.insert("chat_id", std::get<qint32>(*chat_id));
+        if (std::holds_alternative<qint64>(*chat_id))       requestBody.insert("chat_id", std::get<qint64>(*chat_id));
         else if (std::holds_alternative<QString>(*chat_id)) requestBody.insert("chat_id", std::get<QString>(*chat_id));
     }
 
     if (message_id.has_value())                 requestBody.insert("message_id", *message_id);
     if (inline_message_id.has_value())          requestBody.insert("inline_message_id", *inline_message_id);
-    if (parse_mode.has_value())                 requestBody.insert("parse_mode", *parse_mode);
+    if (parse_mode.has_value())                 requestBody.insert("parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower());
     if (entities.has_value())                   requestBody.insert("entities", QVectorToQJsonArray<MessageEntity>(*entities));
     if (disable_web_page_preview.has_value())   requestBody.insert("disable_web_page_preview", *disable_web_page_preview);
     if (reply_markup.has_value())               requestBody.insert("reply_markup", reply_markup->toObject());
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageText").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageText").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1785,26 +1777,26 @@ bool Telegram::Bot::editMessageText(const QString& text, const std::optional<std
     }
 }
 
-bool Telegram::Bot::editMessageCaption(const std::optional<std::variant<qint32, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& inline_message_id, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<InlineKeyboardMarkup>& reply_markup)
+bool Telegram::Bot::editMessageCaption(const std::optional<std::variant<qint64, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& inline_message_id, const std::optional<QString>& caption, const std::optional<Message::FormattingType>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<InlineKeyboardMarkup>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
     if (chat_id.has_value())
     {
-        if (std::holds_alternative<qint32>(*chat_id))       requestBody.insert("chat_id", std::get<qint32>(*chat_id));
+        if (std::holds_alternative<qint64>(*chat_id))       requestBody.insert("chat_id", std::get<qint64>(*chat_id));
         else if (std::holds_alternative<QString>(*chat_id)) requestBody.insert("chat_id", std::get<QString>(*chat_id));
     }
 
     if (message_id.has_value())                 requestBody.insert("message_id", *message_id);
     if (inline_message_id.has_value())          requestBody.insert("inline_message_id", *inline_message_id);
     if (caption.has_value())                    requestBody.insert("caption", *caption);
-    if (parse_mode.has_value())                 requestBody.insert("parse_mode", *parse_mode);
+    if (parse_mode.has_value())                 requestBody.insert("parse_mode", QString(QMetaEnum::fromType<std::remove_reference_t<decltype(*parse_mode)>>().valueToKey(static_cast<int>(*parse_mode))).toLower());
     if (caption_entities.has_value())           requestBody.insert("caption_entities", QVectorToQJsonArray<MessageEntity>(*caption_entities));
     if (reply_markup.has_value())               requestBody.insert("reply_markup", reply_markup->toObject());
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageCaption").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageCaption").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1816,14 +1808,14 @@ bool Telegram::Bot::editMessageCaption(const std::optional<std::variant<qint32, 
     }
 }
 
-bool Telegram::Bot::editMessageMedia(const InputMedia& media, const std::optional<std::variant<qint32, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<InlineKeyboardMarkup>& reply_markup)
+bool Telegram::Bot::editMessageMedia(const InputMedia& media, const std::optional<std::variant<qint64, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& caption, const std::optional<QString>& parse_mode, const std::optional<QVector<MessageEntity>>& caption_entities, const std::optional<InlineKeyboardMarkup>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"media", media.toObject()} };
 
     if (chat_id.has_value())
     {
-        if (std::holds_alternative<qint32>(*chat_id))       requestBody.insert("chat_id", std::get<qint32>(*chat_id));
+        if (std::holds_alternative<qint64>(*chat_id))       requestBody.insert("chat_id", std::get<qint64>(*chat_id));
         else if (std::holds_alternative<QString>(*chat_id)) requestBody.insert("chat_id", std::get<QString>(*chat_id));
     }
 
@@ -1834,7 +1826,7 @@ bool Telegram::Bot::editMessageMedia(const InputMedia& media, const std::optiona
     if (reply_markup.has_value())               requestBody.insert("reply_markup", reply_markup->toObject());
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageMedia").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageMedia").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1846,14 +1838,14 @@ bool Telegram::Bot::editMessageMedia(const InputMedia& media, const std::optiona
     }
 }
 
-bool Telegram::Bot::editMessageReplyMarkup(const std::optional<std::variant<qint32, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& caption, const std::optional<QString>& inline_message_id, const std::optional<InlineKeyboardMarkup>& reply_markup)
+bool Telegram::Bot::editMessageReplyMarkup(const std::optional<std::variant<qint64, QString>>& chat_id, const std::optional<qint32>& message_id, const std::optional<QString>& caption, const std::optional<QString>& inline_message_id, const std::optional<InlineKeyboardMarkup>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody;
 
     if (chat_id.has_value())
     {
-        if (std::holds_alternative<qint32>(*chat_id))       requestBody.insert("chat_id", std::get<qint32>(*chat_id));
+        if (std::holds_alternative<qint64>(*chat_id))       requestBody.insert("chat_id", std::get<qint64>(*chat_id));
         else if (std::holds_alternative<QString>(*chat_id)) requestBody.insert("chat_id", std::get<QString>(*chat_id));
     }
 
@@ -1862,7 +1854,7 @@ bool Telegram::Bot::editMessageReplyMarkup(const std::optional<std::variant<qint
     if (reply_markup.has_value())               requestBody.insert("reply_markup", reply_markup->toObject());
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageReplyMarkup").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/editMessageReplyMarkup").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1874,18 +1866,18 @@ bool Telegram::Bot::editMessageReplyMarkup(const std::optional<std::variant<qint
     }
 }
 
-Telegram::Poll Telegram::Bot::stopPoll(const std::variant<qint32, QString>& chat_id, const qint32& message_id, const std::optional<InlineKeyboardMarkup>& reply_markup)
+Telegram::Poll Telegram::Bot::stopPoll(const std::variant<qint64, QString>& chat_id, const qint32& message_id, const std::optional<InlineKeyboardMarkup>& reply_markup)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"message_id", message_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     if (reply_markup.has_value())               requestBody.insert("reply_markup", reply_markup->toObject());
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/stopPoll").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/stopPoll").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool() == true)
@@ -1897,16 +1889,16 @@ Telegram::Poll Telegram::Bot::stopPoll(const std::variant<qint32, QString>& chat
     }
 }
 
-bool Telegram::Bot::deleteMessage(const std::variant<qint32, QString>& chat_id, const qint32& message_id)
+bool Telegram::Bot::deleteMessage(const std::variant<qint64, QString>& chat_id, const qint32& message_id)
 {
     /* Creating request body in JSON and filling it with request parameters */
     QJsonObject requestBody{ {"message_id", message_id} };
 
-    if (std::holds_alternative<qint32>(chat_id))       requestBody.insert("chat_id", std::get<qint32>(chat_id));
+    if (std::holds_alternative<qint64>(chat_id))       requestBody.insert("chat_id", std::get<qint64>(chat_id));
     else if (std::holds_alternative<QString>(chat_id)) requestBody.insert("chat_id", std::get<QString>(chat_id));
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/deleteMessage").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/deleteMessage").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -1918,13 +1910,13 @@ bool Telegram::Bot::deleteMessage(const std::variant<qint32, QString>& chat_id, 
     }
 }
 
-Telegram::Message Telegram::Bot::sendSticker(const std::variant<qint32, QString>& chat_id, const std::variant<QFile*, QString>& sticker, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
+Telegram::Message Telegram::Bot::sendSticker(const std::variant<qint64, QString>& chat_id, const std::variant<QFile*, QString>& sticker, const std::optional<bool>& disable_notification, const std::optional<qint32>& reply_to_message_id, const std::optional<bool>& allow_sending_without_reply, const std::optional<std::variant<InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ForceReply>>& reply_markup)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters;
     QVector<QPair<QString, QFile*>> filesToUpload;
 
-    if (std::holds_alternative<qint32>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint32>(chat_id) });
+    if (std::holds_alternative<qint64>(chat_id))       requestParameters.push_back({ "chat_id", std::get<qint64>(chat_id) });
     else if (std::holds_alternative<QString>(chat_id)) requestParameters.push_back({ "chat_id", std::get<QString>(chat_id) });
 
     if (std::holds_alternative<QFile*>(sticker))       filesToUpload.push_back({ "sticker", std::get<QFile*>(sticker) });
@@ -1943,7 +1935,7 @@ Telegram::Message Telegram::Bot::sendSticker(const std::variant<qint32, QString>
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendSticker").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/sendSticker").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1961,7 +1953,7 @@ Telegram::StickerSet Telegram::Bot::getStickerSet(const QString& name)
     QJsonObject requestBody{ {"name", name} };
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getStickerSet").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/getStickerSet").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1973,10 +1965,10 @@ Telegram::StickerSet Telegram::Bot::getStickerSet(const QString& name)
     }
 }
 
-Telegram::File Telegram::Bot::uploadStickerFile(const qint32& user_id, const QFile* png_sticker)
+Telegram::File Telegram::Bot::uploadStickerFile(const qint64& user_id, const QFile* png_sticker)
 {
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest({ {"png_sticker", const_cast<QFile*>(png_sticker)} }, { {"user_id", user_id} }, QString("https://api.telegram.org/bot%1/uploadStickerFile").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest({ {"png_sticker", const_cast<QFile*>(png_sticker)} }, { {"user_id", user_id} }, QString("https://api.telegram.org/bot%1/uploadStickerFile").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return empty object */
     if (response.object().value("ok").toBool() == true)
@@ -1988,7 +1980,7 @@ Telegram::File Telegram::Bot::uploadStickerFile(const qint32& user_id, const QFi
     }
 }
 
-bool Telegram::Bot::createNewStickerSet(const qint32& user_id, const QString& name, const QString& title, const QString& emojis, const std::optional<std::variant<QFile*, QString>>& png_sticker, const QFile* tgs_sticker, const std::optional<bool>& contains_masks, const std::optional<MaskPosition>& mask_position)
+bool Telegram::Bot::createNewStickerSet(const qint64& user_id, const QString& name, const QString& title, const QString& emojis, const std::optional<std::variant<QFile*, QString>>& png_sticker, const QFile* tgs_sticker, const std::optional<bool>& contains_masks, const std::optional<MaskPosition>& mask_position)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters{ {"user_id", user_id}, {"name", name},{"title", title},{"emojis", emojis} };
@@ -2005,7 +1997,7 @@ bool Telegram::Bot::createNewStickerSet(const qint32& user_id, const QString& na
     if (mask_position.has_value())  requestParameters.push_back({ "mask_position", mask_position->toObject() });
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/createNewStickerSet").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/createNewStickerSet").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -2017,7 +2009,7 @@ bool Telegram::Bot::createNewStickerSet(const qint32& user_id, const QString& na
     }
 }
 
-bool Telegram::Bot::addStickerToSet(const qint32& user_id, const QString& name, const QString& emojis, const std::optional<std::variant<QFile*, QString>>& png_sticker, const QFile* tgs_sticker, const std::optional<MaskPosition>& mask_position)
+bool Telegram::Bot::addStickerToSet(const qint64& user_id, const QString& name, const QString& emojis, const std::optional<std::variant<QFile*, QString>>& png_sticker, const QFile* tgs_sticker, const std::optional<MaskPosition>& mask_position)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters{ {"user_id", user_id}, {"name", name}, {"emojis", emojis} };
@@ -2033,7 +2025,7 @@ bool Telegram::Bot::addStickerToSet(const qint32& user_id, const QString& name, 
     if (mask_position.has_value())  requestParameters.push_back({ "mask_position", mask_position->toObject() });
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/addStickerToSet").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/addStickerToSet").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -2047,7 +2039,7 @@ bool Telegram::Bot::addStickerToSet(const qint32& user_id, const QString& name, 
 
 bool Telegram::Bot::setStickerPositionInSet(const QString& sticker, const qint32& position)
 {
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendGetRequest({ {"sticker", sticker}, {"position", QString(position)} }, QString("https://api.telegram.org/bot%1/setStickerPositionInSet").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendGetRequest(QString("https://api.telegram.org/bot%1/setStickerPositionInSet").arg(bot_settings->bot_token), { {"sticker", sticker}, {"position", QString::number(position)} }));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool())
@@ -2061,7 +2053,7 @@ bool Telegram::Bot::setStickerPositionInSet(const QString& sticker, const qint32
 
 bool Telegram::Bot::deleteStickerFromSet(const QString& sticker)
 {
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendGetRequest({ {"sticker", sticker} }, QString("https://api.telegram.org/bot%1/deleteStickerFromSet").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendGetRequest(QString("https://api.telegram.org/bot%1/deleteStickerFromSet").arg(bot_settings->bot_token), { {"sticker", sticker} }));
 
     /* Check if request was successful. In case of error return empty object and emit errorOccured() signal */
     if (response.object().value("ok").toBool())
@@ -2073,7 +2065,7 @@ bool Telegram::Bot::deleteStickerFromSet(const QString& sticker)
     }
 }
 
-bool Telegram::Bot::setStickerSetThumb(const QString& name, const qint32& user_id, const std::optional<std::variant<QFile*, QString>>& thumb)
+bool Telegram::Bot::setStickerSetThumb(const QString& name, const qint64& user_id, const std::optional<std::variant<QFile*, QString>>& thumb)
 {
     /* Preparing request body */
     QVector<QPair<QString, QVariant>> requestParameters{ {"name", name}, {"user_id", user_id} };
@@ -2086,7 +2078,7 @@ bool Telegram::Bot::setStickerSetThumb(const QString& name, const qint32& user_i
     }
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/setStickerSetThumb").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(filesToUpload, requestParameters, QString("https://api.telegram.org/bot%1/setStickerSetThumb").arg(bot_settings->bot_token)));
 
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())
@@ -2110,7 +2102,7 @@ bool Telegram::Bot::answerInlineQuery(const QString& inline_query_id, const QVec
     if (switch_pm_parameter.has_value())    requestBody.insert("switch_pm_parameter", *switch_pm_parameter);
 
     /* Sending request */
-    QJsonDocument response = QJsonDocument::fromJson(request_manager.SendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/answerInlineQuery").arg(bot_settings.bot_token)));
+    QJsonDocument response = QJsonDocument::fromJson(Internal::RequestManager::sendPostRequest(QJsonDocument(requestBody), QString("https://api.telegram.org/bot%1/answerInlineQuery").arg(bot_settings->bot_token)));
     
     /* Check if request was successful. In case of error return false */
     if (response.object().value("ok").toBool())

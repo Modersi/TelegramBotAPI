@@ -1,10 +1,11 @@
 #ifndef TELEGRAM_TYPES_USER_H
 #define TELEGRAM_TYPES_USER_H
 
+#include <compare>
 #include <optional>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -36,13 +37,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to User class fields. For example it should contain pairs such as "id" = "...",
          * "is_bot" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        User(const QJsonObject& jsonObject);
+        User(const QJsonObject& json_object);
+
 
         /* @brief Returns User in form of JSON object. Returns empty QJsonObject if User is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if User is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const User&) const = default;
+
 
     //** Fields **//
 

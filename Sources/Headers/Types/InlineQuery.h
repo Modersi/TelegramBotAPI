@@ -1,10 +1,11 @@
-#ifndef TELEGRAM_TYPES_INLINEQUERY_H
+Ôªø#ifndef TELEGRAM_TYPES_INLINEQUERY_H
 #define TELEGRAM_TYPES_INLINEQUERY_H
 
 #include <optional>
 
+#include "qmetaobject.h"
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 #include "Types/Location.h"
 #include "Types/User.h"
@@ -17,20 +18,25 @@ namespace Telegram
      *
      */
 
-    struct InlineQuery
+    class InlineQuery
     {
+        Q_GADGET
+
+    public:
         /** @brief Enum that represents all available types of the chat, from which the inline query was sent.
          * 
          * The chat type should be always known for requests sent from official clients and most third-party clients, unless the request was sent from a secret chat */
         enum class ChatType
         {
-            UNINITIALIZED_VALUE,
             SENDER, // for a private chat with the inline query sender
             PRIVATE,
             GROUP,
             SUPERGROUP,
-            CHANNEL
+            CHANNEL,
+            NULL_ENUMERATOR = -1
         };
+        Q_ENUM(ChatType)
+
 
         /** @brief Default constructor. Constructs an empty InlineQuery object
          *
@@ -49,13 +55,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to InlineQuery class fields. For example it should contain pairs such as "id" = "...",
          * "from" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        InlineQuery(const QJsonObject& jsonObject);
+        InlineQuery(const QJsonObject& json_object);
+
 
         /** @brief Returns InlineQuery in form of JSON object. Returns empty QJsonObject if Sticker is empty */
         QJsonObject toObject() const;
 
         /** @brief Returns true if InlineQuery is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const InlineQuery&) const = default;
+
 
 //** Fields **//
 
@@ -71,7 +82,7 @@ namespace Telegram
         /** @brief Offset of the results to be returned, can be controlled by the bot */
         QString offset;
 
-        /** @brief Optional. Type of the chat, from which the inline query was sent. Can be either ìSENDERî for a private chat with the inline query sender, ìPRIVATEî, ìGROUPî, ìSUPERGROUPî, or ìCHANNELî
+        /** @brief Optional. Type of the chat, from which the inline query was sent. Can be either ‚ÄúSENDER‚Äù for a private chat with the inline query sender, ‚ÄúPRIVATE‚Äù, ‚ÄúGROUP‚Äù, ‚ÄúSUPERGROUP‚Äù, or ‚ÄúCHANNEL‚Äù
          *
          * The chat type should be always known for requests sent from official clients and most third-party clients, unless the request was sent from a secret chat */
         std::optional<ChatType> chat_type;

@@ -1,10 +1,11 @@
 #ifndef TELEGRAM_TYPES_CHATPERMISSIONS_H
 #define TELEGRAM_TYPES_CHATPERMISSIONS_H
 
-class QJsonObject;
-#include "qstring.h"
-
+#include <compare>
 #include <optional>
+
+#include "qjsonobject.h"
+#include "qstring.h"
 
 namespace Telegram
 {
@@ -30,13 +31,18 @@ namespace Telegram
         *
         * QJsonObject which is passed to constuctor has to has all key-value pairs related to ChatPermissions class fields. For example it should contain pairs such as "can_send_messages" = "...",
         * "can_send_media_messages" = "..." and so on, otherwise fields related to missing pairs will be setted to std::nullopt */
-        ChatPermissions(const QJsonObject& jsonObject);
+        ChatPermissions(const QJsonObject& json_object);
+
 
         /* @brief Returns ChatPermissions in form of JSON object. Returns empty QJsonObject if ChatPermissions is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if ChatPermissions is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const ChatPermissions&) const = default;
+
 
 //** Fields **//
 

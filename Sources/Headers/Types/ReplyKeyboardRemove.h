@@ -1,10 +1,10 @@
 #ifndef TELEGRAM_TYPES_REPLYKEYBOARDREMOVE_H
 #define TELEGRAM_TYPES_REPLYKEYBOARDREMOVE_H
 
+#include <compare>
 #include <optional>
 
-#include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -26,13 +26,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to ReplyKeyboardRemove class fields. For example it should contain pairs such as "text" = "...",
          * "request_contact" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        ReplyKeyboardRemove(const QJsonObject& jsonObject);
+        ReplyKeyboardRemove(const QJsonObject& json_object);
+
 
         /* @brief Returns ReplyKeyboardRemove in form of JSON object. Returns empty QJsonObject if ReplyKeyboardRemove is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if ReplyKeyboardRemove is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const ReplyKeyboardRemove&) const = default;
+
 
 //** Fields **//
 

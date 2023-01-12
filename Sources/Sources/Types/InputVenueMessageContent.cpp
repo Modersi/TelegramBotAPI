@@ -29,23 +29,20 @@ Telegram::InputVenueMessageContent::InputVenueMessageContent(const float& latitu
 	google_place_type(google_place_type)
 {}
 
-QJsonObject Telegram::InputVenueMessageContent::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InputVenueMessageContent::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inputVenueMessageContentJsonObject{ {"latitude", latitude}, {"longitude", longitude}, {"title", title}, {"address", address} };
+	QJsonObject input_venue_message_content_json_object{ {"latitude", latitude}, {"longitude", longitude}, {"title", title}, {"address", address} };
 
-	if (foursquare_id.has_value())		inputVenueMessageContentJsonObject.insert("foursquare_id", *foursquare_id);
-	if (foursquare_type.has_value())	inputVenueMessageContentJsonObject.insert("foursquare_type", *foursquare_type);
-	if (google_place_id.has_value())	inputVenueMessageContentJsonObject.insert("google_place_id", *google_place_id);
-	if (google_place_type.has_value())	inputVenueMessageContentJsonObject.insert("google_place_type", *google_place_type);
+	if (foursquare_id.has_value())		input_venue_message_content_json_object.insert("foursquare_id", *foursquare_id);
+	if (foursquare_type.has_value())	input_venue_message_content_json_object.insert("foursquare_type", *foursquare_type);
+	if (google_place_id.has_value())	input_venue_message_content_json_object.insert("google_place_id", *google_place_id);
+	if (google_place_type.has_value())	input_venue_message_content_json_object.insert("google_place_type", *google_place_type);
 
-	return inputVenueMessageContentJsonObject;
+	return input_venue_message_content_json_object;
 }
 
-bool Telegram::InputVenueMessageContent::isEmpty() const
-{
+bool Telegram::InputVenueMessageContent::isEmpty() const {
 	return latitude == 0.0
 		and longitude == 0.0
 		and title == ""

@@ -1,6 +1,12 @@
 #ifndef TELEGRAM_TYPES_INPUTCONTACTMESSAGECONTENT_H
 #define TELEGRAM_TYPES_INPUTCONTACTMESSAGECONTENT_H
 
+#include <compare>
+#include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
+
 #include "Types/InputMessageContent.h"
 
 namespace Telegram
@@ -24,11 +30,16 @@ namespace Telegram
                                    const std::optional<QString>& last_name = std::nullopt,	 
                                    const std::optional<QString>& vcard = std::nullopt);
 
+
         /* @brief Returns InputContactMessageContent in form of JSON object. Returns empty QJsonObject if InputContactMessageContent is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InputContactMessageContent is empty */
         virtual bool isEmpty() const override;
+
+
+        std::partial_ordering operator <=> (const InputContactMessageContent&) const = default;
+
 
 //** Fields **//
 

@@ -1,5 +1,9 @@
-#ifndef TELEGRAM_TYPES_CHATMEMBERRESTRICTED_H
+Ôªø#ifndef TELEGRAM_TYPES_CHATMEMBERRESTRICTED_H
 #define TELEGRAM_TYPES_CHATMEMBERRESTRICTED_H
+
+#include <compare>
+
+#include "qjsonobject.h"
 
 #include "User.h"
 #include "ChatMember.h"
@@ -36,7 +40,8 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to ChatMemberRestricted class fields. For example it should contain pairs such as "user" = "...",
          * "status" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        ChatMemberRestricted(const QJsonObject& jsonObject);
+        ChatMemberRestricted(const QJsonObject& json_object);
+
 
         /* @brief Returns ChatMemberRestricted in form of JSON object. Returns empty QJsonObject if ChatMemberRestricted is empty */
         virtual QJsonObject toObject() const override;
@@ -44,10 +49,17 @@ namespace Telegram
         /* @brief Returns true if ChatMemberRestricted is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns status of the ChatMember */
+        virtual Status getStatus() const override;
+
+
+        std::partial_ordering operator <=> (const ChatMemberRestricted&) const = default;
+
+
 //** Fields **//
 
-        /** @brief The member's status in the chat, always ìrestrictedî */
-        const QString status = "restricted";
+        /** @brief The member's status in the chat, always ‚Äúrestricted‚Äù */
+        const Status status = Status::RESTRICTED;
 
         /** @brief Information about the user */
         User user;

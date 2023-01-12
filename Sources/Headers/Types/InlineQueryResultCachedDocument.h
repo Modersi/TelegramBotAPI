@@ -1,12 +1,15 @@
 #ifndef TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDDOCUMENT_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDDOCUMENT_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
+#include "qvector.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/MessageEntity.h"
@@ -30,8 +33,8 @@ namespace Telegram
 
         /** @brief Constructs InlineQueryResultCachedDocument object from parameters */
         InlineQueryResultCachedDocument(const QString& id,
-                                        const QString& document_file_id,
                                         const QString& title,
+                                        const QString& document_file_id,
                                         const std::optional<QString>& description = std::nullopt,
                                         const std::optional<QString>& caption = std::nullopt,
                                         const std::optional<QString>& parse_mode = std::nullopt,
@@ -39,16 +42,24 @@ namespace Telegram
                                         const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt,
                                         const std::optional<std::shared_ptr<InputMessageContent>>& input_message_content = std::nullopt);
 
+
         /* @brief Returns InlineQueryResultCachedDocument in form of JSON object. Returns empty QJsonObject if InlineQueryResultCachedDocument is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultCachedDocument is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;              
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultCachedDocument&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be document */
-        const QString type = "document";
+        const Type type = Type::DOCUMENT;
 
         /** @brief Unique identifier for this result, 1-64 bytes */
         QString	id;

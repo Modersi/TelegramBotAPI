@@ -1,10 +1,10 @@
 #ifndef TELEGRAM_TYPES_LOCATION_H
 #define TELEGRAM_TYPES_LOCATION_H
 
-#include "qstring.h"
-class QJsonObject;
-
+#include <compare>
 #include <optional>
+
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -33,13 +33,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to Location class fields. For example it should contain pairs such as "longitude" = "...",
          * "latitude" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        Location(const QJsonObject& jsonObject);
+        Location(const QJsonObject& json_object);
+
 
         /* @brief Returns Location in form of JSON object. Returns empty QJsonObject if Location is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if Location is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const Location&) const = default;
+
 
 //** Fields **//
 

@@ -1,7 +1,5 @@
 #include "Types/Audio.h"
 
-#include "qjsonobject.h"
-
 Telegram::Audio::Audio() :
 	file_id(),
 	file_unique_id(),
@@ -35,34 +33,30 @@ Telegram::Audio::Audio(const QString& file_id,
 {
 }
 
-Telegram::Audio::Audio(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("file_id")        ? file_id = jsonObject["file_id"].toString()                : file_id = "";
-	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString()  : file_unique_id = "";
-	jsonObject.contains("duration")       ? duration = jsonObject["duration"].toInt()                 : duration = 0;
-	jsonObject.contains("performer")      ? performer = jsonObject["performer"].toString()            : performer = std::nullopt;
-	jsonObject.contains("title")          ? title = jsonObject["title"].toString()                    : title = std::nullopt;
-	jsonObject.contains("file_name")      ? file_name = jsonObject["file_name"].toString()            : file_name = std::nullopt;
-	jsonObject.contains("mime_type")      ? mime_type = jsonObject["mime_type"].toString()            : mime_type = std::nullopt;
-	jsonObject.contains("file_size")      ? file_size =jsonObject["file_size"].toInt()                : file_size = std::nullopt;
-	jsonObject.contains("thumb")          ? thumb = PhotoSize(jsonObject["thumb"].toObject())         : thumb = std::nullopt;
+Telegram::Audio::Audio(const QJsonObject& json_object) {
+	json_object.contains("file_id")        ? file_id = json_object["file_id"].toString()                : file_id = "";
+	json_object.contains("file_unique_id") ? file_unique_id = json_object["file_unique_id"].toString()  : file_unique_id = "";
+	json_object.contains("duration")       ? duration = json_object["duration"].toInt()                 : duration = 0;
+	json_object.contains("performer")      ? performer = json_object["performer"].toString()            : performer = std::nullopt;
+	json_object.contains("title")          ? title = json_object["title"].toString()                    : title = std::nullopt;
+	json_object.contains("file_name")      ? file_name = json_object["file_name"].toString()            : file_name = std::nullopt;
+	json_object.contains("mime_type")      ? mime_type = json_object["mime_type"].toString()            : mime_type = std::nullopt;
+	json_object.contains("file_size")      ? file_size =json_object["file_size"].toInt()                : file_size = std::nullopt;
+	json_object.contains("thumb")          ? thumb = PhotoSize(json_object["thumb"].toObject())         : thumb = std::nullopt;
 }
 
-QJsonObject Telegram::Audio::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::Audio::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject audioJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"duration", duration} };
+	QJsonObject audio_json_object{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"duration", duration} };
+	if (performer.has_value())	audio_json_object.insert("performer", *performer);
+	if (title.has_value())		audio_json_object.insert("title", *title);
+	if (file_name.has_value())	audio_json_object.insert("file_name", *file_name);
+	if (mime_type.has_value())	audio_json_object.insert("mime_type", *mime_type);
+	if (file_size.has_value())	audio_json_object.insert("file_size", *file_size);
+	if (thumb.has_value())		audio_json_object.insert("thumb", thumb->toObject());
 
-	if (performer.has_value())	audioJsonObject.insert("performer", *performer);
-	if (title.has_value())		audioJsonObject.insert("title", *title);
-	if (file_name.has_value())	audioJsonObject.insert("file_name", *file_name);
-	if (mime_type.has_value())	audioJsonObject.insert("mime_type", *mime_type);
-	if (file_size.has_value())	audioJsonObject.insert("file_size", *file_size);
-	if (thumb.has_value())		audioJsonObject.insert("thumb", thumb->toObject());
-
-	return audioJsonObject;
+	return audio_json_object;
 }
 
 bool Telegram::Audio::isEmpty() const

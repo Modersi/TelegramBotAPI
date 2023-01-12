@@ -1,8 +1,9 @@
 #ifndef TELEGRAM_TYPES_VOICECHATSCHEDULED_H
 #define TELEGRAM_TYPES_VOICECHATSCHEDULED_H
 
-#include "qstring.h"
-class QJsonObject;
+#include <compare>
+
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -25,13 +26,18 @@ namespace Telegram
         /** @brief JSON constructor. Constructs VoiceChatScheduled object from QJsonObject
          *
          * QJsonObject which is passed to constuctor has to has key-value pair "start_date" = "..." to contruct correct object, otherwise empty object will be created */
-        VoiceChatScheduled(const QJsonObject& jsonObject);
+        VoiceChatScheduled(const QJsonObject& json_object);
+
 
         /** @brief Returns VoiceChatScheduled in form of JSON object. Returns empty QJsonObject if VoiceChatScheduled is empty */
         QJsonObject toObject() const;
 
         /** @brief Returns true if VoiceChatScheduled is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const VoiceChatScheduled&) const = default;
+
 
 //** Fields **//
 

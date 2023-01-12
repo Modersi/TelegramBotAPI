@@ -1,7 +1,5 @@
 #include "Types/InputMediaAnimation.h"
 
-#include "qjsonobject.h"
-
 #include "Internal/ConversionFunctions.h"
 
 Telegram::InputMediaAnimation::InputMediaAnimation() :
@@ -33,53 +31,48 @@ Telegram::InputMediaAnimation::InputMediaAnimation(const std::variant<QFile*, QS
 	duration(duration)
 {}
 
-Telegram::InputMediaAnimation::InputMediaAnimation(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("media")			? media = jsonObject["media"].toString()															: media = nullptr;
-	jsonObject.contains("thumb")			? thumb = jsonObject["thumb"].toString()															: thumb = std::nullopt;
-	jsonObject.contains("caption")			? caption = jsonObject["caption"].toString()														: caption = std::nullopt;
-	jsonObject.contains("parse_mode")		? parse_mode = jsonObject["parse_mode"].toString()													: parse_mode = std::nullopt;
-	jsonObject.contains("caption_entities") ? caption_entities = QJsonArrayToQVector<MessageEntity>(jsonObject["caption_entities"].toArray())	: caption_entities = std::nullopt;
-	jsonObject.contains("width")			? width = jsonObject["width"].toInt()																: width = std::nullopt;
-	jsonObject.contains("height")			? height = jsonObject["height"].toInt()																: height = std::nullopt;
-	jsonObject.contains("duration")			? duration = jsonObject["duration"].toInt()															: duration = std::nullopt;
+Telegram::InputMediaAnimation::InputMediaAnimation(const QJsonObject& json_object) {
+	json_object.contains("media")			? media = json_object["media"].toString()															: media = nullptr;
+	json_object.contains("thumb")			? thumb = json_object["thumb"].toString()															: thumb = std::nullopt;
+	json_object.contains("caption")			? caption = json_object["caption"].toString()														: caption = std::nullopt;
+	json_object.contains("parse_mode")		? parse_mode = json_object["parse_mode"].toString()													: parse_mode = std::nullopt;
+	json_object.contains("caption_entities") ? caption_entities = QJsonArrayToQVector<MessageEntity>(json_object["caption_entities"].toArray())	: caption_entities = std::nullopt;
+	json_object.contains("width")			? width = json_object["width"].toInt()																: width = std::nullopt;
+	json_object.contains("height")			? height = json_object["height"].toInt()															: height = std::nullopt;
+	json_object.contains("duration")		? duration = json_object["duration"].toInt()														: duration = std::nullopt;
 }
 
-QJsonObject Telegram::InputMediaAnimation::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InputMediaAnimation::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inputMediaAnimationJsonObject{ {"type", type} };
+	QJsonObject input_media_animation_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()} };
 
-	if (std::holds_alternative<QFile*>(media))  inputMediaAnimationJsonObject.insert("media", QString("attach://%1").arg(std::get<QFile*>(media)->fileName()));
-	if (std::holds_alternative<QString>(media)) inputMediaAnimationJsonObject.insert("media", std::get<QString>(media));
+	if (std::holds_alternative<QFile*>(media))  input_media_animation_json_object.insert("media", QString("attach://%1").arg(std::get<QFile*>(media)->fileName()));
+	if (std::holds_alternative<QString>(media)) input_media_animation_json_object.insert("media", std::get<QString>(media));
 
 	if (thumb.has_value())
 	{
-		if (std::holds_alternative<QFile*>(*thumb))  inputMediaAnimationJsonObject.insert("thumb", QString("attach://%1").arg(std::get<QFile*>(*thumb)->fileName()));
-		if (std::holds_alternative<QString>(*thumb)) inputMediaAnimationJsonObject.insert("thumb", std::get<QString>(*thumb));
+		if (std::holds_alternative<QFile*>(*thumb))  input_media_animation_json_object.insert("thumb", QString("attach://%1").arg(std::get<QFile*>(*thumb)->fileName()));
+		if (std::holds_alternative<QString>(*thumb)) input_media_animation_json_object.insert("thumb", std::get<QString>(*thumb));
 	}
 
-	if (caption.has_value())			inputMediaAnimationJsonObject.insert("caption", *caption);
-	if (parse_mode.has_value())			inputMediaAnimationJsonObject.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())	inputMediaAnimationJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
-	if (width.has_value())				inputMediaAnimationJsonObject.insert("width", *width);
-	if (height.has_value())				inputMediaAnimationJsonObject.insert("height", *height);
+	if (caption.has_value())			input_media_animation_json_object.insert("caption", *caption);
+	if (parse_mode.has_value())			input_media_animation_json_object.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())	input_media_animation_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (width.has_value())				input_media_animation_json_object.insert("width", *width);
+	if (height.has_value())				input_media_animation_json_object.insert("height", *height);
 
-	return inputMediaAnimationJsonObject;
+	return input_media_animation_json_object;
 }
 
-bool Telegram::InputMediaAnimation::isEmpty() const
-{
-	/* Check if std::variant<QFile*, QString> media contains any value */
-	bool holdsMedia(false);
+bool Telegram::InputMediaAnimation::isEmpty() const {
+	bool contains_media(false);
 	if (std::holds_alternative<QFile*>(media))
-		if (std::get<QFile*>(media) != nullptr) holdsMedia = true;
+		if (std::get<QFile*>(media) != nullptr) contains_media = true;
 	if (std::holds_alternative<QString>(media))
-		if (std::get<QString>(media) != "") holdsMedia = true;
+		if (std::get<QString>(media) != "") contains_media = true;
 
-	return holdsMedia == false
+	return contains_media == false
 		   and thumb == std::nullopt
 		   and caption == std::nullopt
 		   and parse_mode == std::nullopt
@@ -87,4 +80,8 @@ bool Telegram::InputMediaAnimation::isEmpty() const
 		   and width == std::nullopt
 		   and height == std::nullopt
 		   and duration == std::nullopt;
+}
+
+Telegram::InputMedia::Type Telegram::InputMediaAnimation::getType() const {
+	return type;
 }

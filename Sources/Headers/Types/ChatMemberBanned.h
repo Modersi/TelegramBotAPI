@@ -1,5 +1,9 @@
-#ifndef TELEGRAM_TYPES_CHATMEMBERBANNED_H
+Ôªø#ifndef TELEGRAM_TYPES_CHATMEMBERBANNED_H
 #define TELEGRAM_TYPES_CHATMEMBERBANNED_H
+
+#include <compare>
+
+#include "qjsonobject.h"
 
 #include "User.h"
 #include "ChatMember.h"
@@ -26,7 +30,8 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to ChatMemberBanned class fields. For example it should contain pairs such as "user" = "...",
          * "status" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        ChatMemberBanned(const QJsonObject& jsonObject);
+        ChatMemberBanned(const QJsonObject& json_object);
+
 
         /* @brief Returns ChatMemberBanned in form of JSON object. Returns empty QJsonObject if ChatMemberBanned is empty */
         virtual QJsonObject toObject() const override;
@@ -34,10 +39,17 @@ namespace Telegram
         /* @brief Returns true if ChatMemberBanned is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns status of the ChatMember */
+        virtual Status getStatus() const override;
+
+
+        std::partial_ordering operator <=> (const ChatMemberBanned&) const = default;
+
+
 //** Fields **//
 
-        /** @brief The member's status in the chat, always ìkickedî */
-        const QString status = "kicked";
+        /** @brief The member's status in the chat, always ‚Äúkicked‚Äù */
+        const Status status = Status::KICKED;
 
         /** @brief Information about the user */
         User user;

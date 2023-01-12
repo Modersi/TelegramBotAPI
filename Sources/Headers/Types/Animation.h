@@ -1,6 +1,11 @@
 #ifndef TELEGRAM_TYPES_ANIMATION_H
 #define TELEGRAM_TYPES_ANIMATION_H
 
+#include <compare>
+
+#include "qstring.h"
+#include "qjsonobject.h"
+
 #include "PhotoSize.h"
 
 namespace Telegram 
@@ -35,14 +40,19 @@ namespace Telegram
 		 *
 		 * QJsonObject which is passed to constuctor has to has all key-value pairs related to Animation class fields. For example it should contain pairs such as "file_id" = "...",
          * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-		Animation(const QJsonObject &jsonObject);
+		Animation(const QJsonObject &json_object);
+
 
 		/* @brief Returns Animation in form of JSON object. Returns empty QJsonObject if Animation is empty */
 		QJsonObject toObject() const;
 
 		/* @brief Returns true if Animation is empty */
 		bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const Animation&) const = default;
 		
+
 //** Fields **//
 
 		/** @brief Identifier for this file, which can be used to download or reuse the file */

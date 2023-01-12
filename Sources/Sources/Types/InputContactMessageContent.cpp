@@ -17,21 +17,18 @@ Telegram::InputContactMessageContent::InputContactMessageContent(const QString& 
 	vcard(vcard)
 {}
 
-QJsonObject Telegram::InputContactMessageContent::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InputContactMessageContent::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inputContactMessageContentJsonObject{ {"phone_number", phone_number}, {"first_name", first_name} };
+	QJsonObject input_contact_message_content_json_object{ {"phone_number", phone_number}, {"first_name", first_name} };
 
-	if (last_name.has_value())	inputContactMessageContentJsonObject.insert("last_name", *last_name);
-	if (vcard.has_value())		inputContactMessageContentJsonObject.insert("vcard", *vcard);
+	if (last_name.has_value())	input_contact_message_content_json_object.insert("last_name", *last_name);
+	if (vcard.has_value())		input_contact_message_content_json_object.insert("vcard", *vcard);
 
-	return inputContactMessageContentJsonObject;
+	return input_contact_message_content_json_object;
 }
 
-bool Telegram::InputContactMessageContent::isEmpty() const
-{
+bool Telegram::InputContactMessageContent::isEmpty() const {
 	return phone_number == ""
 		   and first_name == ""
 		   and last_name == std::nullopt

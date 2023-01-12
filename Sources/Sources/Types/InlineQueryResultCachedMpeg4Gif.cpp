@@ -1,7 +1,6 @@
 #include "Types/InlineQueryResultCachedMpeg4Gif.h"
 
 #include "Internal/ConversionFunctions.h"
-#include "Types/InputMessageContent.h"
 
 Telegram::InlineQueryResultCachedMpeg4Gif::InlineQueryResultCachedMpeg4Gif() :
 	id(),
@@ -32,21 +31,19 @@ Telegram::InlineQueryResultCachedMpeg4Gif::InlineQueryResultCachedMpeg4Gif(const
 	input_message_content(input_message_content)
 {}
 
-QJsonObject Telegram::InlineQueryResultCachedMpeg4Gif::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineQueryResultCachedMpeg4Gif::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineQueryResultCachedMpeg4GifJsonObject{ {"type", type}, {"id", id}, {"mpeg4_file_id", mpeg4_file_id} };
+	QJsonObject inline_query_result_cached_mpeg4_gif_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()}, {"id", id}, {"mpeg4_file_id", mpeg4_file_id} };
 
-	if (title.has_value())					inlineQueryResultCachedMpeg4GifJsonObject.insert("title", *title);
-	if (caption.has_value())				inlineQueryResultCachedMpeg4GifJsonObject.insert("caption", *caption);
-	if (parse_mode.has_value())				inlineQueryResultCachedMpeg4GifJsonObject.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inlineQueryResultCachedMpeg4GifJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
-	if (reply_markup.has_value())			inlineQueryResultCachedMpeg4GifJsonObject.insert("reply_markup", reply_markup->toObject());
-	if (input_message_content.has_value())	inlineQueryResultCachedMpeg4GifJsonObject.insert("input_message_content", (**input_message_content).toObject());
+	if (title.has_value())					inline_query_result_cached_mpeg4_gif_json_object.insert("title", *title);
+	if (caption.has_value())				inline_query_result_cached_mpeg4_gif_json_object.insert("caption", *caption);
+	if (parse_mode.has_value())				inline_query_result_cached_mpeg4_gif_json_object.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())		inline_query_result_cached_mpeg4_gif_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (reply_markup.has_value())			inline_query_result_cached_mpeg4_gif_json_object.insert("reply_markup", reply_markup->toObject());
+	if (input_message_content.has_value())	inline_query_result_cached_mpeg4_gif_json_object.insert("input_message_content", (**input_message_content).toObject());
 
-	return inlineQueryResultCachedMpeg4GifJsonObject;
+	return inline_query_result_cached_mpeg4_gif_json_object;
 }
 
 bool Telegram::InlineQueryResultCachedMpeg4Gif::isEmpty() const
@@ -59,4 +56,8 @@ bool Telegram::InlineQueryResultCachedMpeg4Gif::isEmpty() const
 		   and caption_entities == std::nullopt
 		   and reply_markup == std::nullopt
 		   and input_message_content == std::nullopt;
+}
+
+Telegram::InlineQueryResult::Type Telegram::InlineQueryResultCachedMpeg4Gif::getType() const {
+	return type;
 }

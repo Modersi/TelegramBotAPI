@@ -1,10 +1,10 @@
 #ifndef TELEGRAM_TYPES_RESPONSEPARAMETERS_H
 #define TELEGRAM_TYPES_RESPONSEPARAMETERS_H
 
+#include <compare>
 #include <optional>
 
-#include "qglobal.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -24,13 +24,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has key-value pairs related to ResponseParameters class, such as "migrate_to_chat_id" = "...", "retry_after" = "..." to construct correct
          * object, otherwise fields related to missing pairs will be setted to std::nullopt */
-        ResponseParameters(const QJsonObject& jsonObject);
+        ResponseParameters(const QJsonObject& json_object);
+
 
         /* @brief Returns ResponseParameters in form of JSON object. Returns empty QJsonObject if ResponseParameters is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if ResponseParameters is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const ResponseParameters&) const = default;
+
 
 //** Fields **//
 

@@ -47,38 +47,35 @@ Telegram::ChatMemberAdministrator::ChatMemberAdministrator(const User& user,
 	custom_title(custom_title)
 {}
 
-Telegram::ChatMemberAdministrator::ChatMemberAdministrator(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("user")					  ? user = User(jsonObject["user"].toObject())								: user = User();
-	jsonObject.contains("can_be_edited")		  ? can_be_edited = jsonObject["can_be_edited"].toBool()					: can_be_edited = false;
-	jsonObject.contains("is_anonymous")			  ? is_anonymous = jsonObject["is_anonymous"].toBool()						: is_anonymous = false;
-	jsonObject.contains("can_manage_chat")		  ? can_manage_chat = jsonObject["can_manage_chat"].toBool()				: can_manage_chat = false;
-	jsonObject.contains("can_delete_messages")	  ? can_delete_messages = jsonObject["can_delete_messages"].toBool()		: can_delete_messages = false;
-	jsonObject.contains("can_manage_voice_chats") ? can_manage_voice_chats = jsonObject["can_manage_voice_chats"].toBool()	: can_manage_voice_chats = false;
-	jsonObject.contains("can_restrict_members")   ? can_restrict_members = jsonObject["can_restrict_members"].toBool()		: can_restrict_members = false;
-	jsonObject.contains("can_promote_members")	  ? can_promote_members = jsonObject["can_promote_members"].toBool()		: can_promote_members = false;
-	jsonObject.contains("can_change_info")		  ? can_change_info = jsonObject["can_change_info"].toBool()				: can_change_info = false;
-	jsonObject.contains("can_invite_users")		  ? can_invite_users = jsonObject["can_invite_users"].toBool()				: can_invite_users = false;
-	jsonObject.contains("can_post_messages")	  ? can_post_messages = jsonObject["can_post_messages"].toBool()			: can_post_messages = std::nullopt;
-	jsonObject.contains("can_edit_messages")	  ? can_edit_messages = jsonObject["can_edit_messages"].toBool()			: can_edit_messages = std::nullopt;
-	jsonObject.contains("can_pin_messages")		  ? can_pin_messages = jsonObject["can_pin_messages"].toBool()				: can_pin_messages = std::nullopt;
-	jsonObject.contains("custom_title")			  ? custom_title = jsonObject["custom_title"].toString()					: custom_title = std::nullopt;
+Telegram::ChatMemberAdministrator::ChatMemberAdministrator(const QJsonObject& json_object) {
+	json_object.contains("user")					? user = User(json_object["user"].toObject())								: user = User();
+	json_object.contains("can_be_edited")			? can_be_edited = json_object["can_be_edited"].toBool()						: can_be_edited = false;
+	json_object.contains("is_anonymous")			? is_anonymous = json_object["is_anonymous"].toBool()						: is_anonymous = false;
+	json_object.contains("can_manage_chat")			? can_manage_chat = json_object["can_manage_chat"].toBool()					: can_manage_chat = false;
+	json_object.contains("can_delete_messages")		? can_delete_messages = json_object["can_delete_messages"].toBool()			: can_delete_messages = false;
+	json_object.contains("can_manage_voice_chats")	? can_manage_voice_chats = json_object["can_manage_voice_chats"].toBool()	: can_manage_voice_chats = false;
+	json_object.contains("can_restrict_members")	? can_restrict_members = json_object["can_restrict_members"].toBool()		: can_restrict_members = false;
+	json_object.contains("can_promote_members")		? can_promote_members = json_object["can_promote_members"].toBool()			: can_promote_members = false;
+	json_object.contains("can_change_info")			? can_change_info = json_object["can_change_info"].toBool()					: can_change_info = false;
+	json_object.contains("can_invite_users")		? can_invite_users = json_object["can_invite_users"].toBool()				: can_invite_users = false;
+	json_object.contains("can_post_messages")		? can_post_messages = json_object["can_post_messages"].toBool()				: can_post_messages = std::nullopt;
+	json_object.contains("can_edit_messages")		? can_edit_messages = json_object["can_edit_messages"].toBool()				: can_edit_messages = std::nullopt;
+	json_object.contains("can_pin_messages")		? can_pin_messages = json_object["can_pin_messages"].toBool()				: can_pin_messages = std::nullopt;
+	json_object.contains("custom_title")			? custom_title = json_object["custom_title"].toString()						: custom_title = std::nullopt;
 }
 
-QJsonObject Telegram::ChatMemberAdministrator::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::ChatMemberAdministrator::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject chatMemberAdministratorJsonObject{ {"status", status}, {"user", user.toObject()}, {"can_be_edited", can_be_edited}, {"is_anonymous", is_anonymous}, {"can_manage_chat", can_manage_chat}, {"can_delete_messages", can_delete_messages},
-												   {"can_manage_voice_chats", can_manage_voice_chats}, {"can_restrict_members", can_restrict_members}, {"can_promote_members", can_promote_members}, {"can_change_info", can_change_info}, {"can_invite_users", can_invite_users} };
+	QJsonObject chat_member_administrator_json_object{ {"status", QString(QMetaEnum::fromType<decltype(status)>().valueToKey(static_cast<int>(status))).toLower()}, {"user", user.toObject()}, {"can_be_edited", can_be_edited}, {"is_anonymous", is_anonymous}, {"can_manage_chat", can_manage_chat}, {"can_delete_messages", can_delete_messages},
+												       {"can_manage_voice_chats", can_manage_voice_chats}, {"can_restrict_members", can_restrict_members}, {"can_promote_members", can_promote_members}, {"can_change_info", can_change_info}, {"can_invite_users", can_invite_users} };
 
-	if (can_post_messages.has_value())			chatMemberAdministratorJsonObject.insert("can_post_messages", *can_post_messages);
-	if (can_edit_messages.has_value())			chatMemberAdministratorJsonObject.insert("can_edit_messages", *can_edit_messages);
-	if (can_pin_messages.has_value())			chatMemberAdministratorJsonObject.insert("can_pin_messages", *can_pin_messages);
-	if (custom_title.has_value())				chatMemberAdministratorJsonObject.insert("custom_title", *custom_title);
+	if (can_post_messages.has_value())			chat_member_administrator_json_object.insert("can_post_messages", *can_post_messages);
+	if (can_edit_messages.has_value())			chat_member_administrator_json_object.insert("can_edit_messages", *can_edit_messages);
+	if (can_pin_messages.has_value())			chat_member_administrator_json_object.insert("can_pin_messages", *can_pin_messages);
+	if (custom_title.has_value())				chat_member_administrator_json_object.insert("custom_title", *custom_title);
 
-	return chatMemberAdministratorJsonObject;
+	return chat_member_administrator_json_object;
 }
 
 bool Telegram::ChatMemberAdministrator::isEmpty() const
@@ -97,4 +94,8 @@ bool Telegram::ChatMemberAdministrator::isEmpty() const
 		   and can_edit_messages == std::nullopt
 		   and can_pin_messages == std::nullopt
 		   and custom_title == std::nullopt;
+}
+
+Telegram::ChatMember::Status Telegram::ChatMemberAdministrator::getStatus() const {
+	return status;
 }

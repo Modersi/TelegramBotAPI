@@ -2,9 +2,10 @@
 #define TELEGRAM_TYPES_CHOSENINLINERESULT_H
 
 #include <optional>
+#include <compare>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 #include "Types/User.h"
 #include "Types/Location.h"
@@ -37,13 +38,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to ChosenInlineResult class fields. For example it should contain pairs such as "result_id" = "...",
          * "from" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        ChosenInlineResult(const QJsonObject& jsonObject);
+        ChosenInlineResult(const QJsonObject& json_object);
+
 
         /* @brief Returns ChosenInlineResult in form of JSON object. Returns empty QJsonObject if ChosenInlineResult is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if ChosenInlineResult is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const ChosenInlineResult&) const = default;
+
 
 //** Fields **//
 

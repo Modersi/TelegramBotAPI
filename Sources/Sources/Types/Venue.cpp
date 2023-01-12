@@ -1,7 +1,5 @@
 #include "Types/Venue.h"
 
-#include "qjsonobject.h"
-
 Telegram::Venue::Venue() :
 	location(),
 	title(),
@@ -29,34 +27,30 @@ Telegram::Venue::Venue(const Location& location,
 {
 }
 
-Telegram::Venue::Venue(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("location")			 ? location = Location(jsonObject["location"].toObject())	      : location = Location();
-	jsonObject.contains("title")			 ? title = jsonObject["title"].toString()						  : title = "";
-	jsonObject.contains("address")			 ? address = jsonObject["address"].toString()					  : address = "";
-	jsonObject.contains("foursquare_id")	 ? foursquare_id = jsonObject["foursquare_id"].toString()		  : foursquare_id = std::nullopt;
-	jsonObject.contains("foursquare_type")	 ? foursquare_type = jsonObject["foursquare_type"].toString()	  : foursquare_type = std::nullopt;
-	jsonObject.contains("google_place_id")	 ? google_place_id = jsonObject["google_place_id"].toString()	  : google_place_id = std::nullopt;
-	jsonObject.contains("google_place_type") ? google_place_type = jsonObject["google_place_type"].toString() : google_place_type = std::nullopt;
+Telegram::Venue::Venue(const QJsonObject& json_object) {
+	json_object.contains("location")			? location = Location(json_object["location"].toObject())	      : location = Location();
+	json_object.contains("title")				? title = json_object["title"].toString()						  : title = "";
+	json_object.contains("address")				? address = json_object["address"].toString()					  : address = "";
+	json_object.contains("foursquare_id")		? foursquare_id = json_object["foursquare_id"].toString()		  : foursquare_id = std::nullopt;
+	json_object.contains("foursquare_type")		? foursquare_type = json_object["foursquare_type"].toString()	  : foursquare_type = std::nullopt;
+	json_object.contains("google_place_id")		? google_place_id = json_object["google_place_id"].toString()	  : google_place_id = std::nullopt;
+	json_object.contains("google_place_type")	? google_place_type = json_object["google_place_type"].toString() : google_place_type = std::nullopt;
 }
 
-QJsonObject Telegram::Venue::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::Venue::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject venueJsonObject{ {"location", location.toObject()}, {"title", title}, {"address", address} };
+	QJsonObject venue_json_object{ {"location", location.toObject()}, {"title", title}, {"address", address} };
 
-	if (foursquare_id.has_value())		venueJsonObject.insert("foursquare_id", *foursquare_id);
-	if (foursquare_type.has_value())	venueJsonObject.insert("foursquare_type", *foursquare_type);
-	if (google_place_id.has_value())	venueJsonObject.insert("google_place_id", *google_place_id);
-	if (google_place_type.has_value())	venueJsonObject.insert("google_place_type", *google_place_type);
+	if (foursquare_id.has_value())		venue_json_object.insert("foursquare_id", *foursquare_id);
+	if (foursquare_type.has_value())	venue_json_object.insert("foursquare_type", *foursquare_type);
+	if (google_place_id.has_value())	venue_json_object.insert("google_place_id", *google_place_id);
+	if (google_place_type.has_value())	venue_json_object.insert("google_place_type", *google_place_type);
 
-	return venueJsonObject;
+	return venue_json_object;
 }
 
-bool Telegram::Venue::isEmpty() const
-{
+bool Telegram::Venue::isEmpty() const {
 	return location.isEmpty()
 		   and title == ""
 		   and address == ""

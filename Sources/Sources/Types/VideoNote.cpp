@@ -1,7 +1,5 @@
 #include "Types/VideoNote.h"
 
-#include "qjsonobject.h"
-
 Telegram::VideoNote::VideoNote() :
 	file_id(),
 	file_unique_id(),
@@ -25,31 +23,27 @@ Telegram::VideoNote::VideoNote(const QString& file_id,
 	file_size(file_size)
 {}
 
-Telegram::VideoNote::VideoNote(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
-	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
-	jsonObject.contains("length")		  ? length = jsonObject["length"].toInt()					 : length = 0;
-	jsonObject.contains("duration")		  ? duration = jsonObject["duration"].toInt()				 : duration = 0;
-	jsonObject.contains("thumb")		  ? thumb = jsonObject["thumb"].toObject()					 : thumb = std::nullopt;
-	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
+Telegram::VideoNote::VideoNote(const QJsonObject& json_object) {
+	json_object.contains("file_id")		   ? file_id = json_object["file_id"].toString()				 : file_id = "";
+	json_object.contains("file_unique_id") ? file_unique_id = json_object["file_unique_id"].toString()   : file_unique_id = "";
+	json_object.contains("length")		   ? length = json_object["length"].toInt()						 : length = 0;
+	json_object.contains("duration")	   ? duration = json_object["duration"].toInt()					 : duration = 0;
+	json_object.contains("thumb")		   ? thumb = json_object["thumb"].toObject()					 : thumb = std::nullopt;
+	json_object.contains("file_size")	   ? file_size = json_object["file_size"].toInt()				 : file_size = std::nullopt;
 }
 
-QJsonObject Telegram::VideoNote::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::VideoNote::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject videoNoteJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"length", length}, {"duration", duration} };
+	QJsonObject video_note_json_object{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"length", length}, {"duration", duration} };
 
-	if (thumb.has_value())		videoNoteJsonObject.insert("thumb", thumb->toObject());
-	if (file_size.has_value())	videoNoteJsonObject.insert("file_size", *file_size);
+	if (thumb.has_value())		video_note_json_object.insert("thumb", thumb->toObject());
+	if (file_size.has_value())	video_note_json_object.insert("file_size", *file_size);
 
-	return videoNoteJsonObject;
+	return video_note_json_object;
 }
 
-bool Telegram::VideoNote::isEmpty() const
-{
+bool Telegram::VideoNote::isEmpty() const {
 	return file_id == ""
 		   and file_unique_id == ""
 		   and length == 0

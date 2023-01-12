@@ -1,7 +1,5 @@
 #include "Types/KeyboardButton.h"
 
-#include "qjsonobject.h"
-
 Telegram::KeyboardButton::KeyboardButton() :
     text(),
     request_contact(),
@@ -19,30 +17,27 @@ Telegram::KeyboardButton::KeyboardButton(const QString& text,
     request_poll(request_poll)
 {}
 
-Telegram::KeyboardButton::KeyboardButton(const QJsonObject& jsonObject)
+Telegram::KeyboardButton::KeyboardButton(const QJsonObject& json_object)
 {
-    jsonObject.contains("text")             ? text = jsonObject["text"].toString()                                         : text = "";
-    jsonObject.contains("request_contact")  ? request_contact = jsonObject["request_contact"].toBool()                     : request_contact = std::nullopt;
-    jsonObject.contains("request_location") ? request_location = jsonObject["request_location"].toBool()                   : request_location = std::nullopt;
-    jsonObject.contains("request_poll")     ? request_poll = KeyboardButtonPollType(jsonObject["request_poll"].toObject()) : request_poll = std::nullopt;
+    json_object.contains("text")             ? text = json_object["text"].toString()                                         : text = "";
+    json_object.contains("request_contact")  ? request_contact = json_object["request_contact"].toBool()                     : request_contact = std::nullopt;
+    json_object.contains("request_location") ? request_location = json_object["request_location"].toBool()                   : request_location = std::nullopt;
+    json_object.contains("request_poll")     ? request_poll = KeyboardButtonPollType(json_object["request_poll"].toObject()) : request_poll = std::nullopt;
 }
 
-QJsonObject Telegram::KeyboardButton::toObject() const
-{
-    if (isEmpty())
-        return QJsonObject();
+QJsonObject Telegram::KeyboardButton::toObject() const {
+    if (isEmpty()) return {};
 
-    QJsonObject keyboardButtonJsonObject{ {"text", text} };
+    QJsonObject keyboard_button_json_object{ {"text", text} };
 
-    if (request_contact.has_value())		keyboardButtonJsonObject.insert("request_contact", *request_contact);
-    if (request_location.has_value())		keyboardButtonJsonObject.insert("request_location", *request_location);
-    if (request_poll.has_value())			keyboardButtonJsonObject.insert("request_poll", request_poll->toObject());
+    if (request_contact.has_value())		keyboard_button_json_object.insert("request_contact", *request_contact);
+    if (request_location.has_value())		keyboard_button_json_object.insert("request_location", *request_location);
+    if (request_poll.has_value())			keyboard_button_json_object.insert("request_poll", request_poll->toObject());
 
-    return keyboardButtonJsonObject;
+    return keyboard_button_json_object;
 }
 
-bool Telegram::KeyboardButton::isEmpty() const
-{
+bool Telegram::KeyboardButton::isEmpty() const {
     return text == ""
            and request_contact == std::nullopt
            and request_location == std::nullopt

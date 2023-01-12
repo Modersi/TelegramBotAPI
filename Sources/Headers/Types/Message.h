@@ -1,9 +1,15 @@
 #ifndef TELEGRAM_TYPES_MESSAGE_H
 #define TELEGRAM_TYPES_MESSAGE_H
 
+#include <compare>
 #include <memory>
+#include <optional>
 
-namespace Telegram { struct Chat; }
+#include "qstring.h"
+#include "qjsonobject.h"
+#include "qvector.h"
+
+namespace Telegram { class Chat; }
 #include "User.h"
 #include "MessageEntity.h"
 #include "Animation.h"
@@ -39,8 +45,12 @@ namespace Telegram
      *
      */
 
-    struct Message
+    class Message
     {
+        Q_GADGET
+    
+    public:
+
         /** @brief Default constructor. Constructs an empty Message object
          *
          * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
@@ -108,13 +118,34 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to Message class fields. For example it should contain pairs such as "message_id" = "...",
          * "date" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        Message(const QJsonObject& jsonObject);
+        Message(const QJsonObject& json_object);
+
 
         /* @brief Returns Message in form of JSON object. Returns empty QJsonObject if Message is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if Message is empty */
         bool isEmpty() const;
+
+
+        /** @brief Enum that represents all available types of available formatting for message */
+        enum class FormattingType {
+            Markdown,
+            MarkdownV2,
+            HTML,
+            NULL_ENUMERATOR = -1
+        };
+        Q_ENUM(FormattingType)
+
+        /* @brief With this function you can get text which is prepared to sending with some formatting(ex.HTML or Markdown). Applies formatting rules on the text, and inserts message entities in the text */
+        QPair<QString, QVector<Telegram::MessageEntity>> getTextWithFormatting(const FormattingType& formatting_type) const;
+
+        /* @brief With this function you can get caption which is prepared to sending with some formatting(ex.HTML or Markdown). Applies formatting rules on the caption, and inserts caption entities in the text */
+        QPair<QString, QVector<Telegram::MessageEntity>> getCaptionWithFormatting(const FormattingType& formatting_type) const;
+
+
+        std::partial_ordering operator <=> (const Message& message) const = default;
+
 
 //** Fields **//
 

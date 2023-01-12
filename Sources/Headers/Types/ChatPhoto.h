@@ -1,8 +1,10 @@
 #ifndef TELEGRAM_TYPES_CHATPHOTO_H
 #define TELEGRAM_TYPES_CHATPHOTO_H
 
+#include <compare>
+
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -29,13 +31,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to ChatPhoto class fields. For example it should contain pairs such as "small_file_id" = "...",
          * "small_file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        ChatPhoto(const QJsonObject& jsonObject);
+        ChatPhoto(const QJsonObject& json_object);
+
 
         /* @brief Returns ChatPhoto in form of JSON object. Returns empty QJsonObject if ChatPhoto is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if ChatPhoto is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const ChatPhoto&) const = default;
+
 
 //** Fields **//
 

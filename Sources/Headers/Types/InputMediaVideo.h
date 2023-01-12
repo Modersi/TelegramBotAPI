@@ -1,10 +1,14 @@
 #ifndef TELEGRAM_TYPES_INPUTMEDIAVIDEO_H
 #define TELEGRAM_TYPES_INPUTMEDIAVIDEO_H
 
+#include <compare>
 #include <variant>
+#include <optional>
 
-class QJsonObject;
+#include "qstring.h"
+#include "qjsonobject.h"
 #include "qvector.h"
+#include "qfile.h"
 
 #include "InputMedia.h"
 #include "MessageEntity.h"
@@ -39,7 +43,8 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to InputMediaVideo class fields. For example it should contain pairs such as "type" = "...",
          * "media" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        InputMediaVideo(const QJsonObject& jsonObject);
+        InputMediaVideo(const QJsonObject& json_object);
+
 
         /* @brief Returns InputMediaVideo in form of JSON object. Returns empty QJsonObject if InputMediaVideo is empty */
         virtual QJsonObject toObject() const override;
@@ -47,10 +52,17 @@ namespace Telegram
         /* @brief Returns true if InputMediaVideo is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InputMedia */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InputMediaVideo&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the input media. Must be "video" */
-        const QString type = "video";
+        const Type type = Type::VIDEO;
 
         /** @brief Video to send
          *

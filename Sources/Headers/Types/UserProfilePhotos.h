@@ -1,7 +1,10 @@
 #ifndef TELEGRAM_TYPES_USERPROFILEPHOTOS_H
 #define TELEGRAM_TYPES_USERPROFILEPHOTOS_H
 
+#include <compare>
+
 #include "qvector.h"
+#include "qjsonobject.h"
 
 #include "PhotoSize.h"
 
@@ -28,13 +31,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has key-value pair "total_count" = "..." and double JSON Array of PhotoSize objects to construct correct UserProfilePhotos 
          * object, otherwise emtpy object will be constructed */
-        UserProfilePhotos(const QJsonObject& jsonObject);
+        UserProfilePhotos(const QJsonObject& json_object);
+
 
         /* @brief Returns UserProfilePhotos in form of JSON object. Returns empty QJsonObject if UserProfilePhotos is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if UserProfilePhotos is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const UserProfilePhotos&) const = default;
+
 
 //** Fields **//
 

@@ -1,8 +1,6 @@
 #include "Types/Chat.h"
 #include "Types/Message.h"
 
-#include "qjsonobject.h"
-
 Telegram::Chat::Chat() :
 	id(),
 	type(),
@@ -62,77 +60,56 @@ Telegram::Chat::Chat(const qint64& id,
 	location(location)
 {}
 
-Telegram::Chat::Chat(const QJsonObject& jsonObject)
-{
-	auto getChatType = [](const QJsonValue& chatType) -> Chat::Type
-						{
-							if (chatType == "private") return Type::PRIVATE;
-							if (chatType == "group") return Type::GROUP;
-							if (chatType == "supergroup") return Type::SUPERGROUP;
-							if (chatType == "channel") return Type::CHANNEL;
-							else return Type::UNINITIALIZED_VALUE;
-						};
-
-	jsonObject.contains("id")						? id = jsonObject["id"].toInt()														  : id = 0;
-	jsonObject.contains("type")						? type = getChatType(jsonObject["type"])											  : type = Type::UNINITIALIZED_VALUE;
-	jsonObject.contains("title")					? title = jsonObject["title"].toString()											  : title = std::nullopt;
-	jsonObject.contains("username")					? username = jsonObject["username"].toString()										  : username = std::nullopt;
-	jsonObject.contains("first_name")				? first_name = jsonObject["first_name"].toString()									  : first_name = std::nullopt;
-	jsonObject.contains("last_name")				? last_name = jsonObject["last_name"].toString()									  : last_name = std::nullopt;
-	jsonObject.contains("photo")					? photo = ChatPhoto(jsonObject["photo"].toObject())									  : photo = std::nullopt;
-	jsonObject.contains("bio")						? bio = jsonObject["bio"].toString()												  : bio = std::nullopt;
-	jsonObject.contains("description")				? description = jsonObject["description"].toString()								  : description = std::nullopt;
-	jsonObject.contains("invite_link")				? invite_link = jsonObject["invite_link"].toString()								  : invite_link = std::nullopt;
-	jsonObject.contains("pinned_message")			? pinned_message = std::make_shared<Message>(jsonObject["pinned_message"].toObject()) : pinned_message = std::nullopt;
-	jsonObject.contains("permissions")				? permissions = ChatPermissions(jsonObject["permissions"].toObject())				  : permissions = std::nullopt;
-	jsonObject.contains("slow_mode_delay")			? slow_mode_delay = jsonObject["slow_mode_delay"].toInt()							  : slow_mode_delay = std::nullopt;
-	jsonObject.contains("message_auto_delete_time") ? message_auto_delete_time = jsonObject["message_auto_delete_time"].toInt()			  : message_auto_delete_time = std::nullopt;
-	jsonObject.contains("sticker_set_name")			? sticker_set_name = jsonObject["sticker_set_name"].toString()						  : sticker_set_name = std::nullopt;
-	jsonObject.contains("can_set_sticker_set")		? can_set_sticker_set = jsonObject["can_set_sticker_set"].toBool()					  : can_set_sticker_set = std::nullopt;
-	jsonObject.contains("linked_chat_id")			? linked_chat_id = jsonObject["linked_chat_id"].toInt()								  : linked_chat_id = std::nullopt;
-	jsonObject.contains("location")					? location = ChatLocation(jsonObject["location"].toObject())						  : location = std::nullopt;
+Telegram::Chat::Chat(const QJsonObject& json_object) {
+	json_object.contains("id")						 ? id = json_object["id"].toInteger()													: id = 0;
+	json_object.contains("title")					 ? title = json_object["title"].toString()												: title = std::nullopt;
+	json_object.contains("username")				 ? username = json_object["username"].toString()										: username = std::nullopt;
+	json_object.contains("first_name")				 ? first_name = json_object["first_name"].toString()									: first_name = std::nullopt;
+	json_object.contains("last_name")				 ? last_name = json_object["last_name"].toString()										: last_name = std::nullopt;
+	json_object.contains("photo")					 ? photo = ChatPhoto(json_object["photo"].toObject())									: photo = std::nullopt;
+	json_object.contains("bio")						 ? bio = json_object["bio"].toString()													: bio = std::nullopt;
+	json_object.contains("description")				 ? description = json_object["description"].toString()									: description = std::nullopt;
+	json_object.contains("invite_link")				 ? invite_link = json_object["invite_link"].toString()									: invite_link = std::nullopt;
+	json_object.contains("pinned_message")			 ? pinned_message = std::make_shared<Message>(json_object["pinned_message"].toObject()) : pinned_message = std::nullopt;
+	json_object.contains("permissions")				 ? permissions = ChatPermissions(json_object["permissions"].toObject())					: permissions = std::nullopt;
+	json_object.contains("slow_mode_delay")			 ? slow_mode_delay = json_object["slow_mode_delay"].toInt()								: slow_mode_delay = std::nullopt;
+	json_object.contains("message_auto_delete_time") ? message_auto_delete_time = json_object["message_auto_delete_time"].toInt()			: message_auto_delete_time = std::nullopt;
+	json_object.contains("sticker_set_name")		 ? sticker_set_name = json_object["sticker_set_name"].toString()						: sticker_set_name = std::nullopt;
+	json_object.contains("can_set_sticker_set")		 ? can_set_sticker_set = json_object["can_set_sticker_set"].toBool()					: can_set_sticker_set = std::nullopt;
+	json_object.contains("linked_chat_id")			 ? linked_chat_id = json_object["linked_chat_id"].toInteger()							: linked_chat_id = std::nullopt;
+	json_object.contains("location")				 ? location = ChatLocation(json_object["location"].toObject())							: location = std::nullopt;
+	json_object.contains("type")					 ? type = static_cast<decltype(type)>(QMetaEnum::fromType<decltype(type)>().keyToValue(json_object["type"].toString().toUpper().toUtf8())) : type = decltype(type)::NULL_ENUMERATOR;
 }
 
-QJsonObject Telegram::Chat::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::Chat::toObject() const {
+	if (isEmpty()) return {};
 
-	auto getChatType = [](const Chat::Type& chatType) -> QString
-						{
-							if (chatType == Type::PRIVATE) return "private";
-							if (chatType == Type::GROUP) return "group";
-							if (chatType == Type::SUPERGROUP) return "supergroup";
-							if (chatType == Type::CHANNEL) return "channel";
-							else return "";
-						};
+	QJsonObject chat_json_object{ {"id", id}, {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()} };
 
-	QJsonObject chatJsonObject{ {"id", id}, {"type", getChatType(type)} };
+	if (title.has_value())						chat_json_object.insert("title", *title);
+	if (username.has_value())					chat_json_object.insert("username", *username);
+	if (first_name.has_value())					chat_json_object.insert("first_name", *first_name);
+	if (last_name.has_value())					chat_json_object.insert("last_name", *last_name);
+	if (photo.has_value())						chat_json_object.insert("photo", photo->toObject());
+	if (bio.has_value())						chat_json_object.insert("bio", *bio);
+	if (description.has_value())				chat_json_object.insert("description", *description);
+	if (invite_link.has_value())				chat_json_object.insert("invite_link", *invite_link);
+	if (pinned_message.has_value())				chat_json_object.insert("pinned_message", pinned_message.value()->toObject());
+	if (permissions.has_value())				chat_json_object.insert("permissions", permissions->toObject());
+	if (slow_mode_delay.has_value())			chat_json_object.insert("slow_mode_delay", *slow_mode_delay);
+	if (message_auto_delete_time.has_value())	chat_json_object.insert("message_auto_delete_time", *message_auto_delete_time);
+	if (sticker_set_name.has_value())			chat_json_object.insert("sticker_set_name", *sticker_set_name);
+	if (can_set_sticker_set.has_value())		chat_json_object.insert("can_set_sticker_set", *can_set_sticker_set);
+	if (linked_chat_id.has_value())				chat_json_object.insert("linked_chat_id", *linked_chat_id);
+	if (location.has_value())					chat_json_object.insert("location", location->toObject());
 
-	if (title.has_value())						chatJsonObject.insert("title", *title);
-	if (username.has_value())					chatJsonObject.insert("username", *username);
-	if (first_name.has_value())					chatJsonObject.insert("first_name", *first_name);
-	if (last_name.has_value())					chatJsonObject.insert("last_name", *last_name);
-	if (photo.has_value())						chatJsonObject.insert("photo", photo->toObject());
-	if (bio.has_value())						chatJsonObject.insert("bio", *bio);
-	if (description.has_value())				chatJsonObject.insert("description", *description);
-	if (invite_link.has_value())				chatJsonObject.insert("invite_link", *invite_link);
-	if (pinned_message.has_value())				chatJsonObject.insert("pinned_message", pinned_message.value()->toObject());
-	if (permissions.has_value())				chatJsonObject.insert("permissions", permissions->toObject());
-	if (slow_mode_delay.has_value())			chatJsonObject.insert("slow_mode_delay", *slow_mode_delay);
-	if (message_auto_delete_time.has_value())	chatJsonObject.insert("message_auto_delete_time", *message_auto_delete_time);
-	if (sticker_set_name.has_value())			chatJsonObject.insert("sticker_set_name", *sticker_set_name);
-	if (can_set_sticker_set.has_value())		chatJsonObject.insert("can_set_sticker_set", *can_set_sticker_set);
-	if (linked_chat_id.has_value())				chatJsonObject.insert("linked_chat_id", *linked_chat_id);
-	if (location.has_value())					chatJsonObject.insert("location", location->toObject());
-
-	return chatJsonObject;
+	return chat_json_object;
 }
 
 bool Telegram::Chat::isEmpty() const
 {
 	return id == 0
-		   and type == Type::UNINITIALIZED_VALUE
+		   and type == decltype(type)::NULL_ENUMERATOR
 		   and title == std::nullopt
 		   and username == std::nullopt
 		   and first_name == std::nullopt

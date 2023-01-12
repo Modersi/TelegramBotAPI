@@ -1,11 +1,12 @@
 #ifndef TELEGRAM_TYPES_WEBHOOKINFO_H
 #define TELEGRAM_TYPES_WEBHOOKINFO_H
 
+#include <compare>
 #include <optional>
 
 #include "qstring.h"
 #include "qvector.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -36,13 +37,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to WebhookInfo class fields. For example it should contain pairs such as "url" = "...",
          * "has_custom_certificate" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        WebhookInfo(const QJsonObject& jsonObject);
+        WebhookInfo(const QJsonObject& json_object);
+
 
         /** @brief Returns WebhookInfo in form of JSON object. Returns empty QJsonObject if WebhookInfo is empty */
         QJsonObject toObject() const;
 
         /** @brief Returns true if WebhookInfo is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const WebhookInfo&) const = default;
+
 
 //** Fields **//
 

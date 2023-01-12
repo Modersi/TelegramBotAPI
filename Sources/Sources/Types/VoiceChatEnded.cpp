@@ -1,7 +1,5 @@
 #include "Types/VoiceChatEnded.h"
 
-#include "qjsonobject.h"
-
 Telegram::VoiceChatEnded::VoiceChatEnded() :
 	duration()
 {}
@@ -10,20 +8,16 @@ Telegram::VoiceChatEnded::VoiceChatEnded(const qint32& duration) :
 	duration(duration)
 {}
 
-Telegram::VoiceChatEnded::VoiceChatEnded(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("duration") ? duration = jsonObject["duration"].toInt() : duration = 0;
+Telegram::VoiceChatEnded::VoiceChatEnded(const QJsonObject& json_object) {
+	json_object.contains("duration") ? duration = json_object["duration"].toInt() : duration = 0;
 }
 
-QJsonObject Telegram::VoiceChatEnded::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::VoiceChatEnded::toObject() const {
+	if (isEmpty()) return {};
 
-	return QJsonObject{ {"duration", duration} };
+	return { {"duration", duration} };
 }
 
-bool Telegram::VoiceChatEnded::isEmpty() const
-{
+bool Telegram::VoiceChatEnded::isEmpty() const {
 	return duration == 0;
 }

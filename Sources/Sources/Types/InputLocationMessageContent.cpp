@@ -23,24 +23,21 @@ Telegram::InputLocationMessageContent::InputLocationMessageContent(const float& 
 	proximity_alert_radius(proximity_alert_radius)
 {}
 
-QJsonObject Telegram::InputLocationMessageContent::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InputLocationMessageContent::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inputLocationMessageContentJsonObject{ {"latitude", latitude}, {"longitude", longitude} };
+	QJsonObject input_location_message_content_json_object{ {"latitude", latitude}, {"longitude", longitude} };
 
-	if (horizontal_accuracy.has_value())	inputLocationMessageContentJsonObject.insert("horizontal_accuracy", *horizontal_accuracy);
-	if (live_period.has_value())			inputLocationMessageContentJsonObject.insert("live_period", *live_period);
-	if (heading.has_value())				inputLocationMessageContentJsonObject.insert("heading", *heading);
-	if (proximity_alert_radius.has_value())	inputLocationMessageContentJsonObject.insert("proximity_alert_radius", *proximity_alert_radius);
+	if (horizontal_accuracy.has_value())	input_location_message_content_json_object.insert("horizontal_accuracy", *horizontal_accuracy);
+	if (live_period.has_value())			input_location_message_content_json_object.insert("live_period", *live_period);
+	if (heading.has_value())				input_location_message_content_json_object.insert("heading", *heading);
+	if (proximity_alert_radius.has_value())	input_location_message_content_json_object.insert("proximity_alert_radius", *proximity_alert_radius);
 
 
-	return inputLocationMessageContentJsonObject;
+	return input_location_message_content_json_object;
 }
 
-bool Telegram::InputLocationMessageContent::isEmpty() const
-{
+bool Telegram::InputLocationMessageContent::isEmpty() const {
 	return latitude == 0.0
 		   and longitude == 0.0
 		   and horizontal_accuracy == std::nullopt

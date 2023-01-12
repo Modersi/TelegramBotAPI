@@ -1,7 +1,15 @@
 #ifndef TELEGRAM_TYPES_CHAT_H
 #define TELEGRAM_TYPES_CHAT_H
 
-namespace Telegram { struct Message; }
+#include <compare>
+#include <optional>
+#include <memory>
+
+#include "qmetaobject.h"
+#include "qstring.h"
+#include "qjsonobject.h"
+
+namespace Telegram { class Message; }
 #include "ChatPhoto.h"
 #include "ChatPermissions.h"
 #include "ChatLocation.h"
@@ -14,17 +22,21 @@ namespace Telegram
      *
      */
 
-    struct Chat
+    class Chat
     {
+        Q_GADGET
+
+    public:
         /** @brief Enum that represents all available types of chat */
-        enum class Type
-        {
-            UNINITIALIZED_VALUE,
+        enum class Type {
             PRIVATE,
             GROUP,
             SUPERGROUP,
-            CHANNEL
+            CHANNEL,
+            NULL_ENUMERATOR = -1
         };
+        Q_ENUM(Type)
+
 
         /** @brief Default constructor. Constructs an empty object
          *
@@ -55,13 +67,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to Chat class fields. For example it should contain pairs such as "id" = "...",
          * "type" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        Chat(const QJsonObject& jsonObject);
+        Chat(const QJsonObject& json_object);
+
 
         /* @brief Returns Chat in form of JSON object. Returns empty QJsonObject if Chat is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if Chat is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const Chat&) const = default;
+
 
 //** Fields **//
 

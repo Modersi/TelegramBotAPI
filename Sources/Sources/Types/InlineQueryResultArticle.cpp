@@ -1,9 +1,5 @@
 #include "Types/InlineQueryResultArticle.h"
 
-#include "qjsonobject.h"
-
-#include "Types/InputMessageContent.h"
-
 Telegram::InlineQueryResultArticle::InlineQueryResultArticle() :
 	id(),
 	title(),
@@ -39,26 +35,23 @@ Telegram::InlineQueryResultArticle::InlineQueryResultArticle(const QString& id,
 	thumb_height(thumb_height)
 {}
 
-QJsonObject Telegram::InlineQueryResultArticle::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineQueryResultArticle::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineQueryResultArticleJsonObject{ {"type", type}, {"id", id}, {"title", title}, {"input_message_content", input_message_content->toObject()} };
+	QJsonObject inline_query_result_article_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()}, {"id", id}, {"title", title}, {"input_message_content", input_message_content->toObject()} };
 
-	if (reply_markup.has_value())	inlineQueryResultArticleJsonObject.insert("reply_markup", reply_markup->toObject());
-	if (url.has_value())			inlineQueryResultArticleJsonObject.insert("url", *url);
-	if (hide_url.has_value())		inlineQueryResultArticleJsonObject.insert("hide_url", *hide_url);
-	if (description.has_value())	inlineQueryResultArticleJsonObject.insert("description", *description);
-	if (thumb_url.has_value())		inlineQueryResultArticleJsonObject.insert("thumb_url", *thumb_url);
-	if (thumb_width.has_value())	inlineQueryResultArticleJsonObject.insert("thumb_width", *thumb_width);
-	if (thumb_height.has_value())	inlineQueryResultArticleJsonObject.insert("thumb_height", *thumb_height);
+	if (reply_markup.has_value())	inline_query_result_article_json_object.insert("reply_markup", reply_markup->toObject());
+	if (url.has_value())			inline_query_result_article_json_object.insert("url", *url);
+	if (hide_url.has_value())		inline_query_result_article_json_object.insert("hide_url", *hide_url);
+	if (description.has_value())	inline_query_result_article_json_object.insert("description", *description);
+	if (thumb_url.has_value())		inline_query_result_article_json_object.insert("thumb_url", *thumb_url);
+	if (thumb_width.has_value())	inline_query_result_article_json_object.insert("thumb_width", *thumb_width);
+	if (thumb_height.has_value())	inline_query_result_article_json_object.insert("thumb_height", *thumb_height);
 
-	return inlineQueryResultArticleJsonObject;
+	return inline_query_result_article_json_object;
 }
 
-bool Telegram::InlineQueryResultArticle::isEmpty() const
-{
+bool Telegram::InlineQueryResultArticle::isEmpty() const {
 	return id == ""
 	       and title == ""
 	       and input_message_content == nullptr
@@ -69,4 +62,8 @@ bool Telegram::InlineQueryResultArticle::isEmpty() const
 	       and thumb_url == std::nullopt
 	       and thumb_width == std::nullopt
 	       and thumb_height == std::nullopt;
+}
+
+Telegram::InlineQueryResult::Type Telegram::InlineQueryResultArticle::getType() const {
+	return type;
 }

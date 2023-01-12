@@ -1,8 +1,8 @@
 #include "Types/PollAnswer.h"
-#include "Internal/ConversionFunctions.h"
 
-#include "qjsonobject.h"
 #include "qjsonarray.h"
+
+#include "Internal/ConversionFunctions.h"
 
 Telegram::PollAnswer::PollAnswer() :
 	poll_id(),
@@ -18,22 +18,18 @@ Telegram::PollAnswer::PollAnswer(const QString& poll_id,
 	option_ids(option_ids)
 {}
 
-Telegram::PollAnswer::PollAnswer(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("poll_id")	  ? poll_id = jsonObject["poll_id"].toString()							   : poll_id = "";
-	jsonObject.contains("user")		  ? user = User(jsonObject["user"].toObject())							   : user = User();
-	jsonObject.contains("option_ids") ? option_ids = QJsonArrayToQVector<qint32>(jsonObject["option_ids"].toArray()) : option_ids = QVector<qint32>();
+Telegram::PollAnswer::PollAnswer(const QJsonObject& json_object) {
+	json_object.contains("poll_id")		? poll_id = json_object["poll_id"].toString()									: poll_id = "";
+	json_object.contains("user")		? user = User(json_object["user"].toObject())									: user = User();
+	json_object.contains("option_ids")	? option_ids = QJsonArrayToQVector<qint32>(json_object["option_ids"].toArray())	: option_ids = QVector<qint32>();
 }
 
-QJsonObject Telegram::PollAnswer::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::PollAnswer::toObject() const {
+	if (isEmpty()) return {};
 
-	return QJsonObject{ {"poll_id", poll_id}, {"user", user.toObject()}, {"option_ids", QVectorToQJsonArray(option_ids)} };
+	return { {"poll_id", poll_id}, {"user", user.toObject()}, {"option_ids", QVectorToQJsonArray(option_ids)} };
 }
 
-bool Telegram::PollAnswer::isEmpty() const
-{
+bool Telegram::PollAnswer::isEmpty() const {
 	return poll_id == "" and user.isEmpty() and option_ids.isEmpty();
 }

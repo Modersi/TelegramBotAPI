@@ -1,10 +1,11 @@
 #ifndef TELEGRAM_TYPES_STICKER_H
 #define TELEGRAM_TYPES_STICKER_H
 
+#include <compare>
 #include <optional>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 #include "Types/PhotoSize.h"
 #include "Types/MaskPosition.h"
@@ -40,13 +41,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has key-value pairs such as "file_id" = "...", "file_unique_id" = "..." to construct correct Sticker
          * object, otherwise fields related to missing pairs will be setted to 0, "", std::nullopt */
-        Sticker(const QJsonObject& jsonObject);
+        Sticker(const QJsonObject& json_object);
+
 
         /** @brief Returns Sticker in form of JSON object. Returns empty QJsonObject if Sticker is empty */
         QJsonObject toObject() const;
 
         /** @brief Returns true if Sticker is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const Sticker&) const = default;
+
 
 //** Fields **//
 

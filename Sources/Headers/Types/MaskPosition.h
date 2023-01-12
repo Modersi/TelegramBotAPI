@@ -1,7 +1,10 @@
-#ifndef TELEGRAM_TYPES_MASKPOSITION_H
+Ôªø#ifndef TELEGRAM_TYPES_MASKPOSITION_H
 #define TELEGRAM_TYPES_MASKPOSITION_H
 
-#include "qstring.h"
+#include <compare>
+
+#include "qmetaobject.h"
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -11,17 +14,22 @@ namespace Telegram
      *
      */
 
-    struct MaskPosition
+    class MaskPosition
     {
+        Q_GADGET
+
+    public:
         /** @brief Enum that represents all available face parts that can be used for mask to be placed */
         enum class Point
         {
-            UNINITIALIZED_VALUE,
             FOREHEAD,
             EYES,
             MOUTH,
-            CHIN
+            CHIN,
+            NULL_ENUMERATOR = -1
         };
+        Q_ENUM(Point)
+
 
         /** @brief Default constructor. Constructs an empty MaskPosition object
          *
@@ -38,7 +46,8 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to MaskPosition class fields. For example it should contain pairs such as "point" = "...",
          * "x_shift" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        MaskPosition(const QJsonObject& jsonObject);
+        MaskPosition(const QJsonObject& json_object);
+
 
         /** @brief Returns MaskPosition in form of JSON object. Returns empty QJsonObject if MaskPosition is empty */
         QJsonObject toObject() const;
@@ -46,10 +55,14 @@ namespace Telegram
         /** @brief Returns true if MaskPosition is empty */
         bool isEmpty() const;
 
+
+        std::partial_ordering operator <=> (const MaskPosition&) const = default;
+
+
 //** Fields **//
 
         /**
-         * @brief The part of the face relative to which the mask should be placed. One of ìforeheadî, ìeyesî, ìmouthî, or ìchinî.
+         * @brief The part of the face relative to which the mask should be placed. One of ‚Äúforehead‚Äù, ‚Äúeyes‚Äù, ‚Äúmouth‚Äù, or ‚Äúchin‚Äù.
          */
         Point point;
 

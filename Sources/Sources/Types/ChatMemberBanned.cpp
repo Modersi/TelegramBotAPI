@@ -10,21 +10,22 @@ Telegram::ChatMemberBanned::ChatMemberBanned(const User& user, const qint32& unt
 	until_date(until_date)
 {}
 
-Telegram::ChatMemberBanned::ChatMemberBanned(const QJsonObject& jsonObject)
+Telegram::ChatMemberBanned::ChatMemberBanned(const QJsonObject& json_object)
 {
-	jsonObject.contains("user")		  ? user = User(jsonObject["user"].toObject())	  : user = User();
-	jsonObject.contains("until_date") ? until_date = jsonObject["until_date"].toInt() : until_date = 0;
+	json_object.contains("user")		? user = User(json_object["user"].toObject())		: user = User();
+	json_object.contains("until_date")	? until_date = json_object["until_date"].toInt()	: until_date = 0;
 }
 
-QJsonObject Telegram::ChatMemberBanned::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::ChatMemberBanned::toObject() const {
+	if (isEmpty()) return {};
 
-	return QJsonObject { {"status", status}, {"user", user.toObject()}, {"until_date", until_date} };
+	return QJsonObject { {"status", QString(QMetaEnum::fromType<decltype(status)>().valueToKey(static_cast<int>(status))).toLower()}, {"user", user.toObject()}, {"until_date", until_date} };
 }
 
-bool Telegram::ChatMemberBanned::isEmpty() const
-{
+bool Telegram::ChatMemberBanned::isEmpty() const {
 	return user.isEmpty() and until_date == 0;
+}
+
+Telegram::ChatMember::Status Telegram::ChatMemberBanned::getStatus() const {
+	return status;
 }
