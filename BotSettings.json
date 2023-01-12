@@ -1,15 +1,15 @@
 {
     "bot_token": "",
-    "webhook_url": "telegrambotapi.com",
-    "certificate_path": "C:/Users/Maybe/Desktop/TestSelfSigned/cert.crt",
-    "private_key_path": "C:/Users/Maybe/Desktop/TestSelfSigned/private.key",
-    "ca_certificates_paths": [],
-    "public_key_path": "C:/Users/Maybe/Desktop/TestSelfSigned/public_key.cer",
+    "webhook_url": null,
+    "certificate_path": null,
+    "private_key_path": null,
+    "ca_certificates_paths": null,
+    "public_key_path": null,
     "webhook_ip_addres": null,
     "max_connections": null,
-    "allowed_updates": [],
+    "allowed_updates": null,
     "drop_pending_updates": null,
     "payment_token": null,
-    "host_addres": "192.168.0.99",
-    "port": 443
+    "host_addres": null,
+    "port": null
 }
