@@ -1,31 +1,32 @@
-#ifndef TELEGRAM_BOTSETTINGS_H
+Ôªø#ifndef TELEGRAM_BOTSETTINGS_H
 #define TELEGRAM_BOTSETTINGS_H
+
+#include <memory>
+#include <optional>
 
 #include "qhostaddress.h"
 #include "qsslconfiguration.h"
 #include "qstring.h"
 #include "qvector.h"
 #include "qdir.h"
-class QJsonObject;
+class QFile;
 
 namespace Telegram
 {
     /**
      *
-     * @brief This class represents your bot settings. Used to startup bot, setup encryption, payments, host adress, port and more
+     * @brief This class represents your bot settings. Used to startup bot, set up encryption, payments, host addres, port, and more
      * 
      */
 
     struct BotSettings
     {
-        /** @brief Constructs BotSettings from file bot_settings_file_name("BotSettings.json" by default) located in bot_settings_file_path(project root folder by default)
+        /** @brief Default constructor. Constructs an empty object
          *
-         * If there is no such file in bot_settings_file_path - new "BotSettings.json" file with default settings is created */
-        BotSettings(const QDir& bot_settings_file_path = QDir(),
-                    const QString& bot_settings_file_name  = "BotSettings.json");
+         * All fields setted to "" or std::nullopt */
+        BotSettings();
 
-
-        /** @brief Constructs BotSettings from parameters */
+        /** @brief Constructs BotSettings */
         BotSettings(const QString& bot_token,
                     const std::optional<QString> webhook_url = std::nullopt,
                     const std::optional<QSslConfiguration> ssl_configuration = std::nullopt,
@@ -36,6 +37,11 @@ namespace Telegram
                     const std::optional<QHostAddress>& host_addres = std::nullopt,
                     const std::optional<quint16> port = std::nullopt,
                     const std::optional<QString> payment_token = std::nullopt);
+
+        /** @brief Constructs BotSettings from the file bot_settings_file_name("BotSettings.json" by default) located in bot_settings_file_path(project root folder by default)
+         *
+         * If there is no such file in bot_settings_file_path - new "BotSettings.json" file with default settings is created */
+        static std::shared_ptr<BotSettings> makeFromFile(const QDir& bot_settings_file_path = QDir(), const QString& bot_settings_file_name = "BotSettings.json");
 
  //** Bot settings **//
 
@@ -57,7 +63,7 @@ namespace Telegram
         /** @brief Optional. Maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery, 1-100. Defaults to 40. Use lower values to limit the load on your bot's server, and higher values to increase your bot's throughput */
         std::optional<qint32> max_connections;
 
-        /** @brief Optional. A list of the update types you want your bot to receive. For example, specify { ìmessageî, ìedited_channel_postî, ìcallback_queryî } to only receive updates of these types. See Update.h for a complete list of available update types. Specify an empty list to receive all update types except chat_member(default). If not specified, the previous setting will be used.
+        /** @brief Optional. A list of the update types you want your bot to receive. For example, specify { ‚Äúmessage‚Äù, ‚Äúedited_channel_post‚Äù, ‚Äúcallback_query‚Äù } to only receive updates of these types. See Update.h for a complete list of available update types. Specify an empty list to receive all update types except chat_member(default). If not specified, the previous setting will be used.
          *
          *  Please note that this parameter doesn't affect updates created before the call to the setWebhook, so unwanted updates may be received for a short period of time. */
         std::optional<QVector<QString>> allowed_updates;
@@ -73,9 +79,6 @@ namespace Telegram
 
         /** @brief Optional. Your payment token */
         std::optional<QString> payment_token;
-
-    private:
-        void CreateDefaultBotSettinngsFile(const QDir& file_path = QDir(), const QString& file_name = "BotSettings.json");
     };
 }
 

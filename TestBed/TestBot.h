@@ -2,22 +2,26 @@
 
 #include "qobject.h"
 
-class TestBot : public QObject
-{
+using namespace Telegram;
+
+class TestBot : public QObject {
 	Q_OBJECT
 
 public:
-	TestBot(const QVector<Telegram::BotCommand>& bot_commands, const Telegram::BotSettings& bot_settings = Telegram::BotSettings());
+	TestBot(const QVector<BotCommand>& bot_commands, const std::shared_ptr<BotSettings>& bot_settings = std::make_shared<BotSettings>());
 
 signals:
-	// Emitted when any command received
-	void commandReceived(const Telegram::User& from, const QString command);
+	// Emitted when any command is received
+	void commandReceived(const std::shared_ptr<Chat>& chat, const QString& command);
 
-private slots:;
-	//	Emitted when any error with Telegram Bot API is occcured, prints error description to the console
-	void onErrorOccured(Telegram::Error error);
+private slots:
+	// Emitted when an error with Telegram Bot API has occurred, prints error description in the console
+	void onErrorOccured(Error error);
+
+	// Emitted when a network error has occurred, prints error code and description in the console
+	void onNetworkErrorOccured(Error error);
 
 public:
-	Telegram::Bot telegram_bot;
-	QVector<Telegram::BotCommand> bot_commands;
+	Bot telegram_bot;
+	QVector<BotCommand> bot_commands;
 };

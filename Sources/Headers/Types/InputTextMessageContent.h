@@ -1,6 +1,13 @@
 #ifndef TELEGRAM_TYPES_INPUTTEXTMESSAGECONTENT_H
 #define TELEGRAM_TYPES_INPUTTEXTMESSAGECONTENT_H
 
+#include <compare>
+#include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
+#include "qvector.h"
+
 #include "Types/InputMessageContent.h"
 #include "Types/MessageEntity.h"
 
@@ -17,19 +24,24 @@ namespace Telegram
         /** @brief Default constructor. Constructs an empty InputTextMessageContent object
          *
          * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
-        InputTextMessageContent(const QString& message_text,	        
-                                const std::optional<QString>& parse_mode = std::nullopt,	            
+        InputTextMessageContent();
+
+        /** @brief Constructs InputTextMessageContent object from parameters */
+        InputTextMessageContent(const QString& message_text,
+                                const std::optional<QString>& parse_mode = std::nullopt,
                                 const std::optional<QVector<MessageEntity>>& entities = std::nullopt,
                                 const std::optional<bool>& disable_web_page_preview = std::nullopt);
 
-        /** @brief Constructs InputTextMessageContent object from parameters */
-        InputTextMessageContent();
 
         /* @brief Returns InputTextMessageContent in form of JSON object. Returns empty QJsonObject if InputTextMessageContent is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InputTextMessageContent is empty */
         virtual bool isEmpty() const override;
+
+
+        std::partial_ordering operator <=> (const InputTextMessageContent&) const = default;
+
 
 //** Fields **//
 

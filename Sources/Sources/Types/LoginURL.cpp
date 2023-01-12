@@ -19,30 +19,26 @@ Telegram::LoginURL::LoginURL(const QString& url,
 	request_write_access(request_write_access)
 {}
 
-Telegram::LoginURL::LoginURL(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("url")					? url = jsonObject["url"].toString()								 : url = "";
-	jsonObject.contains("forward_text")			? forward_text = jsonObject["forward_text"].toString()				 : forward_text = std::nullopt;
-	jsonObject.contains("bot_username")			? bot_username = jsonObject["bot_username"].toString()				 : bot_username = std::nullopt;
-	jsonObject.contains("request_write_access") ? request_write_access = jsonObject["request_write_access"].toBool() : request_write_access = std::nullopt;
+Telegram::LoginURL::LoginURL(const QJsonObject& json_object) {
+	json_object.contains("url")					 ? url = json_object["url"].toString()									: url = "";
+	json_object.contains("forward_text")		 ? forward_text = json_object["forward_text"].toString()				: forward_text = std::nullopt;
+	json_object.contains("bot_username")		 ? bot_username = json_object["bot_username"].toString()				: bot_username = std::nullopt;
+	json_object.contains("request_write_access") ? request_write_access = json_object["request_write_access"].toBool()	: request_write_access = std::nullopt;
 }
 
-QJsonObject Telegram::LoginURL::toObject() const
-{
-	if(isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::LoginURL::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject loginURLJsonObject{ {"url", url} };
+	QJsonObject login_url_json_object{ {"url", url} };
 
-	if (forward_text.has_value())			loginURLJsonObject.insert("forward_text", *forward_text);
-	if (bot_username.has_value())			loginURLJsonObject.insert("bot_username", *bot_username);
-	if (request_write_access.has_value())	loginURLJsonObject.insert("request_write_access", *request_write_access);
+	if (forward_text.has_value())			login_url_json_object.insert("forward_text", *forward_text);
+	if (bot_username.has_value())			login_url_json_object.insert("bot_username", *bot_username);
+	if (request_write_access.has_value())	login_url_json_object.insert("request_write_access", *request_write_access);
 
-	return loginURLJsonObject;
+	return login_url_json_object;
 }
 
-bool Telegram::LoginURL::isEmpty() const
-{
+bool Telegram::LoginURL::isEmpty() const {
 	return url == ""
 		   and forward_text == std::nullopt
 		   and bot_username == std::nullopt

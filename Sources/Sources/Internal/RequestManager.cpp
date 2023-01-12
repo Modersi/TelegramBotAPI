@@ -1,124 +1,82 @@
 #include "Internal/RequestManager.h"
 
+#include <memory>
+
+#include "qnetworkaccessmanager.h"
 #include "qnetworkreply.h"
 #include "qnetworkrequest.h"
 #include "qhttpmultipart.h"
-#include "qmimedatabase.h"
-#include "qmimetype.h"
-#include "qurl.h"
-#include "qurlquery.h"
-#include "qfile.h"
+#include "qeventloop.h"
 #include "qjsondocument.h"
+#include "qjsonobject.h"
+#include "qjsonarray.h"
 #include "qbytearray.h"
 
-#define REQUEST_TIMEOUT_MS 15000
+#define REQUEST_TIMEOUT_MS 1500
 
-Telegram::RequestManager::RequestManager() :
-    networkAccessManager(std::make_unique<QNetworkAccessManager>()),
-    eventLoop(std::make_unique<QEventLoop>()),
-    requestTimeoutTimer(std::make_unique<QTimer>()),
-    QObject()
-{
-    /* If request is finished and reply is received - quit the event loop where request was handled */
-    QObject::connect(networkAccessManager.get(), &QNetworkAccessManager::finished,
-        eventLoop.get(), &QEventLoop::quit);
+QByteArray Telegram::Internal::RequestManager::sendPostRequest(const QJsonDocument& request_json, const QUrl& request_url) {
+    QNetworkAccessManager network_access_manager;
 
-    /* If request is finished and reply is received - stop request timeout timer(thus prevent troubles with sending couple requests in a row) */
-    QObject::connect(networkAccessManager.get(), &QNetworkAccessManager::finished,
-        requestTimeoutTimer.get(), &QTimer::stop);
-
-    /* If request timeout timer over - quit the event loop where request was handled(thus stop request) */
-    QObject::connect(requestTimeoutTimer.get(), &QTimer::timeout,
-        eventLoop.get(), &QEventLoop::quit);
-}
-
-QByteArray Telegram::RequestManager::SendPostRequest(const QJsonDocument& requestBody, const QUrl& requestURL) const
-{
-    /* Creating request and setting it's headers */
-    QNetworkRequest request(requestURL);
+    QNetworkRequest request(request_url);
+    request.setTransferTimeout(REQUEST_TIMEOUT_MS);
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
 
-    /* Sending request and executing event loop in which request is proceed */
-    requestTimeoutTimer->start(REQUEST_TIMEOUT_MS); // Request timeout timer. Stop the request if there is no response within REQUEST_TIMEOUT_MS
-    QNetworkReply* reply = networkAccessManager->post(request, requestBody.toJson());
-    eventLoop->exec();
+    QEventLoop event_loop;
+    std::shared_ptr<QNetworkReply> reply(network_access_manager.post(request, request_json.toJson()));
 
-    reply->deleteLater();
+    QObject::connect(reply.get(), &QNetworkReply::finished, &event_loop, &QEventLoop::quit);
+    event_loop.exec();
+
     return reply->readAll();
 }
 
-QByteArray Telegram::RequestManager::SendPostRequest(const QVector<QPair<QString, QFile*>>& filesToUpload, const QVector<QPair<QString, QVariant>>& parameters, const QUrl& requestURL) const
-{
-    /* Creating multipart/form-data request */
-    QNetworkRequest request(requestURL);
+QByteArray Telegram::Internal::RequestManager::sendPostRequest(const QVector<QPair<QString, QFile*>>& file_name_and_file_pairs, const QVector<QPair<QString, QVariant>>& key_value_pairs, const QUrl& request_url) {    
+    QNetworkAccessManager network_access_manager;
+
+    QNetworkRequest request(request_url);
+    request.setTransferTimeout(REQUEST_TIMEOUT_MS);
+
     QHttpMultiPart* requestBody = new QHttpMultiPart(QHttpMultiPart::FormDataType);
+    for (auto&&[file_name, file] : file_name_and_file_pairs) {
+        QHttpPart file_part;
 
-    /* Adding files to request body */
-    for (auto& file : filesToUpload)
-    {
-        QHttpPart filePart;
+        file_part.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"%1\"; filename=\"%2\"").arg(file_name).arg(file->fileName()));
+        file_part.setBodyDevice(file);
 
-        filePart.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"%1\"; filename=\"%2\"").arg(file.first).arg(file.second->fileName()));
-        filePart.setBodyDevice(file.second);
-        
-        requestBody->append(filePart);
+        requestBody->append(file_part);
+    }
+    for (auto&&[key, value] : key_value_pairs) {
+        QHttpPart parameter_part;
+        parameter_part.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"%1\"").arg(key));
+
+        if (value.canConvert<QJsonObject>())      parameter_part.setBody(QJsonDocument(value.toJsonObject()).toJson());
+        else if (value.canConvert<QJsonArray>())  parameter_part.setBody(QJsonDocument(value.toJsonArray()).toJson());
+        else                                      parameter_part.setBody(value.toByteArray());
+
+        requestBody->append(parameter_part);
     }
 
-    /* Adding parameters to request body */
-    for (auto& parametr : parameters)
-    {
-        QHttpPart parametrPart;
-        parametrPart.setHeader(QNetworkRequest::ContentDispositionHeader, QString("form-data; name=\"%1\"").arg(parametr.first));
+    QEventLoop event_loop;
+    std::shared_ptr<QNetworkReply> reply(network_access_manager.post(request, requestBody));
 
-        if (parametr.second.canConvert<QJsonObject>())      parametrPart.setBody(QJsonDocument(parametr.second.toJsonObject()).toJson());
-        else if (parametr.second.canConvert<QJsonArray>())  parametrPart.setBody(QJsonDocument(parametr.second.toJsonArray()).toJson());
-        else                                                parametrPart.setBody(parametr.second.toByteArray());
+    QObject::connect(reply.get(), &QNetworkReply::finished, &event_loop, &QEventLoop::quit);
+    event_loop.exec();
 
-        requestBody->append(parametrPart);
-    }
-
-    /* Sending request and executing event loop in which request is proceed */
-    requestTimeoutTimer->start(REQUEST_TIMEOUT_MS); // Request timeout timer. Stop the request if there is no response within REQUEST_TIMEOUT_MS
-    QNetworkReply* reply = networkAccessManager->post(request, requestBody);;
-    eventLoop->exec();   
-
-    /* Deleting requestBody via setting reply as it parent; Deleting reply later */
-    requestBody->setParent(reply);
-    reply->deleteLater();
-
+    requestBody->setParent(reply.get());
     return reply->readAll();
 }
 
-//QByteArray Telegram::RequestManager::SendPostRequest(const QVector<QPair<QVariant, QVariant>>& parameters, const QUrl& requestURL) const
-//{
-//    /* Creating request and setting its headers */
-//    QNetworkRequest request(requestURL);
-//    request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
-//
-//    /* Creating request body and adding key-value parameters pairs to it. e.g: chat_id=2123123&message_type=default */
-//    QString requestBody("");
-//    for (const auto& parameter : parameters)
-//        requestBody += parameter.first.toString() + '=' + parameter.second.toString() + '&';
-//
-//    /* Sending request and executing event loop in which request is proceed */
-//    requestTimeoutTimer->start(REQUEST_TIMEOUT_MS); // Request timeout timer. Stop the request if there is no response within REQUEST_TIMEOUT_MS
-//    QNetworkReply* reply = networkAccessManager->post(request, requestBody.toUtf8());
-//    eventLoop->exec();
-//
-//    reply->deleteLater();
-//    return reply->readAll();
-//}
+QByteArray Telegram::Internal::RequestManager::sendGetRequest(const QUrl& request_url, const QUrlQuery& url_query) {
+    QNetworkAccessManager network_access_manager;
+    
+    QUrl request_url_with_query = request_url;
+    request_url_with_query.setQuery(url_query);
 
-QByteArray Telegram::RequestManager::SendGetRequest(const QUrlQuery& requestURLQuery, const QUrl& requestURL) const
-{
-    /* Creating request and setting URL query string */
-    QNetworkRequest request(requestURL.toString() + '?' + requestURLQuery.toString());
+    QEventLoop event_loop;
+    std::shared_ptr<QNetworkReply> reply(network_access_manager.get(QNetworkRequest(request_url)));
 
-    /* Sending request and executing event loop in which request is proceed */
-    requestTimeoutTimer->start(REQUEST_TIMEOUT_MS); // Request timeout timer. Stop the request if there is no response within REQUEST_TIMEOUT_MS
-    QNetworkReply* reply = networkAccessManager->get(request);
-    eventLoop->exec();
+    QObject::connect(reply.get(), &QNetworkReply::finished, &event_loop, &QEventLoop::quit);
+    event_loop.exec();
 
-    reply->deleteLater();
     return reply->readAll();
 }

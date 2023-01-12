@@ -1,6 +1,5 @@
 #include "Types/ReplyKeyboardMarkup.h"
 
-#include "qjsonobject.h"
 #include "qjsonarray.h"
 
 #include "Internal/ConversionFunctions.h"
@@ -12,6 +11,18 @@ Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup() :
 	selective()
 {}
 
+Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup(std::initializer_list<std::initializer_list<KeyboardButton>> keyboard,
+												   const std::optional<bool>&resize_keyboard,
+												   const std::optional<bool>&one_time_keyboard,
+												   const std::optional<bool>&selective) :
+	keyboard(keyboard.size()),
+	resize_keyboard(resize_keyboard),
+	one_time_keyboard(one_time_keyboard),
+	selective(selective)
+{
+	std::ranges::move(std::move(keyboard), this->keyboard.begin());
+}
+
 Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup(const QVector<QVector<KeyboardButton>>& keyboard,
 												   const std::optional<bool>& resize_keyboard,
 												   const std::optional<bool>& one_time_keyboard,
@@ -22,30 +33,26 @@ Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup(const QVector<QVector<Keyboar
 	selective(selective)
 {}
 
-Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("keyboard")			 ? keyboard = DoubleQJsonArrayToDoubleQVector<KeyboardButton>(jsonObject["keyboard"].toArray()) : keyboard = QVector<QVector<KeyboardButton>>();
-	jsonObject.contains("resize_keyboard")	 ? resize_keyboard = jsonObject["resize_keyboard"].toBool()										: resize_keyboard = std::nullopt;
-	jsonObject.contains("one_time_keyboard") ? one_time_keyboard = jsonObject["one_time_keyboard"].toBool()									: one_time_keyboard = std::nullopt;
-	jsonObject.contains("selective")		 ? selective = jsonObject["selective"].toBool()													: selective = std::nullopt;
+Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup(const QJsonObject& json_object) {
+	json_object.contains("keyboard")			? keyboard = DoubleQJsonArrayToDoubleQVector<KeyboardButton>(json_object["keyboard"].toArray()) : keyboard = QVector<QVector<KeyboardButton>>();
+	json_object.contains("resize_keyboard")		? resize_keyboard = json_object["resize_keyboard"].toBool()										: resize_keyboard = std::nullopt;
+	json_object.contains("one_time_keyboard")	? one_time_keyboard = json_object["one_time_keyboard"].toBool()									: one_time_keyboard = std::nullopt;
+	json_object.contains("selective")			? selective = json_object["selective"].toBool()													: selective = std::nullopt;
 }
 
-QJsonObject Telegram::ReplyKeyboardMarkup::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::ReplyKeyboardMarkup::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject replyKeyboardMarkupJsonObject{ {"keyboard", DoubleQVectorToDoubleQJsonArray(keyboard)} };
+	QJsonObject reply_keyboard_markup_json_object{ {"keyboard", DoubleQVectorToDoubleQJsonArray(keyboard)} };
 
-	if (resize_keyboard.has_value())	replyKeyboardMarkupJsonObject.insert("resize_keyboard", *resize_keyboard);
-	if (one_time_keyboard.has_value())	replyKeyboardMarkupJsonObject.insert("one_time_keyboard", *one_time_keyboard);
-	if (selective.has_value())			replyKeyboardMarkupJsonObject.insert("selective", *selective);
+	if (resize_keyboard.has_value())	reply_keyboard_markup_json_object.insert("resize_keyboard", *resize_keyboard);
+	if (one_time_keyboard.has_value())	reply_keyboard_markup_json_object.insert("one_time_keyboard", *one_time_keyboard);
+	if (selective.has_value())			reply_keyboard_markup_json_object.insert("selective", *selective);
 
-	return replyKeyboardMarkupJsonObject;
+	return reply_keyboard_markup_json_object;
 }
 
-bool Telegram::ReplyKeyboardMarkup::isEmpty() const
-{
+bool Telegram::ReplyKeyboardMarkup::isEmpty() const {
 	return keyboard.isEmpty()
 		   and resize_keyboard == std::nullopt
 		   and one_time_keyboard == std::nullopt

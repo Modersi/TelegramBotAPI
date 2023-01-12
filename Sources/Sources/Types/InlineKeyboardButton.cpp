@@ -31,38 +31,35 @@ Telegram::InlineKeyboardButton::InlineKeyboardButton(const QString& text,
 	pay(pay)
 {}
 
-Telegram::InlineKeyboardButton::InlineKeyboardButton(const QJsonObject& jsonObject)
+Telegram::InlineKeyboardButton::InlineKeyboardButton(const QJsonObject& json_object)
 {
-	jsonObject.contains("text")								? text = jsonObject["text"].toString()														   : text = "";
-	jsonObject.contains("url")								? url = jsonObject["url"].toString()														   : url = std::nullopt;
-	jsonObject.contains("login_url")						? login_url = LoginURL(jsonObject["login_url"].toObject())									   : login_url = std::nullopt;
-	jsonObject.contains("callback_data")					? callback_data = jsonObject["callback_data"].toString()									   : callback_data = std::nullopt;
-	jsonObject.contains("switch_inline_query")				? switch_inline_query = jsonObject["switch_inline_query"].toString()						   : switch_inline_query = std::nullopt;
-	jsonObject.contains("switch_inline_query_current_chat") ? switch_inline_query_current_chat = jsonObject["switch_inline_query_current_chat"].toString() : switch_inline_query_current_chat = std::nullopt;
-	//jsonObject.contains("callback_game")					? callback_game = CallbackGame(jsonObject["callback_game"].toObject())						   : callback_game = std::nullopt;
-	jsonObject.contains("pay")								? pay = jsonObject["pay"].toBool()															   : pay = std::nullopt;
+	json_object.contains("text")							? text = json_object["text"].toString()														   : text = "";
+	json_object.contains("url")								? url = json_object["url"].toString()														   : url = std::nullopt;
+	json_object.contains("login_url")						? login_url = LoginURL(json_object["login_url"].toObject())									   : login_url = std::nullopt;
+	json_object.contains("callback_data")					? callback_data = json_object["callback_data"].toString()									   : callback_data = std::nullopt;
+	json_object.contains("switch_inline_query")				? switch_inline_query = json_object["switch_inline_query"].toString()						   : switch_inline_query = std::nullopt;
+	json_object.contains("switch_inline_query_current_chat") ? switch_inline_query_current_chat = json_object["switch_inline_query_current_chat"].toString() : switch_inline_query_current_chat = std::nullopt;
+	//json_object.contains("callback_game")					? callback_game = CallbackGame(json_object["callback_game"].toObject())						   : callback_game = std::nullopt;
+	json_object.contains("pay")								? pay = json_object["pay"].toBool()															   : pay = std::nullopt;
 }
 
-QJsonObject Telegram::InlineKeyboardButton::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineKeyboardButton::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineKeyboardButtonJsonObject{ {"text", text} };
+	QJsonObject inline_keyboard_button_json_object{ {"text", text} };
 
-	if (url.has_value())								inlineKeyboardButtonJsonObject.insert("url", *url);
-	if (login_url.has_value())							inlineKeyboardButtonJsonObject.insert("login_url", login_url->toObject());
-	if (callback_data.has_value())						inlineKeyboardButtonJsonObject.insert("callback_data", *callback_data);
-	if (switch_inline_query.has_value())				inlineKeyboardButtonJsonObject.insert("switch_inline_query", *switch_inline_query);
-	if (switch_inline_query_current_chat.has_value())	inlineKeyboardButtonJsonObject.insert("switch_inline_query_current_chat", *switch_inline_query_current_chat);
-	//if (callback_game.has_value())						inlineKeyboardButtonJsonObject.insert("callback_game", *callback_game);
-	if (pay.has_value())								inlineKeyboardButtonJsonObject.insert("pay", *pay);
+	if (url.has_value())								inline_keyboard_button_json_object.insert("url", *url);
+	if (login_url.has_value())							inline_keyboard_button_json_object.insert("login_url", login_url->toObject());
+	if (callback_data.has_value())						inline_keyboard_button_json_object.insert("callback_data", *callback_data);
+	if (switch_inline_query.has_value())				inline_keyboard_button_json_object.insert("switch_inline_query", *switch_inline_query);
+	if (switch_inline_query_current_chat.has_value())	inline_keyboard_button_json_object.insert("switch_inline_query_current_chat", *switch_inline_query_current_chat);
+	//if (callback_game.has_value())						inline_keyboard_button_json_object.insert("callback_game", *callback_game);
+	if (pay.has_value())								inline_keyboard_button_json_object.insert("pay", *pay);
 
-	return inlineKeyboardButtonJsonObject;
+	return inline_keyboard_button_json_object;
 }
 
-bool Telegram::InlineKeyboardButton::isEmpty() const
-{
+bool Telegram::InlineKeyboardButton::isEmpty() const {
 	return text == ""
 		   and url == std::nullopt
 		   and login_url == std::nullopt

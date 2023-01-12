@@ -1,12 +1,15 @@
-#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTDOCUMENT_H
+Ôªø#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTDOCUMENT_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTDOCUMENT_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
+#include "qvector.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/MessageEntity.h"
@@ -45,16 +48,24 @@ namespace Telegram
                                   const std::optional<qint32>& thumb_width = std::nullopt,	         
                                   const std::optional<qint32>& thumb_height = std::nullopt);
 
+
         /* @brief Returns InlineQueryResultDocument in form of JSON object. Returns empty QJsonObject if InlineQueryResultDocument is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultDocument is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultDocument&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be document */
-        const QString type = "document";
+        const Type type = Type::DOCUMENT;
         
         /** @brief Unique identifier for this result, 1-64 bytes */
         QString	id;
@@ -65,7 +76,7 @@ namespace Telegram
         /** @brief A valid URL for the file */
         QString	document_url;
         
-        /** @brief Mime type of the content of the file, either ìapplication/pdfî or ìapplication/zipî */
+        /** @brief Mime type of the content of the file, either ‚Äúapplication/pdf‚Äù or ‚Äúapplication/zip‚Äù */
         QString	mime_type;
         
         /** @brief Optional. Caption of the document to be sent, 0-1024 characters after entities parsing */

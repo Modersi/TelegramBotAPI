@@ -1,7 +1,5 @@
 #include "Types/ProximityAlertTriggered.h"
 
-#include "qjsonobject.h"
-
 Telegram::ProximityAlertTriggered::ProximityAlertTriggered() :
 	traveler(),
 	watcher(),
@@ -16,22 +14,18 @@ Telegram::ProximityAlertTriggered::ProximityAlertTriggered(const User& traveler,
 	distance(distance)
 {}
 
-Telegram::ProximityAlertTriggered::ProximityAlertTriggered(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("traveler") ? traveler = User(jsonObject["traveler"].toObject()) : traveler = User();
-	jsonObject.contains("watcher")	? watcher = User(jsonObject["watcher"].toObject())	 : watcher = User();
-	jsonObject.contains("distance") ? distance = jsonObject["distance"].toInt()			 : distance = 0;
+Telegram::ProximityAlertTriggered::ProximityAlertTriggered(const QJsonObject& json_object) {
+	json_object.contains("traveler") ? traveler = User(json_object["traveler"].toObject())   : traveler = User();
+	json_object.contains("watcher")	 ? watcher = User(json_object["watcher"].toObject())	 : watcher = User();
+	json_object.contains("distance") ? distance = json_object["distance"].toInt()			 : distance = 0;
 }
 
-QJsonObject Telegram::ProximityAlertTriggered::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::ProximityAlertTriggered::toObject() const {
+	if (isEmpty()) return {};
 
-	return QJsonObject{ {"traveler", traveler.toObject()}, {"watcher", watcher.toObject()}, {"distance", distance} };
+	return { {"traveler", traveler.toObject()}, {"watcher", watcher.toObject()}, {"distance", distance} };
 }
 
-bool Telegram::ProximityAlertTriggered::isEmpty() const
-{
+bool Telegram::ProximityAlertTriggered::isEmpty() const {
 	return traveler.isEmpty() and watcher.isEmpty() and distance == 0;
 }

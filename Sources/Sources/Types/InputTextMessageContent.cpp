@@ -20,22 +20,19 @@ Telegram::InputTextMessageContent::InputTextMessageContent(const QString& messag
 	disable_web_page_preview(disable_web_page_preview)
 {}
 
-QJsonObject Telegram::InputTextMessageContent::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InputTextMessageContent::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inputTextMessageContentJsonObject{ {"message_text", message_text} };
+	QJsonObject input_text_message_content_json_object{ {"message_text", message_text} };
 
-	if (parse_mode.has_value())					inputTextMessageContentJsonObject.insert("parse_mode", *parse_mode);
-	if (entities.has_value())					inputTextMessageContentJsonObject.insert("entities", QVectorToQJsonArray(*entities));
-	if (disable_web_page_preview.has_value())	inputTextMessageContentJsonObject.insert("disable_web_page_preview", *disable_web_page_preview);
+	if (parse_mode.has_value())					input_text_message_content_json_object.insert("parse_mode", *parse_mode);
+	if (entities.has_value())					input_text_message_content_json_object.insert("entities", QVectorToQJsonArray(*entities));
+	if (disable_web_page_preview.has_value())	input_text_message_content_json_object.insert("disable_web_page_preview", *disable_web_page_preview);
 
-	return inputTextMessageContentJsonObject;
+	return input_text_message_content_json_object;
 }
 
-bool Telegram::InputTextMessageContent::isEmpty() const
-{
+bool Telegram::InputTextMessageContent::isEmpty() const {
 	return message_text == ""
 		   and parse_mode == std::nullopt
 		   and entities == std::nullopt

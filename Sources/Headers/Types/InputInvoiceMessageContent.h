@@ -1,6 +1,13 @@
 #ifndef TELEGRAM_TYPES_INPUTINVOICEMESSAGECONTENT_H
 #define TELEGRAM_TYPES_INPUTINVOICEMESSAGECONTENT_H
 
+#include <compare>
+#include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
+#include "qvector.h"
+
 #include "Types/InputMessageContent.h"
 //#include "Types/LabeledPrice.h"
 
@@ -28,7 +35,7 @@ namespace Telegram
                                    //const QVector<LabeledPrice>& prices,
                                    const std::optional<qint32>& max_tip_amount = std::nullopt,	             
                                    const std::optional<QVector<qint32>>& suggested_tip_amounts = std::nullopt,	     
-                                   const std::optional<QJsonValue>& provider_data = std::nullopt,
+                                   const std::optional<QJsonObject>& provider_data = std::nullopt,
                                    const std::optional<QString>& photo_url = std::nullopt,	                 
                                    const std::optional<qint32>& photo_size = std::nullopt,	                 
                                    const std::optional<qint32>& photo_width = std::nullopt,	                 
@@ -41,11 +48,13 @@ namespace Telegram
                                    const std::optional<bool>& send_email_to_provider = std::nullopt,	     
                                    const std::optional<bool>& is_flexible = std::nullopt);
 
+
         /* @brief Returns InputInvoiceMessageContent in form of JSON object. Returns empty QJsonObject if InputInvoiceMessageContent is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InputInvoiceMessageContent is empty */
         virtual bool isEmpty() const override;
+
 
 //** Fields **//
 
@@ -74,7 +83,7 @@ namespace Telegram
         std::optional<QVector<qint32>> suggested_tip_amounts;
         
         /* @brief Optional. A JSON-serialized object for data about the invoice, which will be shared with the payment provider. A detailed description of the required fields should be provided by the payment provider */
-        std::optional<QJsonValue> provider_data;
+        std::optional<QJsonObject> provider_data;
         
         /* @brief Optional. URL of the product photo for the invoice. Can be a photo of the goods or a marketing image for a service. People like it better when they see what they are paying for */
         std::optional<QString> photo_url;

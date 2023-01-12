@@ -1,12 +1,14 @@
 #ifndef TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDSTICKER_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDSTICKER_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 
@@ -35,16 +37,24 @@ namespace Telegram
                                        const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt,
                                        const std::optional<std::shared_ptr<InputMessageContent>>& input_message_content = std::nullopt);
 
+
         /* @brief Returns InlineQueryResultCachedSticker in form of JSON object. Returns empty QJsonObject if InlineQueryResultCachedSticker is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultCachedSticker is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultCachedSticker&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be sticker */
-        const QString type = "sticker";
+        const Type type = Type::STICKER;
 
         /** @brief Unique identifier for this result, 1-64 bytes */
         QString	id;

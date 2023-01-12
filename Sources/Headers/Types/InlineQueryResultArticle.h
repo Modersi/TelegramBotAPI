@@ -1,12 +1,14 @@
 #ifndef TELEGRAM_TYPES_INLINEQUERYRESULTARTICLE_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTARTICLE_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 
@@ -37,16 +39,23 @@ namespace Telegram
                                  const std::optional<qint32>& thumb_width = std::nullopt,
                                  const std::optional<qint32>& thumb_height = std::nullopt);
 
+
         /* @brief Returns InlineQueryResultArticle in form of JSON object. Returns empty QJsonObject if InlineQueryResultArticle is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultArticle is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultArticle&) const = default;
+
 //** Fields **//
 
         /** @brief Type of the result, must be article */
-        const QString type = "article";
+        const Type type = Type::ARTICLE;
 
         /** @brief Unique identifier for this result, 1-64 Bytes */
         QString id;

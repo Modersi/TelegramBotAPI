@@ -1,7 +1,10 @@
 #ifndef TELEGRAM_TYPES_VOICECHATPARTICIPANTSINVITED_H
 #define TELEGRAM_TYPES_VOICECHATPARTICIPANTSINVITED_H
 
+#include <compare>
+
 #include "qvector.h"
+#include "qjsonobject.h"
 
 #include "User.h"
 
@@ -26,13 +29,18 @@ namespace Telegram
         /** @brief JSON constructor. Constructs VoiceChatScheduled object from QJsonObject
          *
          * QJsonObject which is passed to constuctor has to has key-value pair "users" = "..." to contruct correct object, otherwise empty object will be created */
-        VoiceChatParticipantsInvited(const QJsonObject& jsonObject);
+        VoiceChatParticipantsInvited(const QJsonObject& json_object);
+
 
         /** @brief Returns VoiceChatParticipantsInvited in form of JSON object. Returns empty QJsonObject if VoiceChatParticipantsInvited is empty */
         QJsonObject toObject() const;
 
         /** @brief Returns true if VoiceChatParticipantsInvited is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const VoiceChatParticipantsInvited&) const = default;
+
 
 //** Fields **//
 

@@ -1,7 +1,6 @@
 #include "Types/InlineQueryResultAudio.h"
 
 #include "Internal/ConversionFunctions.h"
-#include "Types/InputMessageContent.h"
 
 Telegram::InlineQueryResultAudio::InlineQueryResultAudio() :
 	id(),
@@ -38,26 +37,23 @@ Telegram::InlineQueryResultAudio::InlineQueryResultAudio(const QString& id,
 	input_message_content(input_message_content)
 {}
 
-QJsonObject Telegram::InlineQueryResultAudio::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineQueryResultAudio::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineQueryResultAudioJsonObject{ {"type", type}, {"id", id}, {"audio_url", audio_url}, {"title", title} };
+	QJsonObject inline_query_result_audio_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()}, {"id", id}, {"audio_url", audio_url}, {"title", title} };
 
-	if (caption.has_value())				inlineQueryResultAudioJsonObject.insert("caption", *caption);
-	if (parse_mode.has_value())				inlineQueryResultAudioJsonObject.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inlineQueryResultAudioJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
-	if (performer.has_value())				inlineQueryResultAudioJsonObject.insert("performer", *performer);
-	if (audio_duration.has_value())			inlineQueryResultAudioJsonObject.insert("audio_duration", *audio_duration);
-	if (reply_markup.has_value())			inlineQueryResultAudioJsonObject.insert("reply_markup", reply_markup->toObject());
-	if (input_message_content.has_value())	inlineQueryResultAudioJsonObject.insert("input_message_content", (**input_message_content).toObject());
+	if (caption.has_value())				inline_query_result_audio_json_object.insert("caption", *caption);
+	if (parse_mode.has_value())				inline_query_result_audio_json_object.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())		inline_query_result_audio_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (performer.has_value())				inline_query_result_audio_json_object.insert("performer", *performer);
+	if (audio_duration.has_value())			inline_query_result_audio_json_object.insert("audio_duration", *audio_duration);
+	if (reply_markup.has_value())			inline_query_result_audio_json_object.insert("reply_markup", reply_markup->toObject());
+	if (input_message_content.has_value())	inline_query_result_audio_json_object.insert("input_message_content", (**input_message_content).toObject());
 
-	return inlineQueryResultAudioJsonObject;
+	return inline_query_result_audio_json_object;
 }
 
-bool Telegram::InlineQueryResultAudio::isEmpty() const
-{
+bool Telegram::InlineQueryResultAudio::isEmpty() const {
 	return id == ""
 		   and audio_url == ""
 		   and title == ""
@@ -68,4 +64,8 @@ bool Telegram::InlineQueryResultAudio::isEmpty() const
 		   and audio_duration == std::nullopt
 		   and reply_markup == std::nullopt
 		   and input_message_content == std::nullopt;
+}
+
+Telegram::InlineQueryResult::Type Telegram::InlineQueryResultAudio::getType() const {
+	return type;
 }

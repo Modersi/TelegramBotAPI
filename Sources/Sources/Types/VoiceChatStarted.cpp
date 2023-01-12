@@ -3,12 +3,10 @@
 Telegram::VoiceChatStarted::VoiceChatStarted()
 {}
 
-QJsonObject Telegram::VoiceChatStarted::toObject() const
-{
-    return QJsonObject();
+QJsonObject Telegram::VoiceChatStarted::toObject() const {
+    return {};
 }
 
-bool Telegram::VoiceChatStarted::isEmpty() const
-{
+bool Telegram::VoiceChatStarted::isEmpty() const {
     return true;
 }

@@ -1,12 +1,15 @@
 #ifndef TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDMPEG4GIF_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDMPEG4GIF_H
 
+#include <compare>
 #include <optional>
+#include <memory> 
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
+#include "qvector.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/MessageEntity.h"
@@ -38,16 +41,24 @@ namespace Telegram
                                         const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt,
                                         const std::optional<std::shared_ptr<InputMessageContent>>& input_message_content = std::nullopt);
 
+
         /* @brief Returns InlineQueryResultCachedMpeg4Gif in form of JSON object. Returns empty QJsonObject if InlineQueryResultCachedMpeg4Gif is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultCachedMpeg4Gif is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultCachedMpeg4Gif&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be mpeg4_gif */
-        const QString type = "mpeg4_gif";
+        const Type type = Type::MPEG4_GIF;
 
         /** @brief Unique identifier for this result, 1-64 bytes */
         QString	id;

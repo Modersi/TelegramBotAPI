@@ -1,32 +1,20 @@
 ##### TelegramBotAPI library
 add_library(${PROJECT_NAME})
-
-target_precompile_headers(${PROJECT_NAME} PRIVATE PrecompiledHeaders)
-
-##### You can turn on debug mode by specifying build option DEBUG_MODE so all system messages will be visible
-if(DEBUG_MODE)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE DEBUG_MODE)
-endif(DEBUG_MODE)
-
-set_target_properties(${PROJECT_NAME} 
-						PROPERTIES 
-							CXX_STANDARD 20
-							CXX_STANDARD_REQUIRED ON
-							VERSION ${PROJECT_VERSION})
-
-# Library install destination place #
-install(TARGETS ${PROJECT_NAME} 
-		EXPORT TelegramBotAPI
-		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-		ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 		
-# Headers install destination place #
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/Sources/Headers/ 
-		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(TARGETS ${PROJECT_NAME} EXPORT ${PROJECT_NAME}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/Sources/Headers)
+install(DIRECTORY Headers/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX}/cmake)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core PRIVATE Qt6::Network)
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL)
+
+target_include_directories(${PROJECT_NAME} PRIVATE Headers)
 target_sources(${PROJECT_NAME}
-					PUBLIC
+					PRIVATE
 						##### Main header
 							Headers/TelegramBotAPI.h
 
@@ -227,23 +215,14 @@ target_sources(${PROJECT_NAME}
 							Sources/Types/WebhookInfo.cpp
 							Headers/Types/WebhookInfo.h
 
-					PRIVATE
 						##### Internal
-							Sources/Internal/WebhookManager.cpp
-							Headers/Internal/WebhookManager.h
+							Sources/Internal/TelegramListener.cpp
+							Headers/Internal/TelegramListener.h
 							Sources/Internal/RequestManager.cpp
 							Headers/Internal/RequestManager.h
 							Headers/Internal/ConversionFunctions.h)
 
-# Linking with Qt5 #	
-find_package(Qt5 REQUIRED Core Network)				
-target_link_libraries(${PROJECT_NAME} 
-						PRIVATE Qt5::Core
-						PRIVATE Qt5::Network)
 
-# Linking with OpenSSL #
-find_package(OpenSSL REQUIRED)				
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL)
 
 
 

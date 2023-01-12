@@ -1,10 +1,11 @@
 #ifndef TELEGRAM_TYPES_FILE_H
 #define TELEGRAM_TYPES_FILE_H
 
-#include "qstring.h"
-class QJsonObject;
-
+#include <compare>
 #include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -36,13 +37,17 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to File class fields. For example it should contain pairs such as "file_id" = "...",
          * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        File(const QJsonObject& jsonObject);
+        File(const QJsonObject& json_object);
+
 
         /* @brief Returns File in form of JSON object. Returns empty QJsonObject if File is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if File is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const File&) const = default;
 
 
 //** Fields **//

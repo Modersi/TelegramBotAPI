@@ -1,10 +1,10 @@
 #ifndef TELEGRAM_TYPES_POLLOPTION_H
 #define TELEGRAM_TYPES_POLLOPTION_H
 
-#include "qstring.h"
-class QJsonObject;
+#include <compare>
 
-#include <optional>
+#include "qstring.h"
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -29,13 +29,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has key-value pair "text" = "...", "voterCount" = "..." to construct correct object,
          * otherwise empty PollOption object will be constructed */
-        PollOption(const QJsonObject& jsonObject);
+        PollOption(const QJsonObject& json_object);
+
 
         /* @brief Returns PollOption in form of JSON object. Returns empty QJsonObject if PollOption is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if PollOption is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const PollOption&) const = default;
+
 
 //** Fields **//
 

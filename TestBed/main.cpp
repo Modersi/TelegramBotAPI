@@ -1,29 +1,29 @@
 #include "qcoreapplication.h"
-#include "qsslkey.h"
-#include "qjsonarray.h"
 
 #include "TestBot.h"
 
 using namespace Telegram;
 
-int main(int argc, char* argv[])
-{
-	QCoreApplication coreApplication(argc, argv);
+/* A simple example of a Telegram bot that sends a message when it receives a command */
+
+int main(int argc, char* argv[]) {
+
+	QCoreApplication core_application(argc, argv);
 
 	QVector<BotCommand> bot_commands = {
-		{"test_command", "Test description"}
+		{"test_command", "Test description!"}
 	};
 
 	TestBot test_bot(bot_commands);
-#define telegram_bot test_bot.telegram_bot
 
-	QObject::connect(&test_bot, &TestBot::commandReceived, [&](const User& from, const QString command) {
+	QObject::connect(&test_bot, &TestBot::commandReceived, [&test_bot](const std::shared_ptr<Chat>& chat, const QString& command) {
 
 		if (command == "/test_command") {
-			telegram_bot.sendMessage(from.id, "Test command received!");
+			test_bot.telegram_bot.sendMessage(chat->id, "Test command received!");
 		}
 
 	});
 
-	return coreApplication.exec();
+	return core_application.exec();
 }
+

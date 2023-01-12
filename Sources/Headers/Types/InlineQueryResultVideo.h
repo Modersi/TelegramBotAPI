@@ -1,12 +1,15 @@
-#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTVIDEO_H
+Ôªø#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTVIDEO_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTVIDEO_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
+#include "qvector.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/MessageEntity.h"
@@ -46,16 +49,24 @@ namespace Telegram
                                const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt,	     
                                const std::optional<std::shared_ptr<InputMessageContent>>& input_message_content = std::nullopt);
 
+
          /* @brief Returns InlineQueryResultVideo in form of JSON object. Returns empty QJsonObject if InlineQueryResultVideo is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultVideo is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultVideo&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be video */
-        const QString type = "video";
+        const Type type = Type::VIDEO;
         
         /** @brief Unique identifier for this result, 1-64 bytes */
         QString id;
@@ -63,7 +74,7 @@ namespace Telegram
         /** @brief A valid URL for the embedded video player or video file */
         QString video_url;
         
-        /** @brief Mime type of the content of video url, ìtext/htmlî or ìvideo/mp4î */
+        /** @brief Mime type of the content of video url, ‚Äútext/html‚Äù or ‚Äúvideo/mp4‚Äù */
         QString mime_type;
         
         /** @brief URL of the thumbnail (jpeg only) for the video */

@@ -1,7 +1,6 @@
 #include "Types/InlineQueryResultGif.h"
 
 #include "Internal/ConversionFunctions.h"
-#include "Types/InputMessageContent.h"
 
 Telegram::InlineQueryResultGif::InlineQueryResultGif() :
 	id(),
@@ -47,29 +46,26 @@ Telegram::InlineQueryResultGif::InlineQueryResultGif(const QString& id,
 	input_message_content(input_message_content)
 {}
 
-QJsonObject Telegram::InlineQueryResultGif::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineQueryResultGif::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineQueryResultGifJsonObject{ {"type", type}, {"id", id}, {"gif_url", gif_url}, {"thumb_url", thumb_url} };
+	QJsonObject inline_query_result_gif_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()}, {"id", id}, {"gif_url", gif_url}, {"thumb_url", thumb_url} };
 
-	if (gif_width.has_value())				inlineQueryResultGifJsonObject.insert("gif_width", *gif_width);
-	if (gif_height.has_value())				inlineQueryResultGifJsonObject.insert("gif_height", *gif_height);
-	if (gif_duration.has_value())			inlineQueryResultGifJsonObject.insert("gif_duration", *gif_duration);
-	if (thumb_mime_type.has_value())		inlineQueryResultGifJsonObject.insert("thumb_mime_type", *thumb_mime_type);
-	if (title.has_value())					inlineQueryResultGifJsonObject.insert("title", *title);
-	if (caption.has_value())				inlineQueryResultGifJsonObject.insert("caption", *caption);
-	if (parse_mode.has_value())				inlineQueryResultGifJsonObject.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inlineQueryResultGifJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
-	if (reply_markup.has_value())			inlineQueryResultGifJsonObject.insert("reply_markup", reply_markup->toObject());
-	if (input_message_content.has_value())	inlineQueryResultGifJsonObject.insert("input_message_content", (**input_message_content).toObject());
+	if (gif_width.has_value())				inline_query_result_gif_json_object.insert("gif_width", *gif_width);
+	if (gif_height.has_value())				inline_query_result_gif_json_object.insert("gif_height", *gif_height);
+	if (gif_duration.has_value())			inline_query_result_gif_json_object.insert("gif_duration", *gif_duration);
+	if (thumb_mime_type.has_value())		inline_query_result_gif_json_object.insert("thumb_mime_type", *thumb_mime_type);
+	if (title.has_value())					inline_query_result_gif_json_object.insert("title", *title);
+	if (caption.has_value())				inline_query_result_gif_json_object.insert("caption", *caption);
+	if (parse_mode.has_value())				inline_query_result_gif_json_object.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())		inline_query_result_gif_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (reply_markup.has_value())			inline_query_result_gif_json_object.insert("reply_markup", reply_markup->toObject());
+	if (input_message_content.has_value())	inline_query_result_gif_json_object.insert("input_message_content", (**input_message_content).toObject());
 
-	return inlineQueryResultGifJsonObject;
+	return inline_query_result_gif_json_object;
 }
 
-bool Telegram::InlineQueryResultGif::isEmpty() const
-{
+bool Telegram::InlineQueryResultGif::isEmpty() const {
 	return id == ""
 		   and gif_url == ""
 		   and thumb_url == ""
@@ -83,4 +79,8 @@ bool Telegram::InlineQueryResultGif::isEmpty() const
 		   and caption_entities == std::nullopt
 		   and reply_markup == std::nullopt
 		   and input_message_content == std::nullopt;
+}
+
+Telegram::InlineQueryResult::Type Telegram::InlineQueryResultGif::getType() const {
+	return type;
 }

@@ -1,7 +1,5 @@
 #include "Types/ChatInviteLink.h"
 
-#include "qjsonobject.h"
-
 Telegram::ChatInviteLink::ChatInviteLink() :
 	invite_link(),
 	creator(),
@@ -25,31 +23,28 @@ Telegram::ChatInviteLink::ChatInviteLink(const QString& invite_link,
 	member_limit(member_limit)
 {}
 
-Telegram::ChatInviteLink::ChatInviteLink(const QJsonObject& jsonObject)
+Telegram::ChatInviteLink::ChatInviteLink(const QJsonObject& json_object)
 {
-	jsonObject.contains("invite_link")	? invite_link = jsonObject["invite_link"].toString() : invite_link = "";
-	jsonObject.contains("creator")		? creator = User(jsonObject["creator"].toObject())   : creator = User();
-	jsonObject.contains("is_primary")	? is_primary = jsonObject["is_primary"].toBool()	 : is_primary = false;
-	jsonObject.contains("is_revoked")	? is_revoked = jsonObject["is_revoked"].toBool()	 : is_revoked = false;
-	jsonObject.contains("expire_date")	? expire_date = jsonObject["expire_date"].toInt()	 : expire_date = std::nullopt;
-	jsonObject.contains("member_limit") ? member_limit = jsonObject["member_limit"].toInt()  : member_limit = std::nullopt;
+	json_object.contains("invite_link")	? invite_link = json_object["invite_link"].toString() : invite_link = "";
+	json_object.contains("creator")		? creator = User(json_object["creator"].toObject())   : creator = User();
+	json_object.contains("is_primary")	? is_primary = json_object["is_primary"].toBool()	 : is_primary = false;
+	json_object.contains("is_revoked")	? is_revoked = json_object["is_revoked"].toBool()	 : is_revoked = false;
+	json_object.contains("expire_date")	? expire_date = json_object["expire_date"].toInt()	 : expire_date = std::nullopt;
+	json_object.contains("member_limit") ? member_limit = json_object["member_limit"].toInt()  : member_limit = std::nullopt;
 }
 
-QJsonObject Telegram::ChatInviteLink::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::ChatInviteLink::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject chatInviteLinkJsonObject{ {"invite_link", invite_link}, {"creator", creator.toObject()}, {"is_primary", is_primary}, {"is_revoked", is_revoked} };
+	QJsonObject chat_invite_link_json_object{ {"invite_link", invite_link}, {"creator", creator.toObject()}, {"is_primary", is_primary}, {"is_revoked", is_revoked} };
 
-	if (expire_date.has_value())	chatInviteLinkJsonObject.insert("expire_date", *expire_date);
-	if (member_limit.has_value())	chatInviteLinkJsonObject.insert("member_limit", *member_limit);
+	if (expire_date.has_value())	chat_invite_link_json_object.insert("expire_date", *expire_date);
+	if (member_limit.has_value())	chat_invite_link_json_object.insert("member_limit", *member_limit);
 
-	return chatInviteLinkJsonObject;
+	return chat_invite_link_json_object;
 }
 
-bool Telegram::ChatInviteLink::isEmpty() const
-{
+bool Telegram::ChatInviteLink::isEmpty() const {
 	return invite_link == ""
 		   and creator.isEmpty()
 		   and is_primary == false

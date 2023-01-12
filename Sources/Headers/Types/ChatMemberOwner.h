@@ -1,5 +1,11 @@
-#ifndef TELEGRAM_TYPES_CHATMEMBEROWNER_H
+Ôªø#ifndef TELEGRAM_TYPES_CHATMEMBEROWNER_H
 #define TELEGRAM_TYPES_CHATMEMBEROWNER_H
+
+#include <compare>
+#include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
 
 #include "User.h"
 #include "ChatMember.h"
@@ -28,7 +34,8 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to ChatMemberOwner class fields. For example it should contain pairs such as "user" = "...",
          * "status" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        ChatMemberOwner(const QJsonObject& jsonObject);
+        ChatMemberOwner(const QJsonObject& json_object);
+
 
         /* @brief Returns ChatMemberOwner in form of JSON object. Returns empty QJsonObject if ChatMemberOwner is empty */
         virtual QJsonObject toObject() const override;
@@ -36,10 +43,16 @@ namespace Telegram
         /* @brief Returns true if ChatMemberOwner is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns status of the ChatMember */
+        virtual Status getStatus() const override;
+
+
+        std::partial_ordering operator <=> (const ChatMemberOwner&) const = default;
+
 //** Fields **//
 
-        /** @brief The member's status in the chat, always ìcreatorî */
-        const QString status = "creator";
+        /** @brief The member's status in the chat, always ‚Äúcreator‚Äù */
+        const Status status = Status::CREATOR;
 
         /** @brief Information about the user */
         User user;

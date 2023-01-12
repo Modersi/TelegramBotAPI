@@ -1,7 +1,5 @@
 #include "Types/Contact.h"
 
-#include "qjsonobject.h"
-
 Telegram::Contact::Contact() :
 	phone_number(),
 	first_name(),
@@ -22,31 +20,27 @@ Telegram::Contact::Contact(const QString& phone_number,
 	vcard(vcard)
 {}
 
-Telegram::Contact::Contact(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("phone_number") ? phone_number = jsonObject["phone_number"].toString() : phone_number = "";
-	jsonObject.contains("first_name")	? first_name = jsonObject["first_name"].toString()	   : first_name = "";
-	jsonObject.contains("last_name")	? last_name = jsonObject["last_name"].toString()	   : last_name = std::nullopt;
-	jsonObject.contains("user_id")		? user_id = jsonObject["user_id"].toInt()			   : user_id = std::nullopt;
-	jsonObject.contains("vcard")		? vcard = jsonObject["vcard"].toString()			   : vcard = std::nullopt;
+Telegram::Contact::Contact(const QJsonObject& json_object) {
+	json_object.contains("phone_number") ? phone_number = json_object["phone_number"].toString() : phone_number = "";
+	json_object.contains("first_name")	 ? first_name = json_object["first_name"].toString()	 : first_name = "";
+	json_object.contains("last_name")	 ? last_name = json_object["last_name"].toString()	     : last_name = std::nullopt;
+	json_object.contains("user_id")		 ? user_id = json_object["user_id"].toInteger()			 : user_id = std::nullopt;
+	json_object.contains("vcard")		 ? vcard = json_object["vcard"].toString()			     : vcard = std::nullopt;
 }
 
-QJsonObject Telegram::Contact::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::Contact::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject conctactJsonObject{ {"phone_number", phone_number}, {"first_name", first_name} };
+	QJsonObject conctact_json_object{ {"phone_number", phone_number}, {"first_name", first_name} };
 
-	if (last_name.has_value())	conctactJsonObject.insert("last_name", *last_name);
-	if (user_id.has_value())	conctactJsonObject.insert("user_id", *user_id);
-	if (vcard.has_value())		conctactJsonObject.insert("vcard", *vcard);
+	if (last_name.has_value())	conctact_json_object.insert("last_name", *last_name);
+	if (user_id.has_value())	conctact_json_object.insert("user_id", *user_id);
+	if (vcard.has_value())		conctact_json_object.insert("vcard", *vcard);
 
-	return conctactJsonObject;
+	return conctact_json_object;
 }
 
-bool Telegram::Contact::isEmpty() const
-{
+bool Telegram::Contact::isEmpty() const {
 	return phone_number == ""
 		   and first_name == ""
 		   and last_name == std::nullopt

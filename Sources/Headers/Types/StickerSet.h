@@ -1,7 +1,12 @@
 #ifndef TELEGRAM_TYPES_STICKERSET_H
 #define TELEGRAM_TYPES_STICKERSET_H
 
+#include <compare>
+#include <optional>
+
 #include "qvector.h"
+#include "qstring.h"
+#include "qjsonobject.h"
 
 #include "Sticker.h"
 #include "PhotoSize.h"
@@ -33,13 +38,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to StickerSet class fields. For example it should contain pairs such as "name" = "...",
          * "title" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        StickerSet(const QJsonObject& jsonObject);
+        StickerSet(const QJsonObject& json_object);
+
 
         /** @brief Returns StickerSet in form of JSON object. Returns empty QJsonObject if StickerSet is empty */
         QJsonObject toObject() const;
 
         /** @brief Returns true if StickerSet is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const StickerSet&) const = default;
+
 
 //** Fields **//
 

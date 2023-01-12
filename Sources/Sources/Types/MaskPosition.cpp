@@ -17,43 +17,21 @@ Telegram::MaskPosition::MaskPosition(const Point& point,
 	scale(scale)
 {}
 
-Telegram::MaskPosition::MaskPosition(const QJsonObject& jsonObject)
-{
-	auto GetMaskPositionPoint = [](const QJsonValue& maskPositionPoint) -> MaskPosition::Point
-							{
-								if (maskPositionPoint == "forehead")	return Point::FOREHEAD;
-								else if (maskPositionPoint == "eyes")	return Point::EYES;
-								else if (maskPositionPoint == "mouth")	return Point::MOUTH;
-								else if (maskPositionPoint == "chin")	return Point::CHIN;
-								else return Point::UNINITIALIZED_VALUE;
-							};
-
-	jsonObject.contains("point")   ? point = GetMaskPositionPoint(jsonObject["point"].toString()) : point = Point::UNINITIALIZED_VALUE;
-	jsonObject.contains("x_shift") ? x_shift = jsonObject["x_shift"].toDouble()					  : x_shift = 0.0;
-	jsonObject.contains("y_shift") ? y_shift = jsonObject["y_shift"].toDouble()					  : y_shift = 0.0;
-	jsonObject.contains("scale")   ? scale = jsonObject["scale"].toDouble()						  : scale = 0.0;
+Telegram::MaskPosition::MaskPosition(const QJsonObject& json_object) {
+	json_object.contains("point")   ? point = static_cast<decltype(point)>(QMetaEnum::fromType<decltype(point)>().keyToValue(json_object["point"].toString().toUpper().toUtf8())) : point = decltype(point)::NULL_ENUMERATOR;
+	json_object.contains("x_shift") ? x_shift = json_object["x_shift"].toDouble()																									: x_shift = 0.0;
+	json_object.contains("y_shift") ? y_shift = json_object["y_shift"].toDouble()																									: y_shift = 0.0;
+	json_object.contains("scale")   ? scale = json_object["scale"].toDouble()																										: scale = 0.0;
 }
 
-QJsonObject Telegram::MaskPosition::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::MaskPosition::toObject() const {
+	if (isEmpty()) return {};
 
-	auto GetMaskPositionPoint = [](const MaskPosition::Point& maskPositionPoint) -> QString
-							{
-								if (maskPositionPoint == Point::FOREHEAD)	return "forehead";
-								else if (maskPositionPoint == Point::EYES)	return "eyes";
-								else if (maskPositionPoint == Point::MOUTH)	return "mouth";
-								else if (maskPositionPoint == Point::CHIN)	return "chin";
-								else return "";
-							};
-
-	return QJsonObject{ {"point", GetMaskPositionPoint(point)}, {"x_shift", x_shift}, {"y_shift", y_shift}, {"scale", scale} };
+	return { {"point", QString(QMetaEnum::fromType<decltype(point)>().valueToKey(static_cast<int>(point))).toLower()}, {"x_shift", x_shift}, {"y_shift", y_shift}, {"scale", scale} };
 }
 
-bool Telegram::MaskPosition::isEmpty() const
-{
-	return point == Point::UNINITIALIZED_VALUE
+bool Telegram::MaskPosition::isEmpty() const {
+	return point == decltype(point)::NULL_ENUMERATOR
 		   and x_shift == 0.0
 		   and y_shift == 0.0
 		   and scale == 0.0;

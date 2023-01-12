@@ -1,6 +1,8 @@
 #ifndef TELEGRAM_TYPES_MESSAGEID_H
 #define TELEGRAM_TYPES_MESSAGEID_H
 
+#include <compare>
+
 #include "qstring.h"
 class QJsonObject;
 
@@ -23,13 +25,15 @@ namespace Telegram
         /** @brief JSON constructor. Constructs MessageId object from QJsonObject
          *
          * QJsonObject which is passed to constuctor has to has key-value pair "message_id" = "..." to contruct correct object, otherwise empty object will be created */
-        MessageId(const QJsonObject& jsonObject);
+        MessageId(const QJsonObject& json_object);
 
         /* @brief Returns MessageId in form of JSON object. Returns empty QJsonObject if MessageId is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if MessageId is empty */
         bool isEmpty() const;
+
+        std::partial_ordering operator <=> (const MessageId&) const = default;
 
 //** Fields **//
 

@@ -1,7 +1,5 @@
 #include "Types/CallbackQuery.h"
 
-#include "qjsonobject.h"
-
 Telegram::CallbackQuery::CallbackQuery() : 
     id(),
     from(),
@@ -28,34 +26,30 @@ Telegram::CallbackQuery::CallbackQuery(const QString& id,
     game_short_name(game_short_name)
 {}
 
-Telegram::CallbackQuery::CallbackQuery(const QJsonObject& jsonObject)
-{
-    jsonObject.contains("id")                ? id = jsonObject["id"].toString()                               : id = "";
-    jsonObject.contains("from")              ? from = User(jsonObject["from"].toObject())                     : from = User();
-    jsonObject.contains("chat_instance")     ? chat_instance = jsonObject["chat_instance"].toString()         : chat_instance = "";
-    jsonObject.contains("message")           ? message = Message(jsonObject["message"].toObject())            : message = std::nullopt;
-    jsonObject.contains("inline_message_id") ? inline_message_id = jsonObject["inline_message_id"].toString() : inline_message_id = std::nullopt;
-    jsonObject.contains("data")              ? data = jsonObject["data"].toString()                           : data = std::nullopt;
-    jsonObject.contains("game_short_name")   ? game_short_name = jsonObject["game_short_name"].toString()     : game_short_name = std::nullopt;
+Telegram::CallbackQuery::CallbackQuery(const QJsonObject& json_object) {
+    json_object.contains("id")                ? id = json_object["id"].toString()                               : id = "";
+    json_object.contains("from")              ? from = User(json_object["from"].toObject())                     : from = User();
+    json_object.contains("chat_instance")     ? chat_instance = json_object["chat_instance"].toString()         : chat_instance = "";
+    json_object.contains("message")           ? message = Message(json_object["message"].toObject())            : message = std::nullopt;
+    json_object.contains("inline_message_id") ? inline_message_id = json_object["inline_message_id"].toString() : inline_message_id = std::nullopt;
+    json_object.contains("data")              ? data = json_object["data"].toString()                           : data = std::nullopt;
+    json_object.contains("game_short_name")   ? game_short_name = json_object["game_short_name"].toString()     : game_short_name = std::nullopt;
 }
 
-QJsonObject Telegram::CallbackQuery::toObject() const
-{
-    if (isEmpty())
-        return QJsonObject();
+QJsonObject Telegram::CallbackQuery::toObject() const {
+    if (isEmpty()) return {};
 
-    QJsonObject callBackQueryJsonObject{ {"id", id}, {"from", from.toObject()}, {"chat_instance", chat_instance} };
+    QJsonObject callback_query_json_object{ {"id", id}, {"from", from.toObject()}, {"chat_instance", chat_instance} };
 
-    if (message.has_value())			callBackQueryJsonObject.insert("message", message->toObject());
-    if (inline_message_id.has_value())	callBackQueryJsonObject.insert("inline_message_id", *inline_message_id);
-    if (data.has_value())				callBackQueryJsonObject.insert("data", *data);
-    if (game_short_name.has_value())	callBackQueryJsonObject.insert("game_short_name", *game_short_name);
+    if (message.has_value())			callback_query_json_object.insert("message", message->toObject());
+    if (inline_message_id.has_value())	callback_query_json_object.insert("inline_message_id", *inline_message_id);
+    if (data.has_value())				callback_query_json_object.insert("data", *data);
+    if (game_short_name.has_value())	callback_query_json_object.insert("game_short_name", *game_short_name);
 
-    return callBackQueryJsonObject;
+    return callback_query_json_object;
 }
 
-bool Telegram::CallbackQuery::isEmpty() const
-{
+bool Telegram::CallbackQuery::isEmpty() const {
     return id == ""
            and from.isEmpty()
            and chat_instance == ""

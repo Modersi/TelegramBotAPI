@@ -1,7 +1,10 @@
 #ifndef TELEGRAM_TYPES_POLLANSWER_H
 #define TELEGRAM_TYPES_POLLANSWER_H
 
+#include <compare>
+
 #include "qvector.h"
+#include "qstring.h"
 
 #include "User.h"
 
@@ -29,13 +32,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to PollAnswer class fields. For example it should contain pairs such as "poll_id" = "...",
          * "user" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        PollAnswer(const QJsonObject& jsonObject);
+        PollAnswer(const QJsonObject& json_object);
+
 
         /* @brief Returns PollAnswer in form of JSON object. Returns empty QJsonObject if PollAnswer is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if PollAnswer is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const PollAnswer&) const = default;
+
 
 //** Fields **//
 

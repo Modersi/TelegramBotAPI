@@ -1,7 +1,6 @@
 #include "Types/InlineQueryResultLocation.h"
 
 #include "Internal/ConversionFunctions.h"
-#include "Types/InputMessageContent.h"
 
 Telegram::InlineQueryResultLocation::InlineQueryResultLocation() :
 	id(),
@@ -47,28 +46,25 @@ Telegram::InlineQueryResultLocation::InlineQueryResultLocation(const QString& id
 	thumb_height(thumb_height)
 {}
 
-QJsonObject Telegram::InlineQueryResultLocation::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineQueryResultLocation::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineQueryResultLocationJsonObject{ {"type", type}, {"id", id}, {"latitude", latitude}, {"longitude", longitude}, {"title", title} };
+	QJsonObject inline_query_result_location_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()}, {"id", id}, {"latitude", latitude}, {"longitude", longitude}, {"title", title} };
 
-	if (horizontal_accuracy.has_value())	inlineQueryResultLocationJsonObject.insert("horizontal_accuracy", *horizontal_accuracy);
-	if (live_period.has_value())			inlineQueryResultLocationJsonObject.insert("live_period", *live_period);
-	if (heading.has_value())				inlineQueryResultLocationJsonObject.insert("heading", *heading);
-	if (proximity_alert_radius.has_value())	inlineQueryResultLocationJsonObject.insert("proximity_alert_radius", *proximity_alert_radius);
-	if (reply_markup.has_value())			inlineQueryResultLocationJsonObject.insert("reply_markup", reply_markup->toObject());
-	if (input_message_content.has_value())	inlineQueryResultLocationJsonObject.insert("input_message_content", (**input_message_content).toObject());
-	if (thumb_url.has_value())				inlineQueryResultLocationJsonObject.insert("thumb_url", *thumb_url);
-	if (thumb_width.has_value())			inlineQueryResultLocationJsonObject.insert("thumb_width", *thumb_width);
-	if (thumb_height.has_value())			inlineQueryResultLocationJsonObject.insert("thumb_height", *thumb_height);
+	if (horizontal_accuracy.has_value())	inline_query_result_location_json_object.insert("horizontal_accuracy", *horizontal_accuracy);
+	if (live_period.has_value())			inline_query_result_location_json_object.insert("live_period", *live_period);
+	if (heading.has_value())				inline_query_result_location_json_object.insert("heading", *heading);
+	if (proximity_alert_radius.has_value())	inline_query_result_location_json_object.insert("proximity_alert_radius", *proximity_alert_radius);
+	if (reply_markup.has_value())			inline_query_result_location_json_object.insert("reply_markup", reply_markup->toObject());
+	if (input_message_content.has_value())	inline_query_result_location_json_object.insert("input_message_content", (**input_message_content).toObject());
+	if (thumb_url.has_value())				inline_query_result_location_json_object.insert("thumb_url", *thumb_url);
+	if (thumb_width.has_value())			inline_query_result_location_json_object.insert("thumb_width", *thumb_width);
+	if (thumb_height.has_value())			inline_query_result_location_json_object.insert("thumb_height", *thumb_height);
 
-	return inlineQueryResultLocationJsonObject;
+	return inline_query_result_location_json_object;
 }
 
-bool Telegram::InlineQueryResultLocation::isEmpty() const
-{
+bool Telegram::InlineQueryResultLocation::isEmpty() const {
 	return id == ""
 		   and latitude == 0.0
 		   and longitude == 0.0
@@ -82,4 +78,8 @@ bool Telegram::InlineQueryResultLocation::isEmpty() const
 		   and thumb_url == std::nullopt
 		   and thumb_width == std::nullopt
 		   and thumb_height == std::nullopt;
+}
+
+Telegram::InlineQueryResult::Type Telegram::InlineQueryResultLocation::getType() const {
+	return type;
 }

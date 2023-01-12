@@ -1,7 +1,5 @@
 #include "Types/Video.h"
 
-#include "qjsonobject.h"
-
 Telegram::Video::Video() :
 	file_id(),
 	file_unique_id(),
@@ -34,36 +32,32 @@ Telegram::Video::Video(const QString& file_id,
 	file_size(file_size)
 {}
 
-Telegram::Video::Video(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
-	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
-	jsonObject.contains("width")		  ? width = jsonObject["width"].toInt()						 : width = 0;
-	jsonObject.contains("height")		  ? height = jsonObject["height"].toInt()					 : height = 0;
-	jsonObject.contains("duration")		  ? duration = jsonObject["duration"].toInt()				 : duration = 0;
-	jsonObject.contains("thumb")		  ? thumb = PhotoSize(jsonObject["thumb"].toObject())		 : thumb = std::nullopt;
-	jsonObject.contains("file_name")	  ? file_name = jsonObject["file_name"].toString()			 : file_name = std::nullopt;
-	jsonObject.contains("mime_type")	  ? mime_type = jsonObject["mime_type"].toString()			 : mime_type = std::nullopt;
-	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
+Telegram::Video::Video(const QJsonObject& json_object) {
+	json_object.contains("file_id")			? file_id = json_object["file_id"].toString()				 : file_id = "";
+	json_object.contains("file_unique_id")	? file_unique_id = json_object["file_unique_id"].toString()	 : file_unique_id = "";
+	json_object.contains("width")			? width = json_object["width"].toInt()						 : width = 0;
+	json_object.contains("height")			? height = json_object["height"].toInt()					 : height = 0;
+	json_object.contains("duration")		? duration = json_object["duration"].toInt()				 : duration = 0;
+	json_object.contains("thumb")			? thumb = PhotoSize(json_object["thumb"].toObject())		 : thumb = std::nullopt;
+	json_object.contains("file_name")		? file_name = json_object["file_name"].toString()			 : file_name = std::nullopt;
+	json_object.contains("mime_type")		? mime_type = json_object["mime_type"].toString()			 : mime_type = std::nullopt;
+	json_object.contains("file_size")		? file_size = json_object["file_size"].toInt()				 : file_size = std::nullopt;
 }
 
-QJsonObject Telegram::Video::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::Video::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject videoJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"width", width}, {"height", height}, {"duration", duration} };
+	QJsonObject video_json_object{ {"file_id", file_id}, {"file_unique_id", file_unique_id}, {"width", width}, {"height", height}, {"duration", duration} };
 
-	if (thumb.has_value())		videoJsonObject.insert("thumb", thumb->toObject());
-	if (file_name.has_value())	videoJsonObject.insert("file_name", *file_name);
-	if (mime_type.has_value())	videoJsonObject.insert("mime_type", *mime_type);
-	if (file_size.has_value())	videoJsonObject.insert("file_size", *file_size);
+	if (thumb.has_value())		video_json_object.insert("thumb", thumb->toObject());
+	if (file_name.has_value())	video_json_object.insert("file_name", *file_name);
+	if (mime_type.has_value())	video_json_object.insert("mime_type", *mime_type);
+	if (file_size.has_value())	video_json_object.insert("file_size", *file_size);
 
-	return videoJsonObject;
+	return video_json_object;
 }
 
-bool Telegram::Video::isEmpty() const
-{
+bool Telegram::Video::isEmpty() const {
 	return file_id == ""
 		   and file_unique_id == ""
 		   and width == 0

@@ -1,31 +1,19 @@
 #include "Types/KeyboardButtonPollType.h"
 
-#include "qjsonobject.h"
-
 Telegram::KeyboardButtonPollType::KeyboardButtonPollType(const std::optional<Poll::Type>& type) :
 	type(type)
 {}
 
-Telegram::KeyboardButtonPollType::KeyboardButtonPollType(const QJsonObject& jsonObject)
-{
-	if (jsonObject.contains("type"))
-	{
-		if (jsonObject["type"] == "quiz") type = Poll::Type::QUIZ;
-		if (jsonObject["type"] == "regular") type = Poll::Type::REGULAR;
-	}
-	else type = std::nullopt;
+Telegram::KeyboardButtonPollType::KeyboardButtonPollType(const QJsonObject& json_object) {
+	json_object.contains("type") ? type = static_cast<Poll::Type>(QMetaEnum::fromType<Poll::Type>().keyToValue(json_object["type"].toString().toUpper().toUtf8())) : type = std::nullopt;
 }
 
-QJsonObject Telegram::KeyboardButtonPollType::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::KeyboardButtonPollType::toObject() const {
+	if (isEmpty()) return {};
 
-	if (type == Poll::Type::QUIZ) return QJsonObject{ {"type", "quiz"} };
-	if (type == Poll::Type::REGULAR) return QJsonObject{ {"type", "regular"} };
+	return { {"type", QString(QMetaEnum::fromType<Poll::Type>().valueToKey(static_cast<int>(*type))).toLower()} };
 }
 
-bool Telegram::KeyboardButtonPollType::isEmpty() const
-{
+bool Telegram::KeyboardButtonPollType::isEmpty() const {
 	return type == std::nullopt;
 }

@@ -1,10 +1,11 @@
 #ifndef TELEGRAM_TYPES_PHOTOSIZE_H
 #define TELEGRAM_TYPES_PHOTOSIZE_H
 
+#include <compare>
+#include <optional>
+
 #include "qstring.h"
 class QJsonObject;
-
-#include <optional>
 
 namespace Telegram
 {
@@ -32,13 +33,15 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to PhotoSize class fields. For example it should contain pairs such as "file_id" = "...",
          * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        PhotoSize(const QJsonObject& jsonObject);
+        PhotoSize(const QJsonObject& json_object);
 
         /* @brief Returns PhotoSize in form of JSON object. Returns empty QJsonObject if PhotoSize is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if PhotoSize is empty */
         bool isEmpty() const;
+
+        std::partial_ordering operator <=> (const PhotoSize&) const = default;
 
 //** Fields **//
 

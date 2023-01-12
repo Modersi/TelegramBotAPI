@@ -1,12 +1,15 @@
 #ifndef TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDVIDEO_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDVIDEO_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
+#include "qvector.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/MessageEntity.h"
@@ -45,10 +48,15 @@ namespace Telegram
         /* @brief Returns true if InlineQueryResultCachedVideo is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+        std::partial_ordering operator <=> (const InlineQueryResultCachedVideo&) const = default;
+
 //** Fields **//
 
         /** @brief Type of the result, must be video */
-        const QString type = "video";
+        const Type type = Type::VIDEO;
 
         /** @brief Unique identifier for this result, 1-64 bytes */
         QString	id;

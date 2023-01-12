@@ -1,6 +1,12 @@
 #ifndef TELEGRAM_TYPES_CALLBACKQUERY_H
 #define TELEGRAM_TYPES_CALLBACKQUERY_H
 
+#include <compare>
+#include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
+
 #include "User.h"
 #include "Message.h"
 
@@ -39,13 +45,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to CallbackQuery class fields. For example it should contain pairs such as "id" = "...",
          * "from" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        CallbackQuery(const QJsonObject& jsonObject);
+        CallbackQuery(const QJsonObject& json_object);
+
 
         /* @brief Returns CallbackQuery in form of JSON object. Returns empty QJsonObject if CallbackQuery is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if CallbackQuery is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const CallbackQuery&) const = default;
+
 
 //** Fields **//
 

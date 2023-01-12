@@ -1,6 +1,11 @@
 #ifndef TELEGRAM_TYPES_AUDIO_H
 #define TELEGRAM_TYPES_AUDIO_H
 
+#include <compare>
+
+#include "qstring.h"
+#include "qjsonobject.h"
+
 #include "PhotoSize.h"
 
 namespace Telegram 
@@ -33,13 +38,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to Audio class fields. For example it should contain pairs such as "file_id" = "...",
          * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        Audio(const QJsonObject& jsonObject);
+        Audio(const QJsonObject& json_object);
+
 
         /** @brief Returns Audio in form of JSON object. Returns empty QJsonObject if Audio is empty */
         QJsonObject toObject() const;
 
         /** @brief Returns true if Audio is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const Audio&) const = default;
+
 
 //** Fields **//
 

@@ -1,12 +1,14 @@
 #ifndef TELEGRAM_TYPES_INLINEQUERYRESULTLOCATION_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTLOCATION_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 
@@ -44,16 +46,24 @@ namespace Telegram
                                   const std::optional<qint32>& thumb_width = std::nullopt,	          
                                   const std::optional<qint32>& thumb_height = std::nullopt);
 
+
         /* @brief Returns InlineQueryResultLocation in form of JSON object. Returns empty QJsonObject if InlineQueryResultLocation is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultLocation is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultLocation&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be location */
-        const QString type = "location";
+        const Type type = Type::LOCATION;
 
         /** @brief Unique identifier for this result, 1-64 Bytes */
         QString id;

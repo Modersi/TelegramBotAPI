@@ -1,14 +1,16 @@
 #ifndef TELEGRAM_TYPES_BOTCOMMAND_H
 #define TELEGRAM_TYPES_BOTCOMMAND_H
 
+#include <compare>
+
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 namespace Telegram
 {
     /**
      *
-     * @brief This class represents a Bot Command
+     * @brief This structure represents a bot command
      *
      */
 
@@ -27,13 +29,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has key-value pairs such as "command" = "...", "description" = "..." to construct correct 
          * object, otherwise if this pairs are missing empty object will be created */
-        BotCommand(const QJsonObject& jsonObject);
+        BotCommand(const QJsonObject& json_object);
+
 
         /* @brief Returns BotCommand in form of JSON object. Returns empty QJsonObject if BotCommand is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if BotCommand is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const BotCommand&) const = default;
+
 
 //** Fields **//
 

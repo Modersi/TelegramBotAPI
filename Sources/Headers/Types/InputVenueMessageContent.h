@@ -1,5 +1,11 @@
-#ifndef TELEGRAM_TYPES_INPUTVENUEMESSAGECONTENT_H
+Ôªø#ifndef TELEGRAM_TYPES_INPUTVENUEMESSAGECONTENT_H
 #define TELEGRAM_TYPES_INPUTVENUEMESSAGECONTENT_H
+
+#include <compare>
+#include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
 
 #include "Types/InputMessageContent.h"
 
@@ -28,11 +34,16 @@ namespace Telegram
                                  const std::optional<QString>& google_place_id = std::nullopt,
                                  const std::optional<QString>& google_place_type = std::nullopt);
 
+
         /* @brief Returns InputVenueMessageContent in form of JSON object. Returns empty QJsonObject if InputVenueMessageContent is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InputVenueMessageContent is empty */
         virtual bool isEmpty() const override;
+
+
+        std::partial_ordering operator <=> (const InputVenueMessageContent&) const = default;
+
 
  //** Fields **//
 
@@ -51,7 +62,7 @@ namespace Telegram
         /* @brief Optional. Foursquare identifier of the venue, if known */
         std::optional<QString> foursquare_id;
 
-        /* @brief Optional. Foursquare type of the venue, if known. (For example, ìarts_entertainment/defaultî, ìarts_entertainment/aquariumî or ìfood/icecreamî) */
+        /* @brief Optional. Foursquare type of the venue, if known. (For example, ‚Äúarts_entertainment/default‚Äù, ‚Äúarts_entertainment/aquarium‚Äù or ‚Äúfood/icecream‚Äù) */
         std::optional<QString> foursquare_type;
 
         /* @brief Optional. Google Places identifier of the venue */

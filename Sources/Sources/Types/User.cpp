@@ -1,6 +1,4 @@
-#include "Types/User.h"
-
-#include "qjsonobject.h"
+ #include "Types/User.h"
 
 Telegram::User::User() :
 	id(),
@@ -37,7 +35,7 @@ Telegram::User::User(const qint64& id,
 
 Telegram::User::User(const QJsonObject& jsonObject)
 {
-	jsonObject.contains("id")							? id = jsonObject["id"].toInt()													   : id = 0;
+	jsonObject.contains("id")							? id = jsonObject["id"].toInteger()												   : id = 0;
 	jsonObject.contains("is_bot")						? is_bot = jsonObject["is_bot"].toBool()										   : is_bot = false;
 	jsonObject.contains("first_name")					? first_name = jsonObject["first_name"].toString()								   : first_name = "";
 	jsonObject.contains("last_name")					? last_name = jsonObject["last_name"].toString()								   : last_name = std::nullopt;
@@ -48,10 +46,8 @@ Telegram::User::User(const QJsonObject& jsonObject)
 	jsonObject.contains("supports_inline_queries")		? supports_inline_queries = jsonObject["supports_inline_queries"].toBool()		   : supports_inline_queries = std::nullopt;
 }
 
-QJsonObject Telegram::User::toObject() const
-{
-	if(isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::User::toObject() const {
+	if (isEmpty()) return {};
 
 	QJsonObject userJsonObject{ {"id", id}, {"is_bot", is_bot}, {"first_name", first_name} };
 
@@ -65,8 +61,7 @@ QJsonObject Telegram::User::toObject() const
 	return userJsonObject;
 }
 
-bool Telegram::User::isEmpty() const
-{
+bool Telegram::User::isEmpty() const {
 	return id == 0 
 		   and is_bot == false 
 		   and first_name == "" 

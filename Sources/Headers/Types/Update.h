@@ -1,9 +1,10 @@
-#ifndef TELEGRAM_TYPES_UPDATE_H
+Ôªø#ifndef TELEGRAM_TYPES_UPDATE_H
 #define TELEGRAM_TYPES_UPDATE_H
 
 #include <optional>
+#include <compare>
 
-class QJsonObject;
+#include "qjsonobject.h"
 
 #include "Message.h"
 #include "InlineQuery.h"
@@ -52,13 +53,18 @@ namespace Telegram
 		 *
 		 * QJsonObject which is passed to constuctor has to has all key-value pairs related to Update class fields. For example it should contain pairs such as "update_id" = "...",
 		 * "message" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-		Update(const QJsonObject& jsonObject);
+		Update(const QJsonObject& json_object);
+
 
 		/* @brief Returns Update in form of JSON object. Returns empty QJsonObject if Update is empty */
 		QJsonObject toObject() const;
 
 		/* @brief Returns true if Update is empty */
 		bool isEmpty() const;
+
+
+		std::partial_ordering operator <=> (const Update&) const = default;
+
 
 //** Fields **//
 
@@ -68,13 +74,13 @@ namespace Telegram
 		 * updates or to restore the correct update sequence, should they get out of order. If there are no new updates for at least a week, then identifier of the next update will be chosen randomly instead of sequentially */
 		qint32 update_id;
 		
-		/** @brief Optional. New incoming message of any kind ó text, photo, sticker, etc. */
+		/** @brief Optional. New incoming message of any kind ‚Äî text, photo, sticker, etc. */
 		std::optional<Message> message;
 		
 		/** @brief Optional. New version of a message that is known to the bot and was edited */
 		std::optional<Message> edited_message;
 		
-		/** @brief Optional. New incoming channel post of any kind ó text, photo, sticker, etc. */
+		/** @brief Optional. New incoming channel post of any kind ‚Äî text, photo, sticker, etc. */
 		std::optional<Message> channel_post;
 		
 		/** @brief Optional. New version of a channel post that is known to the bot and was edited */
@@ -104,7 +110,7 @@ namespace Telegram
 		/** @brief Optional. The bot's chat member status was updated in a chat. For private chats, this update is received only when the bot is blocked or unblocked by the user */
 		std::optional<ChatMemberUpdated> my_chat_member;
 		
-		/** @brief Optional. A chat member's status was updated in a chat. The bot must be an administrator in the chat and must explicitly specify ìchat_memberî in the list of allowed_updates to receive these updates */
+		/** @brief Optional. A chat member's status was updated in a chat. The bot must be an administrator in the chat and must explicitly specify ‚Äúchat_member‚Äù in the list of allowed_updates to receive these updates */
 		std::optional<ChatMemberUpdated> chat_member;
 	};
 }

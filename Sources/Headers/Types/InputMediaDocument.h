@@ -1,10 +1,14 @@
 #ifndef TELEGRAM_TYPES_INPUTMEDIADOCUMENT_H
 #define TELEGRAM_TYPES_INPUTMEDIADOCUMENT_H
 
+#include <compare>
 #include <variant>
+#include <optional>
 
-class QJsonObject;
+#include "qstring.h"
+#include "qjsonobject.h"
 #include "qvector.h"
+#include "qfile.h"
 
 #include "InputMedia.h"
 #include "MessageEntity.h"
@@ -19,8 +23,6 @@ namespace Telegram
 
     struct InputMediaDocument : public InputMedia
     {
-//** Constructors **//
-
         /** @brief Default constructor. Constructs an empty InputMediaDocument object
          *
          * All fields setted to 0, "", etc... All optional fields setted to std::nullopt */
@@ -38,7 +40,8 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to InputMediaDocument class fields. For example it should contain pairs such as "type" = "...",
          * "media" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        InputMediaDocument(const QJsonObject& jsonObject);
+        InputMediaDocument(const QJsonObject& json_object);
+
 
         /* @brief Returns InputMediaDocument in form of JSON object. Returns empty QJsonObject if InputMediaDocument is empty */
         virtual QJsonObject toObject() const override;
@@ -46,10 +49,17 @@ namespace Telegram
         /* @brief Returns true if InputMediaDocument is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InputMedia */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InputMediaDocument&) const = default;
+
+
 //** Fields **// 
 
         /** @brief Type of the input media. Must be "document" */
-        const QString type = "document";
+        const Type type = Type::DOCUMENT;
 
         /** @brief Document to send
          *

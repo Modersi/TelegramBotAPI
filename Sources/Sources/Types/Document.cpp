@@ -1,7 +1,5 @@
 #include "Types/Document.h"
 
-#include "qjsonobject.h"
-
 Telegram::Document::Document() : 
 	file_id(),
 	file_unique_id(),
@@ -26,33 +24,30 @@ Telegram::Document::Document(const QString& file_id,
 {}
 
 
-Telegram::Document::Document(const QJsonObject& jsonObject)
+Telegram::Document::Document(const QJsonObject& json_object)
 {
-	jsonObject.contains("file_id")		  ? file_id = jsonObject["file_id"].toString()				 : file_id = "";
-	jsonObject.contains("file_unique_id") ? file_unique_id = jsonObject["file_unique_id"].toString() : file_unique_id = "";
-	jsonObject.contains("thumb")		  ? thumb = PhotoSize(jsonObject["thumb"].toObject())		 : thumb = std::nullopt;
-	jsonObject.contains("file_name")	  ? file_name = jsonObject["file_name"].toString()			 : file_name = std::nullopt;
-	jsonObject.contains("mime_type")	  ? mime_type = jsonObject["mime_type"].toString()			 : mime_type = std::nullopt;
-	jsonObject.contains("file_size")	  ? file_size = jsonObject["file_size"].toInt()				 : file_size = std::nullopt;
+	json_object.contains("file_id")		  ? file_id = json_object["file_id"].toString()					: file_id = "";
+	json_object.contains("file_unique_id") ? file_unique_id = json_object["file_unique_id"].toString()	: file_unique_id = "";
+	json_object.contains("thumb")		  ? thumb = PhotoSize(json_object["thumb"].toObject())			: thumb = std::nullopt;
+	json_object.contains("file_name")	  ? file_name = json_object["file_name"].toString()				: file_name = std::nullopt;
+	json_object.contains("mime_type")	  ? mime_type = json_object["mime_type"].toString()				: mime_type = std::nullopt;
+	json_object.contains("file_size")	  ? file_size = json_object["file_size"].toInt()				: file_size = std::nullopt;
 }
 
-QJsonObject Telegram::Document::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::Document::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject documentJsonObject{ {"file_id", file_id}, {"file_unique_id", file_unique_id} };
+	QJsonObject document_json_object{ {"file_id", file_id}, {"file_unique_id", file_unique_id} };
 
-	if (thumb.has_value())		documentJsonObject.insert("thumb", thumb->toObject());
-	if (file_name.has_value())	documentJsonObject.insert("file_name", *file_name);
-	if (mime_type.has_value())	documentJsonObject.insert("mime_type", *mime_type);
-	if (file_size.has_value())	documentJsonObject.insert("file_size", *file_size);
+	if (thumb.has_value())		document_json_object.insert("thumb", thumb->toObject());
+	if (file_name.has_value())	document_json_object.insert("file_name", *file_name);
+	if (mime_type.has_value())	document_json_object.insert("mime_type", *mime_type);
+	if (file_size.has_value())	document_json_object.insert("file_size", *file_size);
 
-	return documentJsonObject;
+	return document_json_object;
 }
 
-bool Telegram::Document::isEmpty() const
-{
+bool Telegram::Document::isEmpty() const {
 	return file_id == ""
 		   and file_unique_id == ""
 		   and thumb == std::nullopt

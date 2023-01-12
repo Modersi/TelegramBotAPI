@@ -1,10 +1,11 @@
 #ifndef TELEGRAM_TYPES_CONTACT_H
 #define TELEGRAM_TYPES_CONTACT_H
 
-#include "qstring.h"
-class QJsonObject;
-
+#include <compare>
 #include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -32,13 +33,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to Contact class fields. For example it should contain pairs such as "phone_number" = "...",
          * "first_name" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        Contact(const QJsonObject& jsonObject);
+        Contact(const QJsonObject& json_object);
+
 
         /* @brief Returns Contact in form of JSON object. Returns empty QJsonObject if Contact is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if Contact is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const Contact&) const = default;
+
 
 //** Fields **//
 

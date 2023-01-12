@@ -1,9 +1,11 @@
 #ifndef TELEGRAM_TYPES_FORCEREPLY_H
 #define TELEGRAM_TYPES_FORCEREPLY_H
 
-class QJsonObject;
-
+#include <compare>
 #include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
 
 namespace Telegram
 {
@@ -30,10 +32,18 @@ namespace Telegram
         /** @brief JSON constructor. Constructs ForceReply object from QJsonObject
          *
          * QJsonObject which is passed to constuctor has to has key-value pair "selective" = ..., "input_field_placeholder" = ... otherwise this field will be setted to std::nullopt */
-        ForceReply(const QJsonObject& jsonObject);
+        ForceReply(const QJsonObject& json_object);
+
 
         /* @brief Returns ForceReply in form of JSON object */
         QJsonObject toObject() const;
+
+        /* @brief Returns true if ForceReply is empty */
+        bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const ForceReply&) const = default;
+
 
 //** Fields **//
 

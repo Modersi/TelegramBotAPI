@@ -1,10 +1,14 @@
 #ifndef TELEGRAM_TYPES_INPUTMEDIAANIMATION_H
 #define TELEGRAM_TYPES_INPUTMEDIAANIMATION_H
 
+#include <compare>
+#include <optional>
 #include <variant>
 
-class QJsonObject;
+#include "qstring.h"
+#include "qjsonobject.h"
 #include "qvector.h"
+#include "qfile.h"
 
 #include "InputMedia.h"
 #include "MessageEntity.h"
@@ -40,7 +44,8 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to InputMediaAnimation class fields. For example it should contain pairs such as "type" = "...",
          * "media" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        InputMediaAnimation(const QJsonObject& jsonObject);
+        InputMediaAnimation(const QJsonObject& json_object);
+
 
         /** @brief Returns InputMediaAnimation in form of JSON object. Returns empty QJsonObject if InputMediaAnimation is empty */
         virtual QJsonObject toObject() const override;
@@ -48,10 +53,17 @@ namespace Telegram
         /** @brief Returns true if InputMediaAnimation is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InputMedia */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InputMediaAnimation&) const = default;
+
+
 //** Fields **//
         
         /** @brief Type of the input media. Must be "animation" */
-        const QString type = "animation";
+        const Type type = Type::ANIMATION;
 
         /** @brief Animation to send
          * 

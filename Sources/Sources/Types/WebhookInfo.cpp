@@ -1,7 +1,5 @@
 #include "Types/WebhookInfo.h"
 
-#include "qjsonobject.h"
-
 #include "Internal/ConversionFunctions.h"
 
 Telegram::WebhookInfo::WebhookInfo() :
@@ -33,36 +31,33 @@ Telegram::WebhookInfo::WebhookInfo(const QString& url,
 	allowed_updates(allowed_updates)
 {}
 
-Telegram::WebhookInfo::WebhookInfo(const QJsonObject& jsonObject)
+Telegram::WebhookInfo::WebhookInfo(const QJsonObject& json_object)
 {
-	jsonObject.contains("url")						? url = jsonObject["url"].toString()														: url = "";
-	jsonObject.contains("has_custom_certificate")	? has_custom_certificate = jsonObject["has_custom_certificate"].toBool()					: has_custom_certificate = false;
-	jsonObject.contains("pending_update_count")		? pending_update_count = jsonObject["pending_update_count"].toInt()							: pending_update_count = 0;
-	jsonObject.contains("ip_address")				? ip_address = jsonObject["ip_address"].toString()											: ip_address = std::nullopt;
-	jsonObject.contains("last_error_date")			? last_error_date = jsonObject["last_error_date"].toInt()									: last_error_date = std::nullopt;
-	jsonObject.contains("last_error_message")		? last_error_message = jsonObject["last_error_message"].toString()							: last_error_message = std::nullopt;
-	jsonObject.contains("max_connections")			? max_connections = jsonObject["max_connections"].toInt()									: max_connections = std::nullopt;
-	jsonObject.contains("allowed_updates")			? allowed_updates = QJsonArrayToQVector<QString>(jsonObject["allowed_updates"].toArray())	: allowed_updates = std::nullopt;
+	json_object.contains("url")						? url = json_object["url"].toString()														: url = "";
+	json_object.contains("has_custom_certificate")	? has_custom_certificate = json_object["has_custom_certificate"].toBool()					: has_custom_certificate = false;
+	json_object.contains("pending_update_count")	? pending_update_count = json_object["pending_update_count"].toInt()						: pending_update_count = 0;
+	json_object.contains("ip_address")				? ip_address = json_object["ip_address"].toString()											: ip_address = std::nullopt;
+	json_object.contains("last_error_date")			? last_error_date = json_object["last_error_date"].toInt()									: last_error_date = std::nullopt;
+	json_object.contains("last_error_message")		? last_error_message = json_object["last_error_message"].toString()							: last_error_message = std::nullopt;
+	json_object.contains("max_connections")			? max_connections = json_object["max_connections"].toInt()									: max_connections = std::nullopt;
+	json_object.contains("allowed_updates")			? allowed_updates = QJsonArrayToQVector<QString>(json_object["allowed_updates"].toArray())	: allowed_updates = std::nullopt;
 }
 
-QJsonObject Telegram::WebhookInfo::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::WebhookInfo::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject webhookInfoJsonObject{ {"url", url}, {"has_custom_certificate", has_custom_certificate}, {"pending_update_count", pending_update_count} };
+	QJsonObject webhook_info_json_object{ {"url", url}, {"has_custom_certificate", has_custom_certificate}, {"pending_update_count", pending_update_count} };
 
-	if (ip_address.has_value())			webhookInfoJsonObject.insert("ip_address", *ip_address);
-	if (last_error_date.has_value())	webhookInfoJsonObject.insert("last_error_date", *last_error_date);
-	if (last_error_message.has_value())	webhookInfoJsonObject.insert("last_error_message", *last_error_message);
-	if (max_connections.has_value())	webhookInfoJsonObject.insert("max_connections", *max_connections);
-	if (allowed_updates.has_value())	webhookInfoJsonObject.insert("allowed_updates", QVectorToQJsonArray(*allowed_updates));
+	if (ip_address.has_value())			webhook_info_json_object.insert("ip_address", *ip_address);
+	if (last_error_date.has_value())	webhook_info_json_object.insert("last_error_date", *last_error_date);
+	if (last_error_message.has_value())	webhook_info_json_object.insert("last_error_message", *last_error_message);
+	if (max_connections.has_value())	webhook_info_json_object.insert("max_connections", *max_connections);
+	if (allowed_updates.has_value())	webhook_info_json_object.insert("allowed_updates", QVectorToQJsonArray(*allowed_updates));
 
-	return webhookInfoJsonObject;
+	return webhook_info_json_object;
 }
 
-bool Telegram::WebhookInfo::isEmpty() const
-{
+bool Telegram::WebhookInfo::isEmpty() const {
 	return url == ""
 		   and has_custom_certificate == false
 		   and pending_update_count == 0

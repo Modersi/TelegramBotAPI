@@ -1,12 +1,15 @@
-#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTMPEG4GIF_H
+Ôªø#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTMPEG4GIF_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTMPEG4GIF_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
+#include "qvector.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/MessageEntity.h"
@@ -43,16 +46,24 @@ namespace Telegram
                                   const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt,	     
                                   const std::optional<std::shared_ptr<InputMessageContent>>& input_message_content = std::nullopt);
 
+
          /* @brief Returns InlineQueryResultMpeg4Gif in form of JSON object. Returns empty QJsonObject if InlineQueryResultMpeg4Gif is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultMpeg4Gif is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultMpeg4Gif&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be mpeg4_gif */
-        const QString type = "mpeg4_gif";
+        const Type type = Type::MPEG4_GIF;
         
         /** @brief Unique identifier for this result, 1-64 bytes */
         QString id;
@@ -72,7 +83,7 @@ namespace Telegram
         /** @brief Optional. Video duration */
         std::optional<qint32> mpeg4_duration;
         
-        /** @brief Optional. MIME type of the thumbnail, must be one of ìimage/jpegî, ìimage/gifî, or ìvideo/mp4î. Defaults to ìimage/jpegî */
+        /** @brief Optional. MIME type of the thumbnail, must be one of ‚Äúimage/jpeg‚Äù, ‚Äúimage/gif‚Äù, or ‚Äúvideo/mp4‚Äù. Defaults to ‚Äúimage/jpeg‚Äù */
         std::optional<QString> thumb_mime_type;
         
         /** @brief Optional. Title for the result */

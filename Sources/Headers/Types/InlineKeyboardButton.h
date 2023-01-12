@@ -1,10 +1,11 @@
 #ifndef TELEGRAM_TYPES_INLINEKEYBOARDBUTTON_H
 #define TELEGRAM_TYPES_INLINEKEYBOARDBUTTON_H
 
-class QJsonObject;
-#include "qstring.h"
-
+#include <compare>
 #include <optional>
+
+#include "qjsonobject.h"
+#include "qstring.h"
 
 #include "LoginURL.h"
 //#include "CallbackGame.h"
@@ -40,13 +41,15 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to InlineKeyboardButton class fields. For example it should contain pairs such as "text" = "...",
          * "url" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        InlineKeyboardButton(const QJsonObject& jsonObject);
+        InlineKeyboardButton(const QJsonObject& json_object);
 
         /* @brief Returns InlineKeyboardButton in form of JSON object. Returns empty QJsonObject if InlineKeyboardButton is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if InlineKeyboardButton is empty */
         bool isEmpty() const;
+
+        std::partial_ordering operator <=> (const InlineKeyboardButton&) const = default;
 
 //** Fields **//
 

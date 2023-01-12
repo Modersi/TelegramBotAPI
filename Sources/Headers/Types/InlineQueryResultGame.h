@@ -1,10 +1,11 @@
 #ifndef TELEGRAM_TYPES_INLINEQUERYRESULTGAME_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTGAME_H
 
+#include <compare>
 #include <optional>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
@@ -37,10 +38,15 @@ namespace Telegram
         /* @brief Returns true if InlineQueryResultGame is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+        std::partial_ordering operator <=> (const InlineQueryResultGame&) const = default;
+
 //** Fields **//
 
         /** @brief Type of the result, must be game */
-        const QString type = "game";
+        const Type type = Type::GAME;
 
         /** @brief Unique identifier for this result, 1-64 Bytes */
         QString	id;

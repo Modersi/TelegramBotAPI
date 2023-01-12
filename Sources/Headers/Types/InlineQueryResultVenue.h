@@ -1,12 +1,14 @@
-#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTVENUE_H
+Ôªø#ifndef TELEGRAM_TYPES_INLINEQUERYRESULTVENUE_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTVENUE_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qjsonobject.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 
@@ -45,16 +47,24 @@ namespace Telegram
                                const std::optional<qint32>& thumb_width = std::nullopt,
                                const std::optional<qint32>& thumb_height = std::nullopt);
 
+
         /* @brief Returns InlineQueryResultVenue in form of JSON object. Returns empty QJsonObject if InlineQueryResultVenue is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultVenue is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultVenue&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be venue */
-        const QString type = "venue";
+        const Type type = Type::VENUE;
 
         /** @brief Unique identifier for this result, 1-64 Bytes */
         QString id;
@@ -74,7 +84,7 @@ namespace Telegram
         /** @brief Optional. Foursquare identifier of the venue if known */
         std::optional<QString> foursquare_id;
         
-        /** @brief Optional. Foursquare type of the venue, if known. (For example, ìarts_entertainment/defaultî, ìarts_entertainment/aquariumî or ìfood/icecreamî.) */
+        /** @brief Optional. Foursquare type of the venue, if known. (For example, ‚Äúarts_entertainment/default‚Äù, ‚Äúarts_entertainment/aquarium‚Äù or ‚Äúfood/icecream‚Äù.) */
         std::optional<QString> foursquare_type;
         
         /** @brief Optional. Google Places identifier of the venue */

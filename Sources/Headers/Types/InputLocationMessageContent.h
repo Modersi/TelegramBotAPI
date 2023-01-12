@@ -1,6 +1,11 @@
 #ifndef TELEGRAM_TYPES_INPUTLOCATIONMESSAGECONTENT_H
 #define TELEGRAM_TYPES_INPUTLOCATIONMESSAGECONTENT_H
 
+#include <compare>
+#include <optional>
+
+#include "qjsonobject.h"
+
 #include "Types/InputMessageContent.h"
 
 namespace Telegram
@@ -31,6 +36,8 @@ namespace Telegram
 
         /* @brief Returns true if InputLocationMessageContent is empty */
         virtual bool isEmpty() const override;
+
+        std::partial_ordering operator <=> (const InputLocationMessageContent&) const = default;
 
 //** Fields **//
 

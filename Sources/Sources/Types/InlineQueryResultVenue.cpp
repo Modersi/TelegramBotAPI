@@ -1,7 +1,6 @@
 #include "Types/InlineQueryResultVenue.h"
 
 #include "Internal/ConversionFunctions.h"
-#include "Types/InputMessageContent.h"
 
 Telegram::InlineQueryResultVenue::InlineQueryResultVenue() :
 	id(),
@@ -50,28 +49,25 @@ Telegram::InlineQueryResultVenue::InlineQueryResultVenue(const QString& id,
 	thumb_height(thumb_height)
 {}
 
-QJsonObject Telegram::InlineQueryResultVenue::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineQueryResultVenue::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineQueryResultVenueJsonObject{ {"type", type}, {"id", id}, {"latitude", latitude}, {"longitude", longitude}, {"title", title} , { "address", address } };
+	QJsonObject inline_query_result_venue_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()}, {"id", id}, {"latitude", latitude}, {"longitude", longitude}, {"title", title} , { "address", address } };
 
-	if (foursquare_id.has_value())			inlineQueryResultVenueJsonObject.insert("foursquare_id", *foursquare_id);
-	if (foursquare_type.has_value())		inlineQueryResultVenueJsonObject.insert("foursquare_type", *foursquare_type);
-	if (google_place_id.has_value())		inlineQueryResultVenueJsonObject.insert("google_place_id", *google_place_id);
-	if (google_place_type.has_value())		inlineQueryResultVenueJsonObject.insert("google_place_type", *google_place_type);
-	if (reply_markup.has_value())			inlineQueryResultVenueJsonObject.insert("reply_markup", reply_markup->toObject());
-	if (input_message_content.has_value())	inlineQueryResultVenueJsonObject.insert("input_message_content", (**input_message_content).toObject());
-	if (thumb_url.has_value())				inlineQueryResultVenueJsonObject.insert("thumb_url", *thumb_url);
-	if (thumb_width.has_value())			inlineQueryResultVenueJsonObject.insert("thumb_width", *thumb_width);
-	if (thumb_height.has_value())			inlineQueryResultVenueJsonObject.insert("thumb_height", *thumb_height);
+	if (foursquare_id.has_value())			inline_query_result_venue_json_object.insert("foursquare_id", *foursquare_id);
+	if (foursquare_type.has_value())		inline_query_result_venue_json_object.insert("foursquare_type", *foursquare_type);
+	if (google_place_id.has_value())		inline_query_result_venue_json_object.insert("google_place_id", *google_place_id);
+	if (google_place_type.has_value())		inline_query_result_venue_json_object.insert("google_place_type", *google_place_type);
+	if (reply_markup.has_value())			inline_query_result_venue_json_object.insert("reply_markup", reply_markup->toObject());
+	if (input_message_content.has_value())	inline_query_result_venue_json_object.insert("input_message_content", (**input_message_content).toObject());
+	if (thumb_url.has_value())				inline_query_result_venue_json_object.insert("thumb_url", *thumb_url);
+	if (thumb_width.has_value())			inline_query_result_venue_json_object.insert("thumb_width", *thumb_width);
+	if (thumb_height.has_value())			inline_query_result_venue_json_object.insert("thumb_height", *thumb_height);
 
-	return inlineQueryResultVenueJsonObject;
+	return inline_query_result_venue_json_object;
 }
 
-bool Telegram::InlineQueryResultVenue::isEmpty() const
-{
+bool Telegram::InlineQueryResultVenue::isEmpty() const {
 	return id == ""
 		   and latitude == 0.0
 		   and longitude == 0.0
@@ -86,4 +82,8 @@ bool Telegram::InlineQueryResultVenue::isEmpty() const
 		   and thumb_url == std::nullopt
 		   and thumb_width == std::nullopt
 		   and thumb_height == std::nullopt;
+}
+
+Telegram::InlineQueryResult::Type Telegram::InlineQueryResultVenue::getType() const {
+	return type;
 }

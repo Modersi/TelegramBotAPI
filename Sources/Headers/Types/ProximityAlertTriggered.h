@@ -1,6 +1,10 @@
 #ifndef TELEGRAM_TYPES_PROXIMITYALERTTRIGGERED_H
 #define TELEGRAM_TYPES_PROXIMITYALERTTRIGGERED_H
 
+#include <compare>
+
+#include "qjsonobject.h"
+
 #include "User.h"
 
 namespace Telegram
@@ -27,13 +31,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to ProximityAlertTriggered class fields. For example it should contain pairs such as "traveler" = "...",
          * "watcher" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        ProximityAlertTriggered(const QJsonObject& jsonObject);
+        ProximityAlertTriggered(const QJsonObject& json_object);
+
 
         /* @brief Returns ProximityAlertTriggered in form of JSON object. Returns empty QJsonObject if ProximityAlertTriggered is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if ProximityAlertTriggered is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const ProximityAlertTriggered&) const = default;
+
 
 //** Fields **//
 

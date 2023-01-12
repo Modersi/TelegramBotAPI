@@ -1,7 +1,6 @@
 #include "Types/InlineQueryResultPhoto.h"
 
 #include "Internal/ConversionFunctions.h"
-#include "Types/InputMessageContent.h"
 
 Telegram::InlineQueryResultPhoto::InlineQueryResultPhoto() :
 	id(),
@@ -44,28 +43,25 @@ Telegram::InlineQueryResultPhoto::InlineQueryResultPhoto(const QString& id,
 	input_message_content(input_message_content)
 {}
 
-QJsonObject Telegram::InlineQueryResultPhoto::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineQueryResultPhoto::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineQueryResultPhotoJsonObject{ {"type", type}, {"id", id}, {"photo_url", photo_url}, {"thumb_url", thumb_url} };
+	QJsonObject inline_query_result_photo_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()}, {"id", id}, {"photo_url", photo_url}, {"thumb_url", thumb_url} };
 
-	if (photo_width.has_value())			inlineQueryResultPhotoJsonObject.insert("photo_width", *photo_width);
-	if (photo_height.has_value())			inlineQueryResultPhotoJsonObject.insert("photo_height", *photo_height);
-	if (title.has_value())					inlineQueryResultPhotoJsonObject.insert("title", *title);
-	if (description.has_value())			inlineQueryResultPhotoJsonObject.insert("description", *description);
-	if (caption.has_value())				inlineQueryResultPhotoJsonObject.insert("caption", *caption);
-	if (parse_mode.has_value())				inlineQueryResultPhotoJsonObject.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inlineQueryResultPhotoJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
-	if (reply_markup.has_value())			inlineQueryResultPhotoJsonObject.insert("reply_markup", reply_markup->toObject());
-	if (input_message_content.has_value())	inlineQueryResultPhotoJsonObject.insert("input_message_content", (**input_message_content).toObject());
+	if (photo_width.has_value())			inline_query_result_photo_json_object.insert("photo_width", *photo_width);
+	if (photo_height.has_value())			inline_query_result_photo_json_object.insert("photo_height", *photo_height);
+	if (title.has_value())					inline_query_result_photo_json_object.insert("title", *title);
+	if (description.has_value())			inline_query_result_photo_json_object.insert("description", *description);
+	if (caption.has_value())				inline_query_result_photo_json_object.insert("caption", *caption);
+	if (parse_mode.has_value())				inline_query_result_photo_json_object.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())		inline_query_result_photo_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (reply_markup.has_value())			inline_query_result_photo_json_object.insert("reply_markup", reply_markup->toObject());
+	if (input_message_content.has_value())	inline_query_result_photo_json_object.insert("input_message_content", (**input_message_content).toObject());
 
-	return inlineQueryResultPhotoJsonObject;
+	return inline_query_result_photo_json_object;
 }
 
-bool Telegram::InlineQueryResultPhoto::isEmpty() const
-{
+bool Telegram::InlineQueryResultPhoto::isEmpty() const {
 	return id == ""
 		   and photo_url == ""
 		   and thumb_url == ""
@@ -78,4 +74,8 @@ bool Telegram::InlineQueryResultPhoto::isEmpty() const
 		   and caption_entities == std::nullopt
 		   and reply_markup == std::nullopt
 		   and input_message_content == std::nullopt;
+}
+
+Telegram::InlineQueryResult::Type Telegram::InlineQueryResultPhoto::getType() const {
+	return type;
 }

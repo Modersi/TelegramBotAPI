@@ -33,7 +33,7 @@ Telegram::InputInvoiceMessageContent::InputInvoiceMessageContent(const QString& 
 																 //const QVector<LabeledPrice>& prices,
 																 const std::optional<qint32>& max_tip_amount,
 																 const std::optional<QVector<qint32>>& suggested_tip_amounts,
-																 const std::optional<QJsonValue>& provider_data,
+																 const std::optional<QJsonObject>& provider_data,
 																 const std::optional<QString>& photo_url,
 																 const std::optional<qint32>& photo_size,
 																 const std::optional<qint32>& photo_width,
@@ -67,33 +67,30 @@ Telegram::InputInvoiceMessageContent::InputInvoiceMessageContent(const QString& 
 	is_flexible(is_flexible)
 {}
 
-QJsonObject Telegram::InputInvoiceMessageContent::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InputInvoiceMessageContent::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inputInvoiceMessageContentJsonObject{ {"title", title}, {"description", description}, {"payload", payload}, {"provider_token", provider_token}, {"currency", currency}/*, {"prices", QVectorToQJsonArray(prices)}*/ };
+	QJsonObject input_invoice_message_content_json_object{ {"title", title}, {"description", description}, {"payload", payload}, {"provider_token", provider_token}, {"currency", currency}/*, {"prices", QVectorToQJsonArray(prices)}*/ };
 
-	if (max_tip_amount.has_value())					inputInvoiceMessageContentJsonObject.insert("max_tip_amount", *max_tip_amount);
-	if (suggested_tip_amounts.has_value())			inputInvoiceMessageContentJsonObject.insert("suggested_tip_amounts", QVectorToQJsonArray(*suggested_tip_amounts));
-	if (provider_data.has_value())					inputInvoiceMessageContentJsonObject.insert("provider_data", *provider_data);
-	if (photo_url.has_value())						inputInvoiceMessageContentJsonObject.insert("photo_url", *photo_url);
-	if (photo_size.has_value())						inputInvoiceMessageContentJsonObject.insert("photo_size", *photo_size);
-	if (photo_width.has_value())					inputInvoiceMessageContentJsonObject.insert("photo_width", *photo_width);
-	if (photo_height.has_value())					inputInvoiceMessageContentJsonObject.insert("photo_height", *photo_height);
-	if (need_name.has_value())						inputInvoiceMessageContentJsonObject.insert("need_name", *need_name);
-	if (need_phone_number.has_value())				inputInvoiceMessageContentJsonObject.insert("need_phone_number", *need_phone_number);
-	if (need_email.has_value())						inputInvoiceMessageContentJsonObject.insert("need_email", *need_email);
-	if (need_shipping_address.has_value())			inputInvoiceMessageContentJsonObject.insert("need_shipping_address", *need_shipping_address);
-	if (send_phone_number_to_provider.has_value())	inputInvoiceMessageContentJsonObject.insert("send_phone_number_to_provider", *send_phone_number_to_provider);
-	if (send_email_to_provider.has_value())			inputInvoiceMessageContentJsonObject.insert("send_email_to_provider", *send_email_to_provider);
-	if (is_flexible.has_value())					inputInvoiceMessageContentJsonObject.insert("is_flexible", *is_flexible);
+	if (max_tip_amount.has_value())					input_invoice_message_content_json_object.insert("max_tip_amount", *max_tip_amount);
+	if (suggested_tip_amounts.has_value())			input_invoice_message_content_json_object.insert("suggested_tip_amounts", QVectorToQJsonArray(*suggested_tip_amounts));
+	if (provider_data.has_value())					input_invoice_message_content_json_object.insert("provider_data", *provider_data);
+	if (photo_url.has_value())						input_invoice_message_content_json_object.insert("photo_url", *photo_url);
+	if (photo_size.has_value())						input_invoice_message_content_json_object.insert("photo_size", *photo_size);
+	if (photo_width.has_value())					input_invoice_message_content_json_object.insert("photo_width", *photo_width);
+	if (photo_height.has_value())					input_invoice_message_content_json_object.insert("photo_height", *photo_height);
+	if (need_name.has_value())						input_invoice_message_content_json_object.insert("need_name", *need_name);
+	if (need_phone_number.has_value())				input_invoice_message_content_json_object.insert("need_phone_number", *need_phone_number);
+	if (need_email.has_value())						input_invoice_message_content_json_object.insert("need_email", *need_email);
+	if (need_shipping_address.has_value())			input_invoice_message_content_json_object.insert("need_shipping_address", *need_shipping_address);
+	if (send_phone_number_to_provider.has_value())	input_invoice_message_content_json_object.insert("send_phone_number_to_provider", *send_phone_number_to_provider);
+	if (send_email_to_provider.has_value())			input_invoice_message_content_json_object.insert("send_email_to_provider", *send_email_to_provider);
+	if (is_flexible.has_value())					input_invoice_message_content_json_object.insert("is_flexible", *is_flexible);
 
-	return inputInvoiceMessageContentJsonObject;
+	return input_invoice_message_content_json_object;
 }
 
-bool Telegram::InputInvoiceMessageContent::isEmpty() const
-{
+bool Telegram::InputInvoiceMessageContent::isEmpty() const {
 	return title == ""
 		   and description == ""
 		   and payload == ""

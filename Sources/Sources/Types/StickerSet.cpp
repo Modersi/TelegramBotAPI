@@ -1,7 +1,5 @@
 #include "Types/StickerSet.h"
 
-#include "qjsonobject.h"
-
 #include "Internal/ConversionFunctions.h"
 
 Telegram::StickerSet::StickerSet() :
@@ -27,30 +25,26 @@ Telegram::StickerSet::StickerSet(const QString& name,
 	thumb(thumb)
 {}
 
-Telegram::StickerSet::StickerSet(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("name")			  ? name = jsonObject["name"].toString()									  : name = "";
-	jsonObject.contains("title")		  ? title = jsonObject["title"].toString()									  : title = "";
-	jsonObject.contains("is_animated")	  ? is_animated = jsonObject["is_animated"].toBool()						  : is_animated = false;
-	jsonObject.contains("contains_masks") ? contains_masks = jsonObject["contains_masks"].toBool()					  : contains_masks = false;
-	jsonObject.contains("stickers")		  ? stickers = QJsonArrayToQVector<Sticker>(jsonObject["stickers"].toArray()) : stickers = QVector<Sticker>();
-	jsonObject.contains("thumb")		  ? thumb = PhotoSize(jsonObject["thumb"].toObject())						  : thumb = std::nullopt;
+Telegram::StickerSet::StickerSet(const QJsonObject& json_object) {
+	json_object.contains("name")			? name = json_object["name"].toString()											: name = "";
+	json_object.contains("title")			? title = json_object["title"].toString()										: title = "";
+	json_object.contains("is_animated")		? is_animated = json_object["is_animated"].toBool()								: is_animated = false;
+	json_object.contains("contains_masks")	? contains_masks = json_object["contains_masks"].toBool()						: contains_masks = false;
+	json_object.contains("stickers")		? stickers = QJsonArrayToQVector<Sticker>(json_object["stickers"].toArray())	: stickers = QVector<Sticker>();
+	json_object.contains("thumb")			? thumb = PhotoSize(json_object["thumb"].toObject())							: thumb = std::nullopt;
 }
 
-QJsonObject Telegram::StickerSet::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::StickerSet::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject stickerSetJsonObject{ {"name", name}, {"title", title}, {"is_animated", is_animated}, {"contains_masks", contains_masks}, {"stickers", QVectorToQJsonArray(stickers)} };
+	QJsonObject sticker_set_json_object{ {"name", name}, {"title", title}, {"is_animated", is_animated}, {"contains_masks", contains_masks}, {"stickers", QVectorToQJsonArray(stickers)} };
 
-	if (thumb.has_value()) stickerSetJsonObject.insert("thumb", thumb->toObject());
+	if (thumb.has_value()) sticker_set_json_object.insert("thumb", thumb->toObject());
 
-	return stickerSetJsonObject;
+	return sticker_set_json_object;
 }
 
-bool Telegram::StickerSet::isEmpty() const
-{
+bool Telegram::StickerSet::isEmpty() const {
 	return name == ""
 		   and title == ""
 		   and is_animated == false

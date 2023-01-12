@@ -1,6 +1,12 @@
 #ifndef TELEGRAM_TYPES_VIDEO_H
 #define TELEGRAM_TYPES_VIDEO_H
 
+#include <compare>
+#include <optional>
+
+#include "qstring.h"
+#include "qjsonobject.h"
+
 #include "PhotoSize.h"
 
 namespace Telegram
@@ -33,13 +39,18 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to Video class fields. For example it should contain pairs such as "file_id" = "...",
          * "file_unique_id" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        Video(const QJsonObject& jsonObject);
+        Video(const QJsonObject& json_object);
+
 
         /* @brief Returns Video in form of JSON object. Returns empty QJsonObject if Video is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if Video is empty */
         bool isEmpty() const;
+
+
+        std::partial_ordering operator <=> (const Video&) const = default;
+
 
 //** Fields **//
 

@@ -1,7 +1,6 @@
 #include "Types/InlineQueryResultCachedVideo.h"
 
 #include "Internal/ConversionFunctions.h"
-#include "Types/InputMessageContent.h"
 
 Telegram::InlineQueryResultCachedVideo::InlineQueryResultCachedVideo() :
 	id(),
@@ -37,25 +36,22 @@ Telegram::InlineQueryResultCachedVideo::InlineQueryResultCachedVideo(const QStri
 {
 }
 
-QJsonObject Telegram::InlineQueryResultCachedVideo::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineQueryResultCachedVideo::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineQueryResultCachedVideoJsonObject{ {"type", type}, {"id", id}, {"title", title}, {"video_file_id", video_file_id} };
+	QJsonObject inline_query_result_cached_video_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()}, {"id", id}, {"title", title}, {"video_file_id", video_file_id} };
 
-	if (description.has_value())			inlineQueryResultCachedVideoJsonObject.insert("description", *description);
-	if (caption.has_value())				inlineQueryResultCachedVideoJsonObject.insert("caption", *caption);
-	if (parse_mode.has_value())				inlineQueryResultCachedVideoJsonObject.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inlineQueryResultCachedVideoJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
-	if (reply_markup.has_value())			inlineQueryResultCachedVideoJsonObject.insert("reply_markup", reply_markup->toObject());
-	if (input_message_content.has_value())	inlineQueryResultCachedVideoJsonObject.insert("input_message_content", (**input_message_content).toObject());
+	if (description.has_value())			inline_query_result_cached_video_json_object.insert("description", *description);
+	if (caption.has_value())				inline_query_result_cached_video_json_object.insert("caption", *caption);
+	if (parse_mode.has_value())				inline_query_result_cached_video_json_object.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())		inline_query_result_cached_video_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (reply_markup.has_value())			inline_query_result_cached_video_json_object.insert("reply_markup", reply_markup->toObject());
+	if (input_message_content.has_value())	inline_query_result_cached_video_json_object.insert("input_message_content", (**input_message_content).toObject());
 
-	return inlineQueryResultCachedVideoJsonObject;
+	return inline_query_result_cached_video_json_object;
 }
 
-bool Telegram::InlineQueryResultCachedVideo::isEmpty() const
-{
+bool Telegram::InlineQueryResultCachedVideo::isEmpty() const {
 	return id == ""
 		   and title == ""
 		   and video_file_id == ""
@@ -65,4 +61,8 @@ bool Telegram::InlineQueryResultCachedVideo::isEmpty() const
 		   and caption_entities == std::nullopt
 		   and reply_markup == std::nullopt
 		   and input_message_content == std::nullopt;
+}
+
+Telegram::InlineQueryResult::Type Telegram::InlineQueryResultCachedVideo::getType() const {
+	return type;
 }

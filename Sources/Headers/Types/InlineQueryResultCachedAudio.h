@@ -1,12 +1,15 @@
 #ifndef TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDAUDIO_H
 #define TELEGRAM_TYPES_INLINEQUERYRESULTCACHEDAUDIO_H
 
+#include <compare>
 #include <optional>
+#include <memory>
 
 #include "qstring.h"
-class QJsonObject;
+#include "qvector.h"
+#include "qjsonobject.h"
 
-namespace Telegram { class InputMessageContent; }
+#include "Types/InputMessageContent.h"
 #include "Types/InlineQueryResult.h"
 #include "Types/InlineKeyboardMarkup.h"
 #include "Types/MessageEntity.h"
@@ -39,16 +42,24 @@ namespace Telegram
                                      const std::optional<InlineKeyboardMarkup>& reply_markup = std::nullopt,
                                      const std::optional<std::shared_ptr<InputMessageContent>>& input_message_content = std::nullopt);
 
+
         /* @brief Returns InlineQueryResultCachedAudio in form of JSON object. Returns empty QJsonObject if InlineQueryResultCachedAudio is empty */
         virtual QJsonObject toObject() const override;
 
         /* @brief Returns true if InlineQueryResultCachedAudio is empty */
         virtual bool isEmpty() const override;
 
+        /** @brief Returns type of the InlineQueryResult */
+        virtual Type getType() const override;
+
+
+        std::partial_ordering operator <=> (const InlineQueryResultCachedAudio&) const = default;
+
+
 //** Fields **//
 
         /** @brief Type of the result, must be audio */
-        const QString type = "audio";
+        const Type type = Type::AUDIO;
 
         /** @brief Unique identifier for this result, 1-64 bytes */
         QString	id;

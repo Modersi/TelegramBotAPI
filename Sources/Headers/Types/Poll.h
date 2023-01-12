@@ -1,7 +1,10 @@
 #ifndef TELEGRAM_TYPES_POLL_H
 #define TELEGRAM_TYPES_POLL_H
 
+#include <compare>
+
 #include "qvector.h"
+#include "qmetaobject.h"
 
 #include "PollOption.h"
 #include "MessageEntity.h"
@@ -14,15 +17,19 @@ namespace Telegram
      *
      */
 
-    struct Poll
+    class Poll
     {
+        Q_GADGET
+
+    public:
         /** @brief Enum that represents all available types of poll */
         enum class Type
         {
-            UNINITIALIZED_VALUE,
             QUIZ,
-            REGULAR
+            REGULAR,
+            NULL_ENUMERATOR = -1
         };
+        Q_ENUM(Type)
 
         /** @brief Default constructor. Constructs an empty Poll object
          *
@@ -48,13 +55,15 @@ namespace Telegram
          *
          * QJsonObject which is passed to constuctor has to has all key-value pairs related to Poll class fields. For example it should contain pairs such as "id" = "...",
          * "question" = "..." and so on, otherwise fields related to missing pairs will be setted to some default values(0, "", std::nullopt) */
-        Poll(const QJsonObject& jsonObject);
+        Poll(const QJsonObject& json_object);
 
         /* @brief Returns Poll in form of JSON object. Returns empty QJsonObject if Poll is empty */
         QJsonObject toObject() const;
 
         /* @brief Returns true if Poll is empty */
         bool isEmpty() const;
+
+        std::partial_ordering operator <=> (const Poll&) const = default;
 
 //** Fields **//
 

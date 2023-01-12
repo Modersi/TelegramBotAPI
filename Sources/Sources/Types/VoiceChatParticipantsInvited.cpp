@@ -1,8 +1,8 @@
 #include "Types/VoiceChatParticipantsInvited.h"
-#include "Internal/ConversionFunctions.h"
 
-#include "qjsonobject.h"
 #include "qjsonarray.h"
+
+#include "Internal/ConversionFunctions.h"
 
 Telegram::VoiceChatParticipantsInvited::VoiceChatParticipantsInvited() :
 	users()
@@ -12,20 +12,16 @@ Telegram::VoiceChatParticipantsInvited::VoiceChatParticipantsInvited(const QVect
 	users(users)
 {}
 
-Telegram::VoiceChatParticipantsInvited::VoiceChatParticipantsInvited(const QJsonObject& jsonObject)
-{
-	jsonObject.contains("users") ? users = QJsonArrayToQVector<User>(jsonObject["message_id"].toArray()) : users = QVector<User>();
+Telegram::VoiceChatParticipantsInvited::VoiceChatParticipantsInvited(const QJsonObject& json_object) {
+	json_object.contains("users") ? users = QJsonArrayToQVector<User>(json_object["message_id"].toArray()) : users = QVector<User>();
 }
 
-QJsonObject Telegram::VoiceChatParticipantsInvited::toObject() const
-{
-	if(isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::VoiceChatParticipantsInvited::toObject() const {
+	if (isEmpty()) return {};
 
-	return QJsonObject{ {"users", QVectorToQJsonArray(users)} };
+	return { {"users", QVectorToQJsonArray(users)} };
 }
 
-bool Telegram::VoiceChatParticipantsInvited::isEmpty() const
-{
+bool Telegram::VoiceChatParticipantsInvited::isEmpty() const {
 	return users.isEmpty();
 }

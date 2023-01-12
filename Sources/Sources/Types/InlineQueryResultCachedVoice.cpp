@@ -1,7 +1,6 @@
 #include "Types/InlineQueryResultCachedVoice.h"
 
 #include "Internal/ConversionFunctions.h"
-#include "Types/InputMessageContent.h"
 
 Telegram::InlineQueryResultCachedVoice::InlineQueryResultCachedVoice() :
 	id(),
@@ -34,24 +33,21 @@ Telegram::InlineQueryResultCachedVoice::InlineQueryResultCachedVoice(const QStri
 {
 }
 
-QJsonObject Telegram::InlineQueryResultCachedVoice::toObject() const
-{
-	if (isEmpty())
-		return QJsonObject();
+QJsonObject Telegram::InlineQueryResultCachedVoice::toObject() const {
+	if (isEmpty()) return {};
 
-	QJsonObject inlineQueryResultCachedVoiceJsonObject{ {"type", type}, {"id", id}, {"voice_file_id", voice_file_id}, {"title", title} };
+	QJsonObject inline_query_result_cached_voice_json_object{ {"type", QString(QMetaEnum::fromType<decltype(type)>().valueToKey(static_cast<int>(type))).toLower()}, {"id", id}, {"voice_file_id", voice_file_id}, {"title", title} };
 
-	if (caption.has_value())				inlineQueryResultCachedVoiceJsonObject.insert("caption", *caption);
-	if (parse_mode.has_value())				inlineQueryResultCachedVoiceJsonObject.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inlineQueryResultCachedVoiceJsonObject.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
-	if (reply_markup.has_value())			inlineQueryResultCachedVoiceJsonObject.insert("reply_markup", reply_markup->toObject());
-	if (input_message_content.has_value())	inlineQueryResultCachedVoiceJsonObject.insert("input_message_content", (**input_message_content).toObject());
+	if (caption.has_value())				inline_query_result_cached_voice_json_object.insert("caption", *caption);
+	if (parse_mode.has_value())				inline_query_result_cached_voice_json_object.insert("parse_mode", *parse_mode);
+	if (caption_entities.has_value())		inline_query_result_cached_voice_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (reply_markup.has_value())			inline_query_result_cached_voice_json_object.insert("reply_markup", reply_markup->toObject());
+	if (input_message_content.has_value())	inline_query_result_cached_voice_json_object.insert("input_message_content", (**input_message_content).toObject());
 
-	return inlineQueryResultCachedVoiceJsonObject;
+	return inline_query_result_cached_voice_json_object;
 }
 
-bool Telegram::InlineQueryResultCachedVoice::isEmpty() const
-{
+bool Telegram::InlineQueryResultCachedVoice::isEmpty() const {
 	return id == ""
 		   and voice_file_id == ""
 		   and title == ""
@@ -60,4 +56,8 @@ bool Telegram::InlineQueryResultCachedVoice::isEmpty() const
 		   and caption_entities == std::nullopt
 		   and reply_markup == std::nullopt
 		   and input_message_content == std::nullopt;
+}
+
+Telegram::InlineQueryResult::Type Telegram::InlineQueryResultCachedVoice::getType() const {
+	return type;
 }
