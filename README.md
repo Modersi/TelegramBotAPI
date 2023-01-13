@@ -52,7 +52,7 @@ auto settings_from_custom_file = Telegram::BotSettings::makeFromFile(QDir("Speci
 auto settings_from_code = std::make_shared<Telegram::BotSettings>("BOT_TOKEN", "WEBHOOK_URL");
 settings_from_code->ssl_configuration = configureSimpleSSL("Your SSL certificate file path", "Private key file path", { "CA certificate file paths" });
 ```
-> **See [BotStartup](Examples/BotStartup/) example for the details**
+> **See [BotStartup](Examples/1_BotStartup/) example for the details**
 
 
 ## _[Telegram::Bot](Sources/Headers/Bot.h)_
@@ -67,7 +67,7 @@ QObject::connect(&telegram_bot, &Telegram::Bot::messageReceived, [&](qint32 upda
   telegram_bot.sendMessage(message.chat->id, message.text.value_or("")); 
 });
 ```
-> **See [IncomingMessagesHandling](Examples/IncomingMessagesHandling/) example for the details**
+> **See [IncomingMessagesHandling](Examples/2_IncomingMessagesHandling/) example for the details**
 
 
 # Dependecies
