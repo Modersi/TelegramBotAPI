@@ -79,11 +79,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Core PRIVATE Qt6::Network)
 find_package(OpenSSL REQUIRED)			
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenSSL::SSL)
 ```
-After compiling your program you should deploy all necessary .dll's to the directory with your program .exe file. You can simplify this process by using [windeployqt](https://doc.qt.io/qt-6/windows-deployment.html) tool
-```
-cd qt_directory/6.3.0/bin/
-wyndeployqt path/to/your/file.exe
-```
 
 # Linking to your project
 You can easily link QTelegramBotAPI to your project with CMake by including header files located in TelegramBotAPI/include and linking with TelegramBotAPI.lib
