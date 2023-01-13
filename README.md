@@ -9,7 +9,7 @@ QTelegramBotAPI is a library for developing bots for the Telegram messenger.
 
 # Description
 Bot in Telegram is something like a built-in program that users can interact with by buttons, commands, simple text messages, etc...
-You can create any bot you want! It can be a simple [weather bot](https://telegram.me/weatherman_bot?ref=thereisabotforthat.com) or a much more complicated [Bitcoin exchanger bot](https://t.me/BTC_CHANGE_BOT?start=botostore).
+You can create any bot you want! It can be a simple [weather bot](https://telegram.me/weatherman_bot) or a much more complicated [Russian-Polish translator bot](https://t.me/PL_RU_TranslatorBot).
 
 
 
