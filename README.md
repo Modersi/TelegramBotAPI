@@ -56,12 +56,26 @@ settings_from_code->ssl_configuration = configureSimpleSSL("Your SSL certificate
 
 
 ## _[Telegram::Bot](Sources/Headers/Bot.h)_
-**Telegram::Bot** is a class that represents your bot in Telegram. It contains all available methods such as `sendMessage()`, `sendPhoto()`, etc.. To create an instance of Telegram::Bot you have to pass Telegram::BotSettings object as an argument
+**Telegram::Bot** is a class that represents your bot in Telegram. To create an instance of Telegram::Bot you have to pass Telegram::BotSettings object as an argument
 ```c#
 auto bot_settings = Telegram::BotSettings::makeFromFile();
 Telegram::Bot telegram_bot(bot_settings);
 ```
-Also, it contains all Qt signals related to updates handling. So you can easily connect the needed signal to your function or slot. For example, there is  `Telegram::Bot::messageReceived(qint32 update_id, Message message)` signal that is emitted every time when your bot receives a text message. You can find all available signals and their description in [Bot.h](Sources/Headers/Bot.h) file
+
+It contains all available API methods such as [`sendMessage()`](https://github.com/Modersi/TelegramBotAPI/blob/main/Sources/Headers/Bot.h#L166), [`sendPhoto()`](https://github.com/Modersi/TelegramBotAPI/blob/main/Sources/Headers/Bot.h#L207), etc..  
+
+Each method is asynchronous and uses [std::future](https://en.cppreference.com/w/cpp/thread/future) as a return value to provide asynchronous mechanic.  
+
+Methods with more than 4 optional arguments use [designated initializers](https://en.cppreference.com/w/cpp/language/aggregate_initialization). So, for example, if you want to send a message with a reply keyboard you can write
+```c#
+telegram_bot.sendMessage({.chat_id = some_id, .text = some_text, .reply_markup = some_markup}); 
+```
+instead of
+```c#
+telegram_bot.sendMessage(some_id, some_text, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, some_markup); 
+```  
+
+<br>Also, it contains all Qt signals related to updates handling. So you can easily connect the needed signal to your function or slot. For example, there is  `Telegram::Bot::messageReceived(qint32 update_id, Message message)` signal that is emitted every time when your bot receives a text message. You can find all available signals and their description in [Bot.h](Sources/Headers/Bot.h) file
 ```c#
 QObject::connect(&telegram_bot, &Telegram::Bot::messageReceived, [&](qint32 update_id, Telegram::Message message) { 
   telegram_bot.sendMessage(message.chat->id, message.text.value_or("")); 
