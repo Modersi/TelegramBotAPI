@@ -1,6 +1,6 @@
 #include "Types/InlineQueryResultVideo.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
 
 Telegram::InlineQueryResultVideo::InlineQueryResultVideo() :
 	id(),
@@ -56,7 +56,7 @@ QJsonObject Telegram::InlineQueryResultVideo::toObject() const {
 
 	if (caption.has_value())				inline_query_result_video_json_object.insert("caption", *caption);
 	if (parse_mode.has_value())				inline_query_result_video_json_object.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inline_query_result_video_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (caption_entities.has_value())		inline_query_result_video_json_object.insert("caption_entities", Utility::QJsonArrayInserter::make(*caption_entities));
 	if (video_width.has_value())			inline_query_result_video_json_object.insert("video_width", *video_width);
 	if (video_height.has_value())			inline_query_result_video_json_object.insert("video_height", *video_height);
 	if (video_duration.has_value())			inline_query_result_video_json_object.insert("video_duration", *video_duration);

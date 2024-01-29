@@ -2,7 +2,8 @@
 
 #include "qjsonarray.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
+#include "Internal/Utility/QVectorInserter.h"
 
 Telegram::InlineKeyboardMarkup::InlineKeyboardMarkup() :
 	inline_keyboard()
@@ -20,13 +21,13 @@ Telegram::InlineKeyboardMarkup::InlineKeyboardMarkup(const QVector<QVector<Inlin
 
 Telegram::InlineKeyboardMarkup::InlineKeyboardMarkup(const QJsonObject& json_object)
 {
-	json_object.contains("inline_keyboard") ? inline_keyboard = DoubleQJsonArrayToDoubleQVector<InlineKeyboardButton>(json_object["inline_keyboard"].toArray()) : inline_keyboard = QVector<QVector<InlineKeyboardButton>>();
+	json_object.contains("inline_keyboard") ? inline_keyboard = Utility::QVectorInserter<QVector<InlineKeyboardButton>>::make(json_object["inline_keyboard"].toArray()) : inline_keyboard = QVector<QVector<InlineKeyboardButton>>();
 }
 
 QJsonObject Telegram::InlineKeyboardMarkup::toObject() const {
 	if (isEmpty()) return {};
 
-	return { {"inline_keyboard", DoubleQVectorToDoubleQJsonArray(inline_keyboard)} };
+	return { {"inline_keyboard", Utility::QJsonArrayInserter::make(inline_keyboard.begin(), inline_keyboard.end())} };
 }
 
 bool Telegram::InlineKeyboardMarkup::isEmpty() const {

@@ -1,7 +1,5 @@
 #include "Types/InlineQueryResultLocation.h"
 
-#include "Internal/ConversionFunctions.h"
-
 Telegram::InlineQueryResultLocation::InlineQueryResultLocation() :
 	id(),
 	latitude(),

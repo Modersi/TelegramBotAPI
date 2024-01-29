@@ -72,7 +72,7 @@ void TestBot::sendPhoto(const qint32& chat_id)
 		telegram_bot.sendChatAction(chat_id, Bot::ChatActionType::UPLOAD_PHOTO);
 
 		//	1. Sending the photo with QFile and storing the reply
-		Message send_photo_reply = telegram_bot.sendPhoto(chat_id, photo_file.get(), photo_caption, Message::FormattingType::HTML);
+		Message send_photo_reply = telegram_bot.sendPhoto(chat_id, photo_file.get(), photo_caption, Message::FormattingType::HTML).get();
 
 		//	2. Sending the photo with file_id. Obtained from the response of previous sendPhoto()
 		if (send_photo_reply.photo.has_value())
@@ -99,7 +99,13 @@ void TestBot::sendAudio(const qint32& chat_id)
 		telegram_bot.sendChatAction(chat_id, Bot::ChatActionType::UPLOAD_DOCUMENT);
 
 		//	1. Sending the audio with QFile and storing the reply
-		Message send_audio_reply = telegram_bot.sendAudio(chat_id, audio_file.get(), audio_caption, Message::FormattingType::HTML, std::nullopt, std::nullopt, "Audio.mp3", "Audio.mp3");
+		Message send_audio_reply = telegram_bot.sendAudio({ 
+			.chat_id = chat_id, 
+			.audio = audio_file.get(), 
+			.caption = audio_caption, 
+			.parse_mode = Message::FormattingType::HTML, 
+			.performer = "Audio.mp3", .title = "Audio.mp3" }
+		).get();
 
 		//	2. Sending audio with file_id. Obtained from the response of previous sendAudio()
 		if (send_audio_reply.audio.has_value())
@@ -126,7 +132,7 @@ void TestBot::sendDocument(const qint32& chat_id)
 		telegram_bot.sendChatAction(chat_id, Bot::ChatActionType::UPLOAD_DOCUMENT);
 
 		//	1. Sending the document with QFile and storing the reply
-		Message send_document_reply = telegram_bot.sendDocument(chat_id, document_file.get(), std::nullopt, document_caption, Message::FormattingType::HTML);
+		Message send_document_reply = telegram_bot.sendDocument(chat_id, document_file.get(), std::nullopt, document_caption, Message::FormattingType::HTML).get();
 
 		//	2. Sending the document with file_id. Obtained from the response of previous sendDocument()
 		if (send_document_reply.document.has_value())
@@ -153,14 +159,29 @@ void TestBot::sendVideo(const qint32& chat_id)
 		telegram_bot.sendChatAction(chat_id, Bot::ChatActionType::UPLOAD_VIDEO);
 
 		//	1. Sending the video with QFile and storing the reply
-		Message send_video_reply = telegram_bot.sendVideo(chat_id, video_file.get(), std::nullopt, std::nullopt, std::nullopt, std::nullopt, video_caption, Message::FormattingType::HTML);
+		Message send_video_reply = telegram_bot.sendVideo({ 
+			.chat_id = chat_id, 
+			.video = video_file.get(), 
+			.caption = video_caption, 
+			.parse_mode = Message::FormattingType::HTML }
+		).get();
 
 		//	2. Sending the video with file_id. Obtained from the response of previous sendVideo()
 		if (send_video_reply.video.has_value())
-			telegram_bot.sendVideo(chat_id, send_video_reply.video->file_id, std::nullopt, std::nullopt, std::nullopt, std::nullopt, video_caption, Message::FormattingType::HTML);
+			telegram_bot.sendVideo({
+				.chat_id = chat_id,
+				.video = send_video_reply.video->file_id,
+				.caption = video_caption,
+				.parse_mode = Message::FormattingType::HTML }
+			);
 
 		//	3. Sending the video with URL from internet
-		telegram_bot.sendVideo(chat_id, "https://cdn-130.anonfiles.com/P7vcrfUbu1/ffda5578-1636642158/Video.mp4", std::nullopt, std::nullopt, std::nullopt, std::nullopt, video_caption, Message::FormattingType::HTML);
+		telegram_bot.sendVideo({
+			.chat_id = chat_id,
+			.video = "https://cdn-130.anonfiles.com/P7vcrfUbu1/ffda5578-1636642158/Video.mp4",
+			.caption = video_caption,
+			.parse_mode = Message::FormattingType::HTML }
+		);
 	}
 }
 
@@ -180,14 +201,29 @@ void TestBot::sendAnimation(const qint32& chat_id)
 		telegram_bot.sendChatAction(chat_id, Bot::ChatActionType::UPLOAD_DOCUMENT);
 
 		//	1. Sending the animation with QFile and storing the reply
-		Message send_animation_reply = telegram_bot.sendAnimation(chat_id, animation_file.get(), std::nullopt, std::nullopt, std::nullopt, std::nullopt, animation_caption, Message::FormattingType::HTML);
+		Message send_animation_reply = telegram_bot.sendAnimation({
+			.chat_id = chat_id,
+			.animation = animation_file.get(),
+			.caption = animation_caption,
+			.parse_mode = Message::FormattingType::HTML }
+		).get();
 
 		//	2. Sending the animation with file_id. Obtained from response of previous sendAnimation()
 		if (send_animation_reply.animation.has_value())
-			telegram_bot.sendAnimation(chat_id, send_animation_reply.animation->file_id, std::nullopt, std::nullopt, std::nullopt, std::nullopt, animation_caption, Message::FormattingType::HTML);
+			telegram_bot.sendAnimation({
+				.chat_id = chat_id,
+				.animation = send_animation_reply.animation->file_id,
+				.caption = animation_caption,
+				.parse_mode = Message::FormattingType::HTML }
+			);
 
 		//	3. Sending the animation with URL from internet
-		telegram_bot.sendAnimation(chat_id, "https://cdn-107.anonfiles.com/j4a5sbUdu6/5ef7ec60-1636644323/Animation.gif", std::nullopt, std::nullopt, std::nullopt, std::nullopt, animation_caption, Message::FormattingType::HTML);
+			telegram_bot.sendAnimation({
+				.chat_id = chat_id,
+				.animation = "https://cdn-107.anonfiles.com/j4a5sbUdu6/5ef7ec60-1636644323/Animation.gif",
+				.caption = animation_caption,
+				.parse_mode = Message::FormattingType::HTML }
+			);
 	}
 }
 
@@ -207,7 +243,7 @@ void TestBot::sendVoice(const qint32& chat_id)
 		telegram_bot.sendChatAction(chat_id, Bot::ChatActionType::UPLOAD_VOICE);
 
 		//	1. Sending the voice with QFile and storing the reply
-		Message send_voice_reply = telegram_bot.sendVoice(chat_id, voice_file.get(), voice_caption, Message::FormattingType::HTML);
+		Message send_voice_reply = telegram_bot.sendVoice(chat_id, voice_file.get(), voice_caption, Message::FormattingType::HTML).get();
 
 		//	2. Sending the voice with file_id. Obtained from the response of previous sendVoice()
 		if (send_voice_reply.voice.has_value())
@@ -228,7 +264,7 @@ void TestBot::sendVideoNote(const qint32& chat_id)
 		telegram_bot.sendChatAction(chat_id, Bot::ChatActionType::UPLOAD_VIDEO_NOTE);
 
 		//	1. Sending the video note with QFile and storing reply
-		Message send_video_note_reply = telegram_bot.sendVideoNote(chat_id, video_note_file.get());
+		Message send_video_note_reply = telegram_bot.sendVideoNote(chat_id, video_note_file.get()).get();
 
 		//	2. Sending the video note with file_id. Obtained from the response of previous sendVideoNote()
 		if (send_video_note_reply.video_note.has_value())
@@ -264,10 +300,10 @@ void TestBot::sendMediaGroup(const qint32& chat_id)
 	telegram_bot.sendMediaGroup(chat_id, QVector<InputMediaAudio>{ {audio_file.get()}, { audio_file.get() }, { audio_file.get() } });
 
 	//	3. Sending a bunch of photos and videos
-	telegram_bot.sendMediaGroup(chat_id, { 
+	telegram_bot.sendMediaGroup(chat_id, 
 		{ InputMediaPhoto(photo_file.get()), InputMediaPhoto(photo_file.get()) },
 		{ InputMediaVideo(video_file.get()), InputMediaVideo(video_file.get()) }
-	});
+	).get();
 }
 
 void TestBot::onErrorOccured(Error error) {

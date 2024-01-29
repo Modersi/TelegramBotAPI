@@ -9,7 +9,7 @@
 #include "qjsonobject.h"
 #include "qjsonarray.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QVectorInserter.h"
 
 Telegram::BotSettings::BotSettings() :
 	bot_token(),
@@ -91,7 +91,7 @@ std::shared_ptr<Telegram::BotSettings> Telegram::BotSettings::makeFromFile(const
 	bot_settings_json["webhook_url"].isNull()			? bot_settings->webhook_url = std::nullopt			: bot_settings->webhook_url = bot_settings_json["webhook_url"].toString();
 	bot_settings_json["webhook_ip_addres"].isNull()		? bot_settings->webhook_ip_addres = std::nullopt	: bot_settings->webhook_ip_addres = bot_settings_json["webhook_ip_addres"].toString();
 	bot_settings_json["max_connections"].isNull()		? bot_settings->max_connections = std::nullopt		: bot_settings->max_connections = bot_settings_json["max_connections"].toInt();
-	bot_settings_json["allowed_updates"].isNull()		? bot_settings->allowed_updates = std::nullopt		: bot_settings->allowed_updates = QJsonArrayToQVector<QString>(bot_settings_json["allowed_updates"].toArray());
+	bot_settings_json["allowed_updates"].isNull()		? bot_settings->allowed_updates = std::nullopt		: bot_settings->allowed_updates = Utility::QVectorInserter<QString>::make(bot_settings_json["allowed_updates"].toArray());
 	bot_settings_json["drop_pending_updates"].isNull()	? bot_settings->drop_pending_updates = std::nullopt : bot_settings->drop_pending_updates = bot_settings_json["drop_pending_updates"].toBool();
 	bot_settings_json["host_addres"].isNull()			? bot_settings->host_addres = std::nullopt			: bot_settings->host_addres = QHostAddress(bot_settings_json["host_addres"].toString());
 	bot_settings_json["port"].isNull()					? bot_settings->port = std::nullopt					: bot_settings->port = bot_settings_json["port"].toInt();

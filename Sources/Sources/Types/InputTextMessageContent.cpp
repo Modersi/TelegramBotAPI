@@ -1,6 +1,6 @@
 #include "Types/InputTextMessageContent.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
 
 Telegram::InputTextMessageContent::InputTextMessageContent() :
 	message_text(),
@@ -26,7 +26,7 @@ QJsonObject Telegram::InputTextMessageContent::toObject() const {
 	QJsonObject input_text_message_content_json_object{ {"message_text", message_text} };
 
 	if (parse_mode.has_value())					input_text_message_content_json_object.insert("parse_mode", *parse_mode);
-	if (entities.has_value())					input_text_message_content_json_object.insert("entities", QVectorToQJsonArray(*entities));
+	if (entities.has_value())					input_text_message_content_json_object.insert("entities", Utility::QJsonArrayInserter::make(*entities));
 	if (disable_web_page_preview.has_value())	input_text_message_content_json_object.insert("disable_web_page_preview", *disable_web_page_preview);
 
 	return input_text_message_content_json_object;

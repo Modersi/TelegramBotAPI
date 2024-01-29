@@ -21,6 +21,7 @@ target_sources(${PROJECT_NAME}
 						##### Bot
 							Sources/Bot.cpp 
 							Headers/Bot.h 
+							Headers/FunctionArguments.h
 							Sources/BotSettings.cpp
 							Headers/BotSettings.h
 
@@ -218,11 +219,23 @@ target_sources(${PROJECT_NAME}
 						##### Internal
 							Sources/Internal/TelegramListener.cpp
 							Headers/Internal/TelegramListener.h
-							Sources/Internal/RequestManager.cpp
-							Headers/Internal/RequestManager.h
-							Headers/Internal/ConversionFunctions.h)
+							Headers/Internal/Utility/Utility.h
+							Sources/Internal/Utility/Utility.cpp
+								Sources/Internal/Utility/QHttpMultiPartInserter.cpp
+								Headers/Internal/Utility/QHttpMultiPartInserter.h
+								Headers/Internal/Utility/QHttpMultiPartInserter.hpp
+								Sources/Internal/Utility/QJsonObjectInserter.cpp
+								Headers/Internal/Utility/QJsonObjectInserter.h
+								Headers/Internal/Utility/QJsonObjectInserter.hpp
+								Sources/Internal/Utility/QJsonArrayInserter.cpp
+								Headers/Internal/Utility/QJsonArrayInserter.h
+								Headers/Internal/Utility/QJsonArrayInserter.hpp
+								Headers/Internal/Utility/QVectorInserter.h
+								Headers/Internal/Utility/QVectorInserter.hpp
+)
 
-
+get_target_property(TelegramBotAPISources TelegramBotAPI SOURCES)
+source_group(TREE ${PROJECT_SOURCE_DIR}/Sources FILES ${TelegramBotAPISources})
 
 
 

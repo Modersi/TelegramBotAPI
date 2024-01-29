@@ -115,7 +115,7 @@ void TestBot::sendInlineKeyboard(const qint32& chat_id) {
 
 
 	// Sending all inline buttons
-	telegram_bot.sendMessage(chat_id, "Inline buttons:", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, inline_keyboard_markup);
+	telegram_bot.sendMessage({ .chat_id = chat_id, .text = "Inline buttons:", .reply_markup = inline_keyboard_markup });
 	// In progress // telegram_bot.sendMessage(chat_id, "Pay button test:", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, InlineKeyboardMarkup({ {pay_button} }));
 }
 
@@ -143,17 +143,17 @@ void TestBot::sendReplyKeyboard(const qint32& chat_id) {
 
 
 	// Sending reply keyboard
-	telegram_bot.sendMessage(chat_id, "Reply buttons", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, reply_keyboard_markup);
+	telegram_bot.sendMessage({ .chat_id = chat_id, .text = "Reply buttons", .reply_markup = reply_keyboard_markup });
 }
 
 void TestBot::removeReplyKeyboard(const qint32& chat_id) {
 	//	Removing reply keyboard
-	telegram_bot.sendMessage(chat_id, "Removing reply keyboard!", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, ReplyKeyboardRemove());
+	telegram_bot.sendMessage({ .chat_id = chat_id, .text = "Removing reply keyboard!", .reply_markup = ReplyKeyboardRemove() });
 }
 
 void TestBot::forceReply(const qint32& chat_id) {
 	//	Forcing reply
-	telegram_bot.sendMessage(chat_id, "Forcing reply!", std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, ForceReply("Example input field!"));
+	telegram_bot.sendMessage({ .chat_id = chat_id, .text = "Forcing reply!", .reply_markup = ForceReply("Example input field!") });
 }
 
 void TestBot::onErrorOccured(Error error) {

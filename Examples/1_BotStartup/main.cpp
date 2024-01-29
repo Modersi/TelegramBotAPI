@@ -55,14 +55,14 @@ int main(int argc, char* argv[]) {
 	//Bot test_bot(settings_from_code);
 
 	// After setting up your bot you can ensure the bot is working properly using:
-	qDebug() << test_bot.getMe().toObject();			// To get basic data about your bot in form of a User object
-	qDebug() << test_bot.getWebhookInfo().toObject();	// To get data about your Webhook connection if a form of WebhookInfo object
+	qDebug() << test_bot.getMe().get().toObject();			// To get basic data about your bot in form of a User object
+	qDebug() << test_bot.getWebhookInfo().get().toObject();	// To get data about your Webhook connection if a form of WebhookInfo object
 
 	return core_application.exec();
 }
 
-QSslConfiguration configureSimpleSSL(const QString& certificate_file_path, const QString& private_key_file_path, const QVector<QString>& ca_certificates_files_paths)
-{
+QSslConfiguration configureSimpleSSL(const QString& certificate_file_path, const QString& private_key_file_path, const QVector<QString>& ca_certificates_files_paths) {
+
 	QSslConfiguration ssl_configuration;
 
 	// Adding certificate to the SSL configuration

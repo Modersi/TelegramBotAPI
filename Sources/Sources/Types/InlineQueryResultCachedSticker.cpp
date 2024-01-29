@@ -1,7 +1,5 @@
 #include "Types/InlineQueryResultCachedSticker.h"
 
-#include "Internal/ConversionFunctions.h"
-
 Telegram::InlineQueryResultCachedSticker::InlineQueryResultCachedSticker() :
 	id(),
 	sticker_file_id(),

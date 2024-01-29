@@ -26,7 +26,7 @@ TestBot::TestBot(const QVector<BotCommand>& bot_commands, const std::shared_ptr<
 	});
 
 	/* Printing debug info about the webhook */
-	auto webhook_info = telegram_bot.getWebhookInfo();
+	auto webhook_info = telegram_bot.getWebhookInfo().get();
 
 	qDebug() << "\n" << "---| Webhook information:"
 			 << "\n" << "Webhook URL:" << webhook_info.url

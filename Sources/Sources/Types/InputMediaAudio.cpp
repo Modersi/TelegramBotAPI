@@ -1,6 +1,7 @@
 #include "Types/InputMediaAudio.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
+#include "Internal/Utility/QVectorInserter.h"
 
 Telegram::InputMediaAudio::InputMediaAudio() :
 	media(),
@@ -32,14 +33,14 @@ Telegram::InputMediaAudio::InputMediaAudio(const std::variant<QFile*, QString>& 
 {}
 
 Telegram::InputMediaAudio::InputMediaAudio(const QJsonObject& json_object) {
-	json_object.contains("media")			? media = json_object["media"].toString()														  : media = nullptr;
-	json_object.contains("thumb")			? thumb = json_object["thumb"].toString()														  : thumb = std::nullopt;
-	json_object.contains("caption")			? caption = json_object["caption"].toString()													  : caption = std::nullopt;
-	json_object.contains("parse_mode")		? parse_mode = json_object["parse_mode"].toString()												  : parse_mode = std::nullopt;
-	json_object.contains("caption_entities") ? caption_entities = QJsonArrayToQVector<MessageEntity>(json_object["caption_entities"].toArray()) : caption_entities = std::nullopt;
-	json_object.contains("duration")		? duration = json_object["duration"].toInt()														  : duration = std::nullopt;
-	json_object.contains("performer")		? performer = json_object["performer"].toString()												  : performer = std::nullopt;
-	json_object.contains("title")			? title = json_object["title"].toString()														  : title = std::nullopt;
+	json_object.contains("media")			 ? media = json_object["media"].toString()																		: media = nullptr;
+	json_object.contains("thumb")			 ? thumb = json_object["thumb"].toString()																		: thumb = std::nullopt;
+	json_object.contains("caption")			 ? caption = json_object["caption"].toString()																	: caption = std::nullopt;
+	json_object.contains("parse_mode")		 ? parse_mode = json_object["parse_mode"].toString()															: parse_mode = std::nullopt;
+	json_object.contains("caption_entities") ? caption_entities = Utility::QVectorInserter<MessageEntity>::make(json_object["caption_entities"].toArray())	: caption_entities = std::nullopt;
+	json_object.contains("duration")		 ? duration = json_object["duration"].toInt()																	: duration = std::nullopt;
+	json_object.contains("performer")		 ? performer = json_object["performer"].toString()																: performer = std::nullopt;
+	json_object.contains("title")			 ? title = json_object["title"].toString()																		: title = std::nullopt;
 }
 
 QJsonObject Telegram::InputMediaAudio::toObject() const {
@@ -58,7 +59,7 @@ QJsonObject Telegram::InputMediaAudio::toObject() const {
 	
 	if (caption.has_value())			input_media_audio_json_object.insert("caption", *caption);
 	if (parse_mode.has_value())			input_media_audio_json_object.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())	input_media_audio_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (caption_entities.has_value())	input_media_audio_json_object.insert("caption_entities", Utility::QJsonArrayInserter::make(*caption_entities));
 	if (duration.has_value())			input_media_audio_json_object.insert("duration", *duration);
 	if (performer.has_value())			input_media_audio_json_object.insert("performer", *performer);
 	if (title.has_value())				input_media_audio_json_object.insert("title", *title);

@@ -1,6 +1,6 @@
 #include "Types/InputInvoiceMessageContent.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
 
 Telegram::InputInvoiceMessageContent::InputInvoiceMessageContent() :
 	title(),
@@ -70,10 +70,10 @@ Telegram::InputInvoiceMessageContent::InputInvoiceMessageContent(const QString& 
 QJsonObject Telegram::InputInvoiceMessageContent::toObject() const {
 	if (isEmpty()) return {};
 
-	QJsonObject input_invoice_message_content_json_object{ {"title", title}, {"description", description}, {"payload", payload}, {"provider_token", provider_token}, {"currency", currency}/*, {"prices", QVectorToQJsonArray(prices)}*/ };
+	QJsonObject input_invoice_message_content_json_object{ {"title", title}, {"description", description}, {"payload", payload}, {"provider_token", provider_token}, {"currency", currency}/*, {"prices", Utility::QJsonArrayInserter::make(prices)}*/ };
 
 	if (max_tip_amount.has_value())					input_invoice_message_content_json_object.insert("max_tip_amount", *max_tip_amount);
-	if (suggested_tip_amounts.has_value())			input_invoice_message_content_json_object.insert("suggested_tip_amounts", QVectorToQJsonArray(*suggested_tip_amounts));
+	if (suggested_tip_amounts.has_value())			input_invoice_message_content_json_object.insert("suggested_tip_amounts", Utility::QJsonArrayInserter::make(*suggested_tip_amounts));
 	if (provider_data.has_value())					input_invoice_message_content_json_object.insert("provider_data", *provider_data);
 	if (photo_url.has_value())						input_invoice_message_content_json_object.insert("photo_url", *photo_url);
 	if (photo_size.has_value())						input_invoice_message_content_json_object.insert("photo_size", *photo_size);
