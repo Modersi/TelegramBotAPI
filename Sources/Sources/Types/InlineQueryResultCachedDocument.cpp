@@ -1,6 +1,6 @@
 #include "Types/InlineQueryResultCachedDocument.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
 
 Telegram::InlineQueryResultCachedDocument::InlineQueryResultCachedDocument() :
 	id(),
@@ -42,7 +42,7 @@ QJsonObject Telegram::InlineQueryResultCachedDocument::toObject() const {
 	if (description.has_value())			inline_query_result_cached_document_json_object.insert("description", *description);
 	if (caption.has_value())				inline_query_result_cached_document_json_object.insert("caption", *caption);
 	if (parse_mode.has_value())				inline_query_result_cached_document_json_object.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inline_query_result_cached_document_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (caption_entities.has_value())		inline_query_result_cached_document_json_object.insert("caption_entities", Utility::QJsonArrayInserter::make(*caption_entities));
 	if (reply_markup.has_value())			inline_query_result_cached_document_json_object.insert("reply_markup", reply_markup->toObject());
 	if (input_message_content.has_value())	inline_query_result_cached_document_json_object.insert("input_message_content", (**input_message_content).toObject());
 

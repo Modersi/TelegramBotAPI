@@ -1,5 +1,7 @@
 #include "Types/UserProfilePhotos.h"
-#include "Internal/ConversionFunctions.h"
+
+#include "Internal/Utility/QJsonArrayInserter.h"
+#include "Internal/Utility/QVectorInserter.h"
 
 #include "qjsonarray.h"
 
@@ -15,14 +17,14 @@ Telegram::UserProfilePhotos::UserProfilePhotos(const qint32& total_count,
 {}
 
 Telegram::UserProfilePhotos::UserProfilePhotos(const QJsonObject& json_object) {
-	json_object.contains("total_count") ? total_count = json_object["total_count"].toInt()									   : total_count = 0;
-	json_object.contains("photos")		? photos = DoubleQJsonArrayToDoubleQVector<PhotoSize>(json_object["photos"].toArray()) : photos = QVector<QVector<PhotoSize>>();
+	json_object.contains("total_count") ? total_count = json_object["total_count"].toInt()												: total_count = 0;
+	json_object.contains("photos")		? photos = Utility::QVectorInserter<QVector<PhotoSize>>::make(json_object["photos"].toArray())	: photos = QVector<QVector<PhotoSize>>();
 }
 
 QJsonObject Telegram::UserProfilePhotos::toObject() const {
 	if (isEmpty()) return {};
 
-	return { {"total_count", total_count}, {"photos", DoubleQVectorToDoubleQJsonArray(photos)} };
+	return { {"total_count", total_count}, {"photos", Utility::QJsonArrayInserter::make(photos.begin(), photos.end())} };
 }
 
 bool Telegram::UserProfilePhotos::isEmpty() const {

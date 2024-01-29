@@ -1,6 +1,6 @@
 #include "Types/InlineQueryResultAudio.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
 
 Telegram::InlineQueryResultAudio::InlineQueryResultAudio() :
 	id(),
@@ -44,7 +44,7 @@ QJsonObject Telegram::InlineQueryResultAudio::toObject() const {
 
 	if (caption.has_value())				inline_query_result_audio_json_object.insert("caption", *caption);
 	if (parse_mode.has_value())				inline_query_result_audio_json_object.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inline_query_result_audio_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (caption_entities.has_value())		inline_query_result_audio_json_object.insert("caption_entities", Utility::QJsonArrayInserter::make(*caption_entities));
 	if (performer.has_value())				inline_query_result_audio_json_object.insert("performer", *performer);
 	if (audio_duration.has_value())			inline_query_result_audio_json_object.insert("audio_duration", *audio_duration);
 	if (reply_markup.has_value())			inline_query_result_audio_json_object.insert("reply_markup", reply_markup->toObject());

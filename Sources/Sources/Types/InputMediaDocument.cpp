@@ -1,6 +1,7 @@
 #include "Types/InputMediaDocument.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
+#include "Internal/Utility/QVectorInserter.h"
 
 Telegram::InputMediaDocument::InputMediaDocument() :
 	media(),
@@ -30,7 +31,7 @@ Telegram::InputMediaDocument::InputMediaDocument(const QJsonObject& json_object)
 	json_object.contains("thumb")							? thumb = json_object["thumb"].toString()															: thumb = std::nullopt;
 	json_object.contains("caption")							? caption = json_object["caption"].toString()														: caption = std::nullopt;
 	json_object.contains("parse_mode")						? parse_mode = json_object["parse_mode"].toString()													: parse_mode = std::nullopt;
-	json_object.contains("caption_entities")				? caption_entities = QJsonArrayToQVector<MessageEntity>(json_object["caption_entities"].toArray())	: caption_entities = std::nullopt;
+	json_object.contains("caption_entities")				? caption_entities = Utility::QVectorInserter<MessageEntity>::make(json_object["caption_entities"].toArray())	: caption_entities = std::nullopt;
 	json_object.contains("disable_content_type_detection")	? disable_content_type_detection = json_object["disable_content_type_detection"].toBool()			: disable_content_type_detection = std::nullopt;
 }
 
@@ -50,7 +51,7 @@ QJsonObject Telegram::InputMediaDocument::toObject() const {
 
 	if (caption.has_value())							input_media_document_json_object.insert("caption", *caption);
 	if (parse_mode.has_value())							input_media_document_json_object.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())					input_media_document_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (caption_entities.has_value())					input_media_document_json_object.insert("caption_entities", Utility::QJsonArrayInserter::make(*caption_entities));
 	if (disable_content_type_detection.has_value())		input_media_document_json_object.insert("disable_content_type_detection", *disable_content_type_detection);
 
 	return input_media_document_json_object;

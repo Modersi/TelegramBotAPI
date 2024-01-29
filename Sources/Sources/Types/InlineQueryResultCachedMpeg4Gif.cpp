@@ -1,6 +1,6 @@
 #include "Types/InlineQueryResultCachedMpeg4Gif.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
 
 Telegram::InlineQueryResultCachedMpeg4Gif::InlineQueryResultCachedMpeg4Gif() :
 	id(),
@@ -39,7 +39,7 @@ QJsonObject Telegram::InlineQueryResultCachedMpeg4Gif::toObject() const {
 	if (title.has_value())					inline_query_result_cached_mpeg4_gif_json_object.insert("title", *title);
 	if (caption.has_value())				inline_query_result_cached_mpeg4_gif_json_object.insert("caption", *caption);
 	if (parse_mode.has_value())				inline_query_result_cached_mpeg4_gif_json_object.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())		inline_query_result_cached_mpeg4_gif_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (caption_entities.has_value())		inline_query_result_cached_mpeg4_gif_json_object.insert("caption_entities", Utility::QJsonArrayInserter::make(*caption_entities));
 	if (reply_markup.has_value())			inline_query_result_cached_mpeg4_gif_json_object.insert("reply_markup", reply_markup->toObject());
 	if (input_message_content.has_value())	inline_query_result_cached_mpeg4_gif_json_object.insert("input_message_content", (**input_message_content).toObject());
 

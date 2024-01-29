@@ -1,6 +1,7 @@
 #include "Types/InputMediaPhoto.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
+#include "Internal/Utility/QVectorInserter.h"
 
 Telegram::InputMediaPhoto::InputMediaPhoto() :
 	media(),
@@ -20,10 +21,10 @@ Telegram::InputMediaPhoto::InputMediaPhoto(const std::variant<QFile*, QString>& 
 {}
 
 Telegram::InputMediaPhoto::InputMediaPhoto(const QJsonObject& json_object) {
-	json_object.contains("media")				? media = json_object["media"].toString()															: media = nullptr;
-	json_object.contains("caption")				? caption = json_object["caption"].toString()														: caption = std::nullopt;
-	json_object.contains("parse_mode")			? parse_mode = json_object["parse_mode"].toString()													: parse_mode = std::nullopt;
-	json_object.contains("caption_entities")	? caption_entities = QJsonArrayToQVector<MessageEntity>(json_object["caption_entities"].toArray())   : caption_entities = std::nullopt;
+	json_object.contains("media")				? media = json_object["media"].toString()																		: media = nullptr;
+	json_object.contains("caption")				? caption = json_object["caption"].toString()																	: caption = std::nullopt;
+	json_object.contains("parse_mode")			? parse_mode = json_object["parse_mode"].toString()																: parse_mode = std::nullopt;
+	json_object.contains("caption_entities")	? caption_entities = Utility::QVectorInserter<MessageEntity>::make(json_object["caption_entities"].toArray())   : caption_entities = std::nullopt;
 }
 
 QJsonObject Telegram::InputMediaPhoto::toObject() const {
@@ -36,7 +37,7 @@ QJsonObject Telegram::InputMediaPhoto::toObject() const {
 
 	if (caption.has_value())			input_media_photo_json_object.insert("caption", *caption);
 	if (parse_mode.has_value())			input_media_photo_json_object.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())	input_media_photo_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (caption_entities.has_value())	input_media_photo_json_object.insert("caption_entities", Utility::QJsonArrayInserter::make(*caption_entities));
 
 	return input_media_photo_json_object;
 }

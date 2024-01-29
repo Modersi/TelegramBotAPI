@@ -36,7 +36,6 @@ namespace Telegram
         };
         Q_ENUM(Status)
 
-
         /**  @brief Returns ChatMember in form of JSON object */
         virtual QJsonObject toObject() const = 0;
 

@@ -1,6 +1,8 @@
-﻿#include "Types/Chat.h"
-#include "Types/Message.h"
-#include "Internal/ConversionFunctions.h"
+﻿#include "Types/Message.h"
+
+#include "Types/Chat.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
+#include "Internal/Utility/QVectorInserter.h"
 
 #include "qjsonobject.h"
 #include "qjsonarray.h"
@@ -196,27 +198,27 @@ Telegram::Message::Message(const QJsonObject& json_object) {
 	json_object.contains("media_group_id")					  ? media_group_id = json_object["media_group_id"].toString()																		: media_group_id = std::nullopt;
 	json_object.contains("author_signature")				  ? author_signature = json_object["author_signature"].toString()																	: author_signature = std::nullopt;
 	json_object.contains("text")							  ? text = json_object["text"].toString()																							: text = std::nullopt;										 
-	json_object.contains("entities")						  ? entities = QJsonArrayToQVector<MessageEntity>(json_object["entities"].toArray())												: entities = std::nullopt;
+	json_object.contains("entities")						  ? entities = Utility::QVectorInserter<MessageEntity>::make(json_object["entities"].toArray())												: entities = std::nullopt;
 	json_object.contains("animation")						  ? animation = Animation(json_object["animation"].toObject())																		: animation = std::nullopt;
 	json_object.contains("audio")							  ? audio = Audio(json_object["audio"].toObject())																					: audio = std::nullopt;
 	json_object.contains("document")						  ? document = Document(json_object["document"].toObject())																			: document = std::nullopt;												 
-	json_object.contains("photo")							  ? photo = QJsonArrayToQVector<PhotoSize>(json_object["photo"].toArray())															: photo = std::nullopt;
+	json_object.contains("photo")							  ? photo = Utility::QVectorInserter<PhotoSize>::make(json_object["photo"].toArray())															: photo = std::nullopt;
 	json_object.contains("sticker")							  ? sticker = Sticker(json_object["sticker"].toObject())																			: sticker = std::nullopt;
 	json_object.contains("video")							  ? video = Video(json_object["video"].toObject())																					: video = std::nullopt;
 	json_object.contains("video_note")						  ? video_note = VideoNote(json_object["video_note"].toObject())																	: video_note = std::nullopt;
 	json_object.contains("voice")							  ? voice = Voice(json_object["voice"].toObject())																					: voice = std::nullopt;
 	json_object.contains("caption")							  ? caption = json_object["caption"].toString()																						: caption = std::nullopt;											 
-	json_object.contains("caption_entities")				  ? caption_entities = QJsonArrayToQVector<MessageEntity>(json_object["caption_entities"].toArray())								: caption_entities = std::nullopt;
+	json_object.contains("caption_entities")				  ? caption_entities = Utility::QVectorInserter<MessageEntity>::make(json_object["caption_entities"].toArray())								: caption_entities = std::nullopt;
 	json_object.contains("contact")							  ? contact = Contact(json_object["contact"].toObject())																			: contact = std::nullopt;
 	json_object.contains("dice")							  ? dice = Dice(json_object["dice"].toObject())																						: dice = std::nullopt;
 	//json_object.contains("game")							  ? game = Game(json_object["game"].toObject())																						: game = std::nullopt;
 	json_object.contains("poll")							  ? poll = Poll(json_object["poll"].toObject())																						: poll = std::nullopt;
 	json_object.contains("venue")							  ? venue = Venue(json_object["venue"].toObject())																					: venue = std::nullopt;
 	json_object.contains("location")						  ? location = Location(json_object["location"].toObject())																			: location = std::nullopt;
-	json_object.contains("new_chat_members")				  ? new_chat_members = QJsonArrayToQVector<User>(json_object["new_chat_members"].toArray())											: new_chat_members = std::nullopt;
+	json_object.contains("new_chat_members")				  ? new_chat_members = Utility::QVectorInserter<User>::make(json_object["new_chat_members"].toArray())											: new_chat_members = std::nullopt;
 	json_object.contains("left_chat_member")				  ? left_chat_member = User(json_object["left_chat_member"].toObject())																: left_chat_member = std::nullopt;
 	json_object.contains("new_chat_title")					  ? new_chat_title = json_object["new_chat_title"].toString()																		: new_chat_title = std::nullopt;												 
-	json_object.contains("new_chat_photo")					  ? new_chat_photo = QJsonArrayToQVector<PhotoSize>(json_object["new_chat_photo"].toArray())										: new_chat_photo = std::nullopt;
+	json_object.contains("new_chat_photo")					  ? new_chat_photo = Utility::QVectorInserter<PhotoSize>::make(json_object["new_chat_photo"].toArray())										: new_chat_photo = std::nullopt;
 	json_object.contains("delete_chat_photo")				  ? delete_chat_photo = json_object["delete_chat_photo"].toBool()																	: delete_chat_photo = std::nullopt;
 	json_object.contains("group_chat_created")				  ? group_chat_created = json_object["group_chat_created"].toBool()																	: group_chat_created = std::nullopt;
 	json_object.contains("supergroup_chat_created")			  ? supergroup_chat_created = json_object["supergroup_chat_created"].toBool()														: supergroup_chat_created = std::nullopt;
@@ -256,27 +258,27 @@ QJsonObject Telegram::Message::toObject() const {
 	if (media_group_id.has_value())						message_json_object.insert("media_group_id", *media_group_id);
 	if (author_signature.has_value())					message_json_object.insert("author_signature", *author_signature);
 	if (text.has_value())								message_json_object.insert("text", *text);
-	if (entities.has_value())							message_json_object.insert("entities", QVectorToQJsonArray(*entities));
+	if (entities.has_value())							message_json_object.insert("entities", Utility::QJsonArrayInserter::make(*entities));
 	if (animation.has_value())							message_json_object.insert("animation", animation->toObject());
 	if (audio.has_value())								message_json_object.insert("audio", audio->toObject());
 	if (document.has_value())							message_json_object.insert("document", document->toObject());
-	if (photo.has_value())								message_json_object.insert("photo", QVectorToQJsonArray(*photo));
+	if (photo.has_value())								message_json_object.insert("photo", Utility::QJsonArrayInserter::make(*photo));
 	if (sticker.has_value())							message_json_object.insert("sticker", sticker->toObject());
 	if (video.has_value())								message_json_object.insert("video", video->toObject());
 	if (video_note.has_value())							message_json_object.insert("video_note", video_note->toObject());
 	if (voice.has_value())								message_json_object.insert("voice", voice->toObject());
 	if (caption.has_value())							message_json_object.insert("caption", *caption);
-	if (caption_entities.has_value())					message_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (caption_entities.has_value())					message_json_object.insert("caption_entities", Utility::QJsonArrayInserter::make(*caption_entities));
 	if (contact.has_value())							message_json_object.insert("contact", contact->toObject());
 	if (dice.has_value())								message_json_object.insert("dice", dice->toObject());
 	//if (game.has_value())								message_json_object.insert("game", *game);
 	if (poll.has_value())								message_json_object.insert("poll", poll->toObject());
 	if (venue.has_value())								message_json_object.insert("venue", venue->toObject());
 	if (location.has_value())							message_json_object.insert("location", location->toObject());
-	if (new_chat_members.has_value())					message_json_object.insert("new_chat_members", QVectorToQJsonArray(*new_chat_members));
+	if (new_chat_members.has_value())					message_json_object.insert("new_chat_members", Utility::QJsonArrayInserter::make(*new_chat_members));
 	if (left_chat_member.has_value())					message_json_object.insert("left_chat_member", left_chat_member->toObject());
 	if (new_chat_title.has_value())						message_json_object.insert("new_chat_title", *new_chat_title);
-	if (new_chat_photo.has_value())						message_json_object.insert("new_chat_photo", QVectorToQJsonArray(*new_chat_photo));
+	if (new_chat_photo.has_value())						message_json_object.insert("new_chat_photo", Utility::QJsonArrayInserter::make(*new_chat_photo));
 	if (delete_chat_photo.has_value())					message_json_object.insert("delete_chat_photo", *delete_chat_photo);
 	if (group_chat_created.has_value())					message_json_object.insert("group_chat_created", *group_chat_created);
 	if (supergroup_chat_created.has_value())			message_json_object.insert("supergroup_chat_created", *supergroup_chat_created);

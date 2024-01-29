@@ -1,7 +1,5 @@
 #include "Types/InlineQueryResultContact.h"
 
-#include "Internal/ConversionFunctions.h"
-
 Telegram::InlineQueryResultContact::InlineQueryResultContact() :
 	id(),
 	phone_number(),

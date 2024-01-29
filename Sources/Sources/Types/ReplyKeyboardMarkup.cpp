@@ -2,7 +2,8 @@
 
 #include "qjsonarray.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
+#include "Internal/Utility/QVectorInserter.h"
 
 Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup() :
 	keyboard(),
@@ -34,7 +35,7 @@ Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup(const QVector<QVector<Keyboar
 {}
 
 Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup(const QJsonObject& json_object) {
-	json_object.contains("keyboard")			? keyboard = DoubleQJsonArrayToDoubleQVector<KeyboardButton>(json_object["keyboard"].toArray()) : keyboard = QVector<QVector<KeyboardButton>>();
+	json_object.contains("keyboard")			? keyboard = Utility::QVectorInserter<QVector<KeyboardButton>>::make(json_object["keyboard"].toArray()) : keyboard = QVector<QVector<KeyboardButton>>();
 	json_object.contains("resize_keyboard")		? resize_keyboard = json_object["resize_keyboard"].toBool()										: resize_keyboard = std::nullopt;
 	json_object.contains("one_time_keyboard")	? one_time_keyboard = json_object["one_time_keyboard"].toBool()									: one_time_keyboard = std::nullopt;
 	json_object.contains("selective")			? selective = json_object["selective"].toBool()													: selective = std::nullopt;
@@ -43,7 +44,7 @@ Telegram::ReplyKeyboardMarkup::ReplyKeyboardMarkup(const QJsonObject& json_objec
 QJsonObject Telegram::ReplyKeyboardMarkup::toObject() const {
 	if (isEmpty()) return {};
 
-	QJsonObject reply_keyboard_markup_json_object{ {"keyboard", DoubleQVectorToDoubleQJsonArray(keyboard)} };
+	QJsonObject reply_keyboard_markup_json_object{ {"keyboard",  Utility::QJsonArrayInserter::make(keyboard.begin(), keyboard.end())} };
 
 	if (resize_keyboard.has_value())	reply_keyboard_markup_json_object.insert("resize_keyboard", *resize_keyboard);
 	if (one_time_keyboard.has_value())	reply_keyboard_markup_json_object.insert("one_time_keyboard", *one_time_keyboard);

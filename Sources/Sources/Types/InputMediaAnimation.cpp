@@ -1,6 +1,7 @@
 #include "Types/InputMediaAnimation.h"
 
-#include "Internal/ConversionFunctions.h"
+#include "Internal/Utility/QJsonArrayInserter.h"
+#include "Internal/Utility/QVectorInserter.h"
 
 Telegram::InputMediaAnimation::InputMediaAnimation() :
 	media(),
@@ -32,14 +33,14 @@ Telegram::InputMediaAnimation::InputMediaAnimation(const std::variant<QFile*, QS
 {}
 
 Telegram::InputMediaAnimation::InputMediaAnimation(const QJsonObject& json_object) {
-	json_object.contains("media")			? media = json_object["media"].toString()															: media = nullptr;
-	json_object.contains("thumb")			? thumb = json_object["thumb"].toString()															: thumb = std::nullopt;
-	json_object.contains("caption")			? caption = json_object["caption"].toString()														: caption = std::nullopt;
-	json_object.contains("parse_mode")		? parse_mode = json_object["parse_mode"].toString()													: parse_mode = std::nullopt;
-	json_object.contains("caption_entities") ? caption_entities = QJsonArrayToQVector<MessageEntity>(json_object["caption_entities"].toArray())	: caption_entities = std::nullopt;
-	json_object.contains("width")			? width = json_object["width"].toInt()																: width = std::nullopt;
-	json_object.contains("height")			? height = json_object["height"].toInt()															: height = std::nullopt;
-	json_object.contains("duration")		? duration = json_object["duration"].toInt()														: duration = std::nullopt;
+	json_object.contains("media")			? media = json_object["media"].toString()																		: media = nullptr;
+	json_object.contains("thumb")			? thumb = json_object["thumb"].toString()																		: thumb = std::nullopt;
+	json_object.contains("caption")			? caption = json_object["caption"].toString()																	: caption = std::nullopt;
+	json_object.contains("parse_mode")		? parse_mode = json_object["parse_mode"].toString()																: parse_mode = std::nullopt;
+	json_object.contains("caption_entities") ? caption_entities = Utility::QVectorInserter<MessageEntity>::make(json_object["caption_entities"].toArray())	: caption_entities = std::nullopt;
+	json_object.contains("width")			? width = json_object["width"].toInt()																			: width = std::nullopt;
+	json_object.contains("height")			? height = json_object["height"].toInt()																		: height = std::nullopt;
+	json_object.contains("duration")		? duration = json_object["duration"].toInt()																	: duration = std::nullopt;
 }
 
 QJsonObject Telegram::InputMediaAnimation::toObject() const {
@@ -58,7 +59,7 @@ QJsonObject Telegram::InputMediaAnimation::toObject() const {
 
 	if (caption.has_value())			input_media_animation_json_object.insert("caption", *caption);
 	if (parse_mode.has_value())			input_media_animation_json_object.insert("parse_mode", *parse_mode);
-	if (caption_entities.has_value())	input_media_animation_json_object.insert("caption_entities", QVectorToQJsonArray(*caption_entities));
+	if (caption_entities.has_value())	input_media_animation_json_object.insert("caption_entities", Utility::QJsonArrayInserter::make(*caption_entities));
 	if (width.has_value())				input_media_animation_json_object.insert("width", *width);
 	if (height.has_value())				input_media_animation_json_object.insert("height", *height);
 
