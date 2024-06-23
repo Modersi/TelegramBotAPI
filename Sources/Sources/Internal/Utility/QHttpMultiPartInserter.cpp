@@ -5,6 +5,7 @@ Utility::QHttpMultiPartInserter::QHttpMultiPartInserter(QHttpMultiPart* qhttp_mu
 {}
 
 void Utility::QHttpMultiPartInserter::insert(const QString& key, QFile* value) {
+    if (value == nullptr) return;
 
     QHttpPart part;
     part.setHeader(QNetworkRequest::ContentDispositionHeader, QStringLiteral("form-data; name=\"%1\"; filename=\"%2\"").arg(key).arg(value->fileName()));

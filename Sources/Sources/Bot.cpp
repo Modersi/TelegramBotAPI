@@ -30,7 +30,7 @@ Telegram::Bot::Bot(const std::shared_ptr<BotSettings>& bot_settings) :
 
         telegram_listener.emplace(this->bot_settings);
 
-        setWebhook(*bot_settings->webhook_url, bot_settings->public_key.value_or(nullptr).get(), bot_settings->webhook_ip_addres, bot_settings->max_connections, bot_settings->allowed_updates, bot_settings->drop_pending_updates);
+        setWebhook(*bot_settings->webhook_url, bot_settings->public_key->get(), bot_settings->webhook_ip_addres, bot_settings->max_connections, bot_settings->allowed_updates, bot_settings->drop_pending_updates);
 
         QObject::connect(&telegram_listener.value(), &Telegram::Internal::TelegramListener::updateReceived, [this](const Update& update) {
             if      (update.message.has_value())			    emit messageReceived(update.update_id, *update.message);
